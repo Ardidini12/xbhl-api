@@ -3,23 +3,25 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { ItemsReadItemsData, ItemsReadItemsResponse, ItemsCreateItemData, ItemsCreateItemResponse, ItemsReadItemData, ItemsReadItemResponse, ItemsUpdateItemData, ItemsUpdateItemResponse, ItemsDeleteItemData, ItemsDeleteItemResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueData, LeaguesReadLeagueResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse, LeaguesBulkDeleteLeaguesData, LeaguesBulkDeleteLeaguesResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, SeasonsReadSeasonsData, SeasonsReadSeasonsResponse, SeasonsCreateSeasonData, SeasonsCreateSeasonResponse, SeasonsUpdateSeasonData, SeasonsUpdateSeasonResponse, SeasonsDeleteSeasonData, SeasonsDeleteSeasonResponse, SeasonsEndSeasonData, SeasonsEndSeasonResponse, SeasonsBulkDeleteSeasonsData, SeasonsBulkDeleteSeasonsResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
-export class ItemsService {
+export class LeaguesService {
     /**
-     * Read Items
-     * Retrieve items.
+     * Read Leagues
+     * Retrieve leagues.
      * @param data The data for the request.
+     * @param data.search
      * @param data.skip
      * @param data.limit
-     * @returns ItemsPublic Successful Response
+     * @returns LeaguesPublic Successful Response
      * @throws ApiError
      */
-    public static readItems(data: ItemsReadItemsData = {}): CancelablePromise<ItemsReadItemsResponse> {
+    public static readLeagues(data: LeaguesReadLeaguesData = {}): CancelablePromise<LeaguesReadLeaguesResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/items/',
+            url: '/api/v1/leagues/',
             query: {
+                search: data.search,
                 skip: data.skip,
                 limit: data.limit
             },
@@ -30,17 +32,17 @@ export class ItemsService {
     }
     
     /**
-     * Create Item
-     * Create new item.
+     * Create League
+     * Create new league.
      * @param data The data for the request.
      * @param data.requestBody
-     * @returns ItemPublic Successful Response
+     * @returns LeaguePublic Successful Response
      * @throws ApiError
      */
-    public static createItem(data: ItemsCreateItemData): CancelablePromise<ItemsCreateItemResponse> {
+    public static createLeague(data: LeaguesCreateLeagueData): CancelablePromise<LeaguesCreateLeagueResponse> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/items/',
+            url: '/api/v1/leagues/',
             body: data.requestBody,
             mediaType: 'application/json',
             errors: {
@@ -50,17 +52,17 @@ export class ItemsService {
     }
     
     /**
-     * Read Item
-     * Get item by ID.
+     * Read League
+     * Get league by ID.
      * @param data The data for the request.
      * @param data.id
-     * @returns ItemPublic Successful Response
+     * @returns LeaguePublic Successful Response
      * @throws ApiError
      */
-    public static readItem(data: ItemsReadItemData): CancelablePromise<ItemsReadItemResponse> {
+    public static readLeague(data: LeaguesReadLeagueData): CancelablePromise<LeaguesReadLeagueResponse> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/items/{id}',
+            url: '/api/v1/leagues/{id}',
             path: {
                 id: data.id
             },
@@ -71,18 +73,18 @@ export class ItemsService {
     }
     
     /**
-     * Update Item
-     * Update an item.
+     * Update League
+     * Update a league.
      * @param data The data for the request.
      * @param data.id
      * @param data.requestBody
-     * @returns ItemPublic Successful Response
+     * @returns LeaguePublic Successful Response
      * @throws ApiError
      */
-    public static updateItem(data: ItemsUpdateItemData): CancelablePromise<ItemsUpdateItemResponse> {
+    public static updateLeague(data: LeaguesUpdateLeagueData): CancelablePromise<LeaguesUpdateLeagueResponse> {
         return __request(OpenAPI, {
-            method: 'PUT',
-            url: '/api/v1/items/{id}',
+            method: 'PATCH',
+            url: '/api/v1/leagues/{id}',
             path: {
                 id: data.id
             },
@@ -95,20 +97,40 @@ export class ItemsService {
     }
     
     /**
-     * Delete Item
-     * Delete an item.
+     * Delete League
+     * Delete a league.
      * @param data The data for the request.
      * @param data.id
      * @returns Message Successful Response
      * @throws ApiError
      */
-    public static deleteItem(data: ItemsDeleteItemData): CancelablePromise<ItemsDeleteItemResponse> {
+    public static deleteLeague(data: LeaguesDeleteLeagueData): CancelablePromise<LeaguesDeleteLeagueResponse> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/api/v1/items/{id}',
+            url: '/api/v1/leagues/{id}',
             path: {
                 id: data.id
             },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Bulk Delete Leagues
+     * Delete multiple leagues.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static bulkDeleteLeagues(data: LeaguesBulkDeleteLeaguesData): CancelablePromise<LeaguesBulkDeleteLeaguesResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/leagues/bulk-delete',
+            body: data.requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: 'Validation Error'
             }
@@ -226,6 +248,141 @@ export class PrivateService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/private/users/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
+export class SeasonsService {
+    /**
+     * Read Seasons
+     * Retrieve seasons.
+     * @param data The data for the request.
+     * @param data.leagueId
+     * @param data.search
+     * @param data.skip
+     * @param data.limit
+     * @returns SeasonsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readSeasons(data: SeasonsReadSeasonsData = {}): CancelablePromise<SeasonsReadSeasonsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/seasons/',
+            query: {
+                league_id: data.leagueId,
+                search: data.search,
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Season
+     * Create new season.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns SeasonPublic Successful Response
+     * @throws ApiError
+     */
+    public static createSeason(data: SeasonsCreateSeasonData): CancelablePromise<SeasonsCreateSeasonResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/seasons/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Season
+     * Update a season.
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.requestBody
+     * @returns SeasonPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateSeason(data: SeasonsUpdateSeasonData): CancelablePromise<SeasonsUpdateSeasonResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/seasons/{id}',
+            path: {
+                id: data.id
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Season
+     * Delete a season.
+     * @param data The data for the request.
+     * @param data.id
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteSeason(data: SeasonsDeleteSeasonData): CancelablePromise<SeasonsDeleteSeasonResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/seasons/{id}',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * End Season
+     * End a season (sets end_date to current date).
+     * @param data The data for the request.
+     * @param data.id
+     * @returns SeasonPublic Successful Response
+     * @throws ApiError
+     */
+    public static endSeason(data: SeasonsEndSeasonData): CancelablePromise<SeasonsEndSeasonResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/seasons/{id}/end',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Bulk Delete Seasons
+     * Delete multiple seasons.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static bulkDeleteSeasons(data: SeasonsBulkDeleteSeasonsData): CancelablePromise<SeasonsBulkDeleteSeasonsResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/seasons/bulk-delete',
             body: data.requestBody,
             mediaType: 'application/json',
             errors: {

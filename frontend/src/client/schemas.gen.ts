@@ -71,13 +71,13 @@ export const HTTPValidationErrorSchema = {
     title: 'HTTPValidationError'
 } as const;
 
-export const ItemCreateSchema = {
+export const LeagueCreateSchema = {
     properties: {
-        title: {
+        name: {
             type: 'string',
             maxLength: 255,
             minLength: 1,
-            title: 'Title'
+            title: 'Name'
         },
         description: {
             anyOf: [
@@ -93,17 +93,17 @@ export const ItemCreateSchema = {
         }
     },
     type: 'object',
-    required: ['title'],
-    title: 'ItemCreate'
+    required: ['name'],
+    title: 'LeagueCreate'
 } as const;
 
-export const ItemPublicSchema = {
+export const LeaguePublicSchema = {
     properties: {
-        title: {
+        name: {
             type: 'string',
             maxLength: 255,
             minLength: 1,
-            title: 'Title'
+            title: 'Name'
         },
         description: {
             anyOf: [
@@ -122,11 +122,6 @@ export const ItemPublicSchema = {
             format: 'uuid',
             title: 'Id'
         },
-        owner_id: {
-            type: 'string',
-            format: 'uuid',
-            title: 'Owner Id'
-        },
         created_at: {
             anyOf: [
                 {
@@ -141,13 +136,13 @@ export const ItemPublicSchema = {
         }
     },
     type: 'object',
-    required: ['title', 'id', 'owner_id'],
-    title: 'ItemPublic'
+    required: ['name', 'id'],
+    title: 'LeaguePublic'
 } as const;
 
-export const ItemUpdateSchema = {
+export const LeagueUpdateSchema = {
     properties: {
-        title: {
+        name: {
             anyOf: [
                 {
                     type: 'string',
@@ -158,7 +153,7 @@ export const ItemUpdateSchema = {
                     type: 'null'
                 }
             ],
-            title: 'Title'
+            title: 'Name'
         },
         description: {
             anyOf: [
@@ -174,14 +169,14 @@ export const ItemUpdateSchema = {
         }
     },
     type: 'object',
-    title: 'ItemUpdate'
+    title: 'LeagueUpdate'
 } as const;
 
-export const ItemsPublicSchema = {
+export const LeaguesPublicSchema = {
     properties: {
         data: {
             items: {
-                '$ref': '#/components/schemas/ItemPublic'
+                '$ref': '#/components/schemas/LeaguePublic'
             },
             type: 'array',
             title: 'Data'
@@ -193,7 +188,7 @@ export const ItemsPublicSchema = {
     },
     type: 'object',
     required: ['data', 'count'],
-    title: 'ItemsPublic'
+    title: 'LeaguesPublic'
 } as const;
 
 export const MessageSchema = {
@@ -249,6 +244,172 @@ export const PrivateUserCreateSchema = {
     type: 'object',
     required: ['email', 'password', 'full_name'],
     title: 'PrivateUserCreate'
+} as const;
+
+export const SeasonCreateSchema = {
+    properties: {
+        name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Name'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        league_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'League Id'
+        }
+    },
+    type: 'object',
+    required: ['name', 'league_id'],
+    title: 'SeasonCreate'
+} as const;
+
+export const SeasonPublicSchema = {
+    properties: {
+        name: {
+            type: 'string',
+            maxLength: 255,
+            minLength: 1,
+            title: 'Name'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        start_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Start Date'
+        },
+        end_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'End Date'
+        },
+        league_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'League Id'
+        },
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        }
+    },
+    type: 'object',
+    required: ['name', 'league_id', 'id'],
+    title: 'SeasonPublic'
+} as const;
+
+export const SeasonUpdateSchema = {
+    properties: {
+        name: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255,
+                    minLength: 1
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Name'
+        },
+        description: {
+            anyOf: [
+                {
+                    type: 'string',
+                    maxLength: 255
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Description'
+        },
+        start_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Start Date'
+        },
+        end_date: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'End Date'
+        }
+    },
+    type: 'object',
+    title: 'SeasonUpdate'
+} as const;
+
+export const SeasonsPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/SeasonPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'SeasonsPublic'
 } as const;
 
 export const TokenSchema = {

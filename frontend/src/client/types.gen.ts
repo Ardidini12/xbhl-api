@@ -13,26 +13,25 @@ export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
 
-export type ItemCreate = {
-    title: string;
+export type LeagueCreate = {
+    name: string;
     description?: (string | null);
 };
 
-export type ItemPublic = {
-    title: string;
+export type LeaguePublic = {
+    name: string;
     description?: (string | null);
     id: string;
-    owner_id: string;
     created_at?: (string | null);
 };
 
-export type ItemsPublic = {
-    data: Array<ItemPublic>;
+export type LeaguesPublic = {
+    data: Array<LeaguePublic>;
     count: number;
 };
 
-export type ItemUpdate = {
-    title?: (string | null);
+export type LeagueUpdate = {
+    name?: (string | null);
     description?: (string | null);
 };
 
@@ -50,6 +49,33 @@ export type PrivateUserCreate = {
     password: string;
     full_name: string;
     is_verified?: boolean;
+};
+
+export type SeasonCreate = {
+    name: string;
+    description?: (string | null);
+    league_id: string;
+};
+
+export type SeasonPublic = {
+    name: string;
+    description?: (string | null);
+    start_date?: (string | null);
+    end_date?: (string | null);
+    league_id: string;
+    id: string;
+};
+
+export type SeasonsPublic = {
+    data: Array<SeasonPublic>;
+    count: number;
+};
+
+export type SeasonUpdate = {
+    name?: (string | null);
+    description?: (string | null);
+    start_date?: (string | null);
+    end_date?: (string | null);
 };
 
 export type Token = {
@@ -109,37 +135,44 @@ export type ValidationError = {
     type: string;
 };
 
-export type ItemsReadItemsData = {
+export type LeaguesReadLeaguesData = {
     limit?: number;
+    search?: (string | null);
     skip?: number;
 };
 
-export type ItemsReadItemsResponse = (ItemsPublic);
+export type LeaguesReadLeaguesResponse = (LeaguesPublic);
 
-export type ItemsCreateItemData = {
-    requestBody: ItemCreate;
+export type LeaguesCreateLeagueData = {
+    requestBody: LeagueCreate;
 };
 
-export type ItemsCreateItemResponse = (ItemPublic);
+export type LeaguesCreateLeagueResponse = (LeaguePublic);
 
-export type ItemsReadItemData = {
+export type LeaguesReadLeagueData = {
     id: string;
 };
 
-export type ItemsReadItemResponse = (ItemPublic);
+export type LeaguesReadLeagueResponse = (LeaguePublic);
 
-export type ItemsUpdateItemData = {
+export type LeaguesUpdateLeagueData = {
     id: string;
-    requestBody: ItemUpdate;
+    requestBody: LeagueUpdate;
 };
 
-export type ItemsUpdateItemResponse = (ItemPublic);
+export type LeaguesUpdateLeagueResponse = (LeaguePublic);
 
-export type ItemsDeleteItemData = {
+export type LeaguesDeleteLeagueData = {
     id: string;
 };
 
-export type ItemsDeleteItemResponse = (Message);
+export type LeaguesDeleteLeagueResponse = (Message);
+
+export type LeaguesBulkDeleteLeaguesData = {
+    requestBody: Array<(string)>;
+};
+
+export type LeaguesBulkDeleteLeaguesResponse = (Message);
 
 export type LoginLoginAccessTokenData = {
     formData: Body_login_login_access_token;
@@ -172,6 +205,46 @@ export type PrivateCreateUserData = {
 };
 
 export type PrivateCreateUserResponse = (UserPublic);
+
+export type SeasonsReadSeasonsData = {
+    leagueId?: (string | null);
+    limit?: number;
+    search?: (string | null);
+    skip?: number;
+};
+
+export type SeasonsReadSeasonsResponse = (SeasonsPublic);
+
+export type SeasonsCreateSeasonData = {
+    requestBody: SeasonCreate;
+};
+
+export type SeasonsCreateSeasonResponse = (SeasonPublic);
+
+export type SeasonsUpdateSeasonData = {
+    id: string;
+    requestBody: SeasonUpdate;
+};
+
+export type SeasonsUpdateSeasonResponse = (SeasonPublic);
+
+export type SeasonsDeleteSeasonData = {
+    id: string;
+};
+
+export type SeasonsDeleteSeasonResponse = (Message);
+
+export type SeasonsEndSeasonData = {
+    id: string;
+};
+
+export type SeasonsEndSeasonResponse = (SeasonPublic);
+
+export type SeasonsBulkDeleteSeasonsData = {
+    requestBody: Array<(string)>;
+};
+
+export type SeasonsBulkDeleteSeasonsResponse = (Message);
 
 export type UsersReadUsersData = {
     limit?: number;
