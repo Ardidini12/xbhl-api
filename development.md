@@ -1,5 +1,6 @@
 # FastAPI Project - Development
 
+
 ## Docker Compose
 
 * Start the local stack with Docker Compose:

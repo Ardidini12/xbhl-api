@@ -14,6 +14,7 @@ export type Item = {
   icon: LucideIcon
   title: string
   path: string
+  search?: Record<string, any>
 }
 
 interface MainProps {
@@ -45,7 +46,11 @@ export function Main({ items }: MainProps) {
                   isActive={isActive}
                   asChild
                 >
-                  <RouterLink to={item.path} onClick={handleMenuClick}>
+                  <RouterLink 
+                    to={item.path} 
+                    search={item.search}
+                    onClick={handleMenuClick}
+                  >
                     <item.icon />
                     <span>{item.title}</span>
                   </RouterLink>

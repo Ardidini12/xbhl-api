@@ -53,7 +53,6 @@ class User(UserBase, table=True):
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
-    items: list["Item"] = Relationship(back_populates="owner", cascade_delete=True)
 
 
 # Properties to return via API, id is always required
@@ -68,43 +67,86 @@ class UsersPublic(SQLModel):
 
 
 # Shared properties
-class ItemBase(SQLModel):
-    title: str = Field(min_length=1, max_length=255)
+class LeagueBase(SQLModel):
+    name: str = Field(min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
 
 
-# Properties to receive on item creation
-class ItemCreate(ItemBase):
+# Properties to receive on league creation
+class LeagueCreate(LeagueBase):
     pass
 
 
-# Properties to receive on item update
-class ItemUpdate(ItemBase):
-    title: str | None = Field(default=None, min_length=1, max_length=255)  # type: ignore
+# Properties to receive on league update
+class LeagueUpdate(LeagueBase):
+    name: str | None = Field(default=None, min_length=1, max_length=255)  # type: ignore
 
 
 # Database model, database table inferred from class name
-class Item(ItemBase, table=True):
+class League(LeagueBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
-    owner_id: uuid.UUID = Field(
-        foreign_key="user.id", nullable=False, ondelete="CASCADE"
-    )
-    owner: User | None = Relationship(back_populates="items")
+    seasons: list["Season"] = Relationship(back_populates="league", cascade_delete=True)
 
 
 # Properties to return via API, id is always required
-class ItemPublic(ItemBase):
+class LeaguePublic(LeagueBase):
     id: uuid.UUID
-    owner_id: uuid.UUID
     created_at: datetime | None = None
 
 
-class ItemsPublic(SQLModel):
-    data: list[ItemPublic]
+class LeaguesPublic(SQLModel):
+    data: list[LeaguePublic]
+    count: int
+
+
+# Season models
+class SeasonBase(SQLModel):
+    name: str = Field(min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=255)
+    start_date: datetime | None = None
+    end_date: datetime | None = None
+    league_id: uuid.UUID
+
+
+# Properties to receive on season creation
+class SeasonCreate(SQLModel):
+    name: str = Field(min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=255)
+    league_id: uuid.UUID
+
+
+# Properties to receive on season update
+class SeasonUpdate(SQLModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = Field(default=None, max_length=255)
+
+
+# Database model
+class Season(SeasonBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    start_date: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    end_date: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    league_id: uuid.UUID = Field(foreign_key="league.id", nullable=False, ondelete="CASCADE", index=True)
+    league: "League" = Relationship(back_populates="seasons")
+
+
+# Properties to return via API
+class SeasonPublic(SeasonBase):
+    id: uuid.UUID
+
+
+class SeasonsPublic(SQLModel):
+    data: list[SeasonPublic]
     count: int
 
 

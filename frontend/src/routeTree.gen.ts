@@ -15,9 +15,11 @@ import { Route as RecoverPasswordRouteImport } from './routes/recover-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
+import { Route as LayoutXbhlRouteImport } from './routes/_layout/xbhl'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
-import { Route as LayoutItemsRouteImport } from './routes/_layout/items'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
+import { Route as LayoutXbhlIndexRouteImport } from './routes/_layout/xbhl/index'
+import { Route as LayoutXbhlLeagueIdRouteImport } from './routes/_layout/xbhl/$leagueId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -48,14 +50,14 @@ const LayoutIndexRoute = LayoutIndexRouteImport.update({
   path: '/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutXbhlRoute = LayoutXbhlRouteImport.update({
+  id: '/xbhl',
+  path: '/xbhl',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => LayoutRoute,
-} as any)
-const LayoutItemsRoute = LayoutItemsRouteImport.update({
-  id: '/items',
-  path: '/items',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutAdminRoute = LayoutAdminRouteImport.update({
@@ -63,16 +65,28 @@ const LayoutAdminRoute = LayoutAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutXbhlIndexRoute = LayoutXbhlIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LayoutXbhlRoute,
+} as any)
+const LayoutXbhlLeagueIdRoute = LayoutXbhlLeagueIdRouteImport.update({
+  id: '/$leagueId',
+  path: '/$leagueId',
+  getParentRoute: () => LayoutXbhlRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof LayoutIndexRoute
   '/login': typeof LoginRoute
   '/recover-password': typeof RecoverPasswordRoute
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
-  '/items': typeof LayoutItemsRoute
   '/settings': typeof LayoutSettingsRoute
-  '/': typeof LayoutIndexRoute
+  '/xbhl': typeof LayoutXbhlRouteWithChildren
+  '/xbhl/$leagueId': typeof LayoutXbhlLeagueIdRoute
+  '/xbhl/': typeof LayoutXbhlIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -80,9 +94,10 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/admin': typeof LayoutAdminRoute
-  '/items': typeof LayoutItemsRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
+  '/xbhl/$leagueId': typeof LayoutXbhlLeagueIdRoute
+  '/xbhl': typeof LayoutXbhlIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -92,21 +107,25 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_layout/admin': typeof LayoutAdminRoute
-  '/_layout/items': typeof LayoutItemsRoute
   '/_layout/settings': typeof LayoutSettingsRoute
+  '/_layout/xbhl': typeof LayoutXbhlRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
+  '/_layout/xbhl/$leagueId': typeof LayoutXbhlLeagueIdRoute
+  '/_layout/xbhl/': typeof LayoutXbhlIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/login'
     | '/recover-password'
     | '/reset-password'
     | '/signup'
     | '/admin'
-    | '/items'
     | '/settings'
-    | '/'
+    | '/xbhl'
+    | '/xbhl/$leagueId'
+    | '/xbhl/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -114,9 +133,10 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/admin'
-    | '/items'
     | '/settings'
     | '/'
+    | '/xbhl/$leagueId'
+    | '/xbhl'
   id:
     | '__root__'
     | '/_layout'
@@ -125,9 +145,11 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/signup'
     | '/_layout/admin'
-    | '/_layout/items'
     | '/_layout/settings'
+    | '/_layout/xbhl'
     | '/_layout/'
+    | '/_layout/xbhl/$leagueId'
+    | '/_layout/xbhl/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -171,7 +193,7 @@ declare module '@tanstack/react-router' {
     '/_layout': {
       id: '/_layout'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof LayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -182,18 +204,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/xbhl': {
+      id: '/_layout/xbhl'
+      path: '/xbhl'
+      fullPath: '/xbhl'
+      preLoaderRoute: typeof LayoutXbhlRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/settings': {
       id: '/_layout/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof LayoutSettingsRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/items': {
-      id: '/_layout/items'
-      path: '/items'
-      fullPath: '/items'
-      preLoaderRoute: typeof LayoutItemsRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/admin': {
@@ -203,20 +225,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/xbhl/': {
+      id: '/_layout/xbhl/'
+      path: '/'
+      fullPath: '/xbhl/'
+      preLoaderRoute: typeof LayoutXbhlIndexRouteImport
+      parentRoute: typeof LayoutXbhlRoute
+    }
+    '/_layout/xbhl/$leagueId': {
+      id: '/_layout/xbhl/$leagueId'
+      path: '/$leagueId'
+      fullPath: '/xbhl/$leagueId'
+      preLoaderRoute: typeof LayoutXbhlLeagueIdRouteImport
+      parentRoute: typeof LayoutXbhlRoute
+    }
   }
 }
 
+interface LayoutXbhlRouteChildren {
+  LayoutXbhlLeagueIdRoute: typeof LayoutXbhlLeagueIdRoute
+  LayoutXbhlIndexRoute: typeof LayoutXbhlIndexRoute
+}
+
+const LayoutXbhlRouteChildren: LayoutXbhlRouteChildren = {
+  LayoutXbhlLeagueIdRoute: LayoutXbhlLeagueIdRoute,
+  LayoutXbhlIndexRoute: LayoutXbhlIndexRoute,
+}
+
+const LayoutXbhlRouteWithChildren = LayoutXbhlRoute._addFileChildren(
+  LayoutXbhlRouteChildren,
+)
+
 interface LayoutRouteChildren {
   LayoutAdminRoute: typeof LayoutAdminRoute
-  LayoutItemsRoute: typeof LayoutItemsRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
+  LayoutXbhlRoute: typeof LayoutXbhlRouteWithChildren
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAdminRoute: LayoutAdminRoute,
-  LayoutItemsRoute: LayoutItemsRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
+  LayoutXbhlRoute: LayoutXbhlRouteWithChildren,
   LayoutIndexRoute: LayoutIndexRoute,
 }
 

@@ -4,7 +4,17 @@ from typing import Any
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import Item, ItemCreate, User, UserCreate, UserUpdate
+from app.models import (
+    League,
+    LeagueCreate,
+    LeagueUpdate,
+    Season,
+    SeasonCreate,
+    SeasonUpdate,
+    User,
+    UserCreate,
+    UserUpdate,
+)
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -60,9 +70,35 @@ def authenticate(*, session: Session, email: str, password: str) -> User | None:
     return db_user
 
 
-def create_item(*, session: Session, item_in: ItemCreate, owner_id: uuid.UUID) -> Item:
-    db_item = Item.model_validate(item_in, update={"owner_id": owner_id})
-    session.add(db_item)
+def create_league(*, session: Session, league_in: LeagueCreate) -> League:
+    db_obj = League.model_validate(league_in)
+    session.add(db_obj)
     session.commit()
-    session.refresh(db_item)
-    return db_item
+    session.refresh(db_obj)
+    return db_obj
+
+
+def update_league(*, session: Session, db_league: League, league_in: LeagueUpdate) -> Any:
+    league_data = league_in.model_dump(exclude_unset=True)
+    db_league.sqlmodel_update(league_data)
+    session.add(db_league)
+    session.commit()
+    session.refresh(db_league)
+    return db_league
+
+
+def create_season(*, session: Session, season_in: SeasonCreate) -> Season:
+    db_obj = Season.model_validate(season_in)
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    return db_obj
+
+
+def update_season(*, session: Session, db_season: Season, season_in: SeasonUpdate) -> Any:
+    season_data = season_in.model_dump(exclude_unset=True)
+    db_season.sqlmodel_update(season_data)
+    session.add(db_season)
+    session.commit()
+    session.refresh(db_season)
+    return db_season
