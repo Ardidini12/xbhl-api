@@ -26,7 +26,7 @@ const LeagueActions = ({ league }: LeagueActionsProps) => {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" aria-label="Open actions menu">
             <MoreVertical className="size-4" />
           </Button>
         </DropdownMenuTrigger>

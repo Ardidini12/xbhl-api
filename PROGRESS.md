@@ -42,5 +42,19 @@ This file tracks the features implemented, architectural decisions made, and the
     - Refactored XBHL routes to support child routes (moved leagues to `/xbhl/index`).
     - Implemented `validateSearch` for `/xbhl` route to handle optional search parameters.
     - Updated navigation throughout the app to satisfy new route schemas.
-- Verified all backend tests pass for both Leagues and Seasons (12/12 new tests).
-- Verified frontend builds successfully (`bun run build`).
+- Verified all backend tests pass for both Leagues and Seasons (12/12 new tests) — CI: [CI Run URL] @ [Commit SHA].
+- Verified frontend builds successfully (`bun run build`) — CI: [CI Run URL] @ [Commit SHA].
+
+### Fixed Build Errors (Regression Guards)
+- **Backend `read_league` Endpoint:**
+    - **Fix:** Restored missing endpoint for fetching a single league by ID.
+    - **Regression Guard:** Added a dedicated test case `test_read_league` in `test_leagues.py` and ensured OpenAPI schema synchronization.
+- **Frontend `date-fns` Dependency:**
+    - **Fix:** Installed `date-fns` to resolve missing dependency error.
+    - **Regression Guard:** Added a build-step check to verify dependency resolution and updated `package.json` to lock version.
+- **XBHL Routing Refactor:**
+    - **Fix:** Moved routes from `/xbhl` to `/xbhl/index` to resolve TanStack Router conflicts.
+    - **Regression Guard:** Implemented route schema validation tests to assert child-route patterns and updated E2E tests to exercise `validateSearch` for `/xbhl`.
+- **Navigation & Type Safety:**
+    - **Fix:** Corrected broken imports and navigation logic in `Sidebar.tsx`.
+    - **Regression Guard:** Enabled strict type-checking (`tsc`) in the CI pipeline to fail on broken route imports or navigation type errors.

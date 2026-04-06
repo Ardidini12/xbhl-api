@@ -40,7 +40,7 @@ def test_read_leagues(
     assert response.status_code == 200
     content = response.json()
     assert len(content["data"]) >= 1
-    assert any(l["name"] == name for l in content["data"])
+    assert any(league["name"] == name for league in content["data"])
 
 
 def test_update_league(

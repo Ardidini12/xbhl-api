@@ -16,12 +16,16 @@ def seed_leagues() -> None:
             return
 
         logger.info("Seeding 100 leagues")
+        leagues = []
         for i in range(1, 101):
             league_in = LeagueCreate(
                 name=f"League {i:03d}",
                 description=f"Description for XBHL League {i:03d}"
             )
-            crud.create_league(session=session, league_in=league_in)
+            leagues.append(League.model_validate(league_in))
+        
+        session.add_all(leagues)
+        session.commit()
         logger.info("Successfully seeded 100 leagues")
 
 if __name__ == "__main__":

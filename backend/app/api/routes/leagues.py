@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlmodel import col, func, select
 
 from app import crud
@@ -40,7 +40,11 @@ def read_leagues(
     count_statement = select(func.count()).select_from(statement.subquery())
     count = session.exec(count_statement).one()
     
-    statement = statement.offset(skip).limit(limit)
+    max_limit = 100
+    limit = min(max(1, limit), max_limit)
+    skip = max(0, skip)
+    
+    statement = statement.order_by(League.id).offset(skip).limit(limit)
     leagues = session.exec(statement).all()
 
     return LeaguesPublic(data=leagues, count=count)
@@ -100,7 +104,7 @@ def delete_league(session: SessionDep, id: uuid.UUID) -> Message:
 
 
 @router.post("/bulk-delete", dependencies=[Depends(get_current_active_superuser)])
-def bulk_delete_leagues(session: SessionDep, ids: list[uuid.UUID]) -> Message:
+def bulk_delete_leagues(session: SessionDep, ids: list[uuid.UUID] = Body(...)) -> Message:
     """
     Delete multiple leagues.
     """

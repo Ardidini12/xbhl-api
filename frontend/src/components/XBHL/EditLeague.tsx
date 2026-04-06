@@ -50,14 +50,16 @@ const EditLeague = ({ league, open, onOpenChange }: EditLeagueProps) => {
     },
   })
 
+  const { reset } = form
+
   useEffect(() => {
     if (open) {
-      form.reset({
+      reset({
         name: league.name,
         description: league.description || "",
       })
     }
-  }, [open, league, form.reset])
+  }, [open, league, reset])
 
   const mutation = useMutation({
     mutationFn: (data: LeagueUpdate) =>

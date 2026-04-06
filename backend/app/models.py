@@ -123,8 +123,6 @@ class SeasonCreate(SQLModel):
 class SeasonUpdate(SQLModel):
     name: str | None = Field(default=None, min_length=1, max_length=255)
     description: str | None = Field(default=None, max_length=255)
-    start_date: datetime | None = Field(default=None)
-    end_date: datetime | None = Field(default=None)
 
 
 # Database model
@@ -138,7 +136,7 @@ class Season(SeasonBase, table=True):
         default=None,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
-    league_id: uuid.UUID = Field(foreign_key="league.id", nullable=False)
+    league_id: uuid.UUID = Field(foreign_key="league.id", nullable=False, ondelete="CASCADE", index=True)
     league: "League" = Relationship(back_populates="seasons")
 
 

@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy import cast, String
 from sqlmodel import col, func, select
 
@@ -98,6 +98,8 @@ def end_season(*, session: SessionDep, id: uuid.UUID) -> Any:
     season = session.get(Season, id)
     if not season:
         raise HTTPException(status_code=404, detail="Season not found")
+    if season.end_date is not None:
+        return season
     season.end_date = datetime.now(timezone.utc)
     session.add(season)
     session.commit()
@@ -119,7 +121,7 @@ def delete_season(session: SessionDep, id: uuid.UUID) -> Message:
 
 
 @router.post("/bulk-delete", dependencies=[Depends(get_current_active_superuser)])
-def bulk_delete_seasons(session: SessionDep, ids: list[uuid.UUID]) -> Message:
+def bulk_delete_seasons(session: SessionDep, ids: list[uuid.UUID] = Body(...)) -> Message:
     """
     Delete multiple seasons.
     """

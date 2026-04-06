@@ -26,7 +26,7 @@ def upgrade():
     sa.Column('end_date', sa.DateTime(timezone=True), nullable=True),
     sa.Column('league_id', sa.Uuid(), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
-    sa.ForeignKeyConstraint(['league_id'], ['league.id'], ),
+    sa.ForeignKeyConstraint(['league_id'], ['league.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     # ### end Alembic commands ###

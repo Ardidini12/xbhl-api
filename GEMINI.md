@@ -25,6 +25,11 @@ This is a full-stack web application template featuring a FastAPI backend and a 
 2. `uv sync` (install dependencies)
 3. `fastapi dev app/main.py`
 4. **Migrations:** `alembic upgrade head`
+    - **Rollback:**
+        - Step back one: `alembic downgrade -1`
+        - Target specific: `alembic downgrade <revision_id>`
+        - Reset all: `alembic downgrade base`
+        - *Note: Check `alembic history` before downgrading.*
 5. **Initial Data:** `python app/initial_data.py`
 
 #### Frontend
@@ -34,7 +39,7 @@ This is a full-stack web application template featuring a FastAPI backend and a 
 
 ### Testing
 - **Backend:** `cd backend && pytest` or `./scripts/test.sh`
-- **Frontend (E2E):** `cd frontend && bun run test` (runs Playwright)
+- **Frontend (E2E):** `cd frontend && bunx playwright install && bun run test` (runs Playwright)
 
 ## Development Conventions
 
@@ -45,12 +50,12 @@ This is a full-stack web application template featuring a FastAPI backend and a 
 - **Formatting/Linting:** Managed by `ruff`. Run via `uv run prek run --all-files` at root.
 
 ### UI/UX Development Conventions
-- **Search Filters:** Always provide a dynamic search bar that filters results as the user types (match case `a=A, 1=1`).
+- **Search Filters:** Always provide a dynamic search bar that filters results as the user types (using case-insensitive matching).
 - **Bulk Operations:**
     - Always include checkboxes for each row in a list.
     - Provide a "Select All" checkbox in the header.
     - Show a "Delete X selected" button when one or more items are selected.
-- **Infinite Scroll:** Implement infinite/auto-scroll for lists that may grow large (e.g., leagues, seasons), with a "Scroll for more" or "Loading more..." indicator, and a total count at the end.
+- **Infinite Scroll:** Implement infinite scroll for lists that may grow large (e.g., leagues, seasons), with a "Scroll for more" or "Loading more..." indicator (automatic loading of more items as the user scrolls), and a total count at the end.
 - **Action Menus:** Use a "three dots" icon (MoreVertical) for row-level actions, consistently including options like:
     - `Enter [Resource]` (for navigation to sub-resources).
     - `Edit [Resource]` (opens a modal).

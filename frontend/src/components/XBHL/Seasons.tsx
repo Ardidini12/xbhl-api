@@ -29,6 +29,10 @@ const Seasons = () => {
     }
   }, [leagueId, navigate])
 
+  useEffect(() => {
+    setSelectedIds([])
+  }, [leagueId, search])
+
   const { data: league, isError: isLeagueError } = useQuery({
     queryKey: ["leagues", leagueId],
     queryFn: () => LeaguesService.readLeague({ id: leagueId }),
@@ -99,7 +103,7 @@ const Seasons = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/xbhl" })}>
+        <Button variant="ghost" size="icon" onClick={() => navigate({ to: "/xbhl" })} aria-label="Back to leagues">
           <ArrowLeft className="size-4" />
         </Button>
         <div className="flex-1 min-w-0">
@@ -207,6 +211,7 @@ const Seasons = () => {
       {deleteOpen && (
         <DeleteSeason
           ids={selectedIds}
+          leagueId={leagueId}
           open={deleteOpen}
           onOpenChange={setDeleteOpen}
           onSuccess={() => {

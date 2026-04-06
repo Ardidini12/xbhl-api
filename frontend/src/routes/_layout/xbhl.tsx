@@ -14,8 +14,15 @@ export const Route = createFileRoute("/_layout/xbhl")({
   component: XbhlLayout,
   validateSearch: (search) => xbhlSearchSchema.parse(search),
   beforeLoad: async () => {
-    const user = await UsersService.readUserMe()
-    if (!user.is_superuser) {
+    try {
+      const user = await UsersService.readUserMe()
+      if (!user.is_superuser) {
+        throw redirect({
+          to: "/",
+        })
+      }
+    } catch (e) {
+      if (e instanceof Error && "status" in e && e.status === 307) throw e
       throw redirect({
         to: "/",
       })

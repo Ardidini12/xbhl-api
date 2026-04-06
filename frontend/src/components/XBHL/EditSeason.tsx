@@ -69,7 +69,7 @@ const EditSeason = ({ season, open, onOpenChange }: EditSeasonProps) => {
         id: season.id,
         requestBody: {
           ...data,
-          start_date: data.start_date ? new Date(data.start_date).toISOString() : undefined,
+          start_date: data.start_date ? new Date(data.start_date).toISOString() : null,
         } as SeasonUpdate,
       }),
     onSuccess: () => {

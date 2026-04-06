@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { useState, useMemo, useEffect, useRef } from "react"
-import { Plus, Trash, Search } from "lucide-react"
+import { Plus, Trash, Search, AlertCircle } from "lucide-react"
 
 import { LeaguesService, type LeaguePublic } from "@/client"
 import { Button } from "@/components/ui/button"
@@ -45,6 +45,10 @@ const Leagues = () => {
   const totalLeagues = data?.pages[0]?.count ?? 0
 
   useEffect(() => {
+    setSelectedIds([])
+  }, [search])
+
+  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -68,10 +72,13 @@ const Leagues = () => {
   }
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === allLeagues.length && allLeagues.length > 0) {
-      setSelectedIds([])
+    const allVisibleIds = allLeagues.map((l) => l.id)
+    const allSelected = allVisibleIds.length > 0 && allVisibleIds.every(id => selectedIds.includes(id))
+    
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !allVisibleIds.includes(id)))
     } else {
-      setSelectedIds(allLeagues.map((l) => l.id))
+      setSelectedIds(prev => Array.from(new Set([...prev, ...allVisibleIds])))
     }
   }
 
@@ -109,11 +116,18 @@ const Leagues = () => {
         </div>
       </div>
 
+      {status === "error" && (
+        <div className="flex items-center gap-2 p-4 text-destructive bg-destructive/10 rounded-md border border-destructive/20">
+          <AlertCircle className="size-4" />
+          <p className="text-sm font-medium">Error loading leagues. Please try again or refresh the page.</p>
+        </div>
+      )}
+
       <div className="rounded-md border bg-card">
         <div className="border-b px-4 py-3 flex items-center gap-4 bg-muted/50">
           <Checkbox
             checked={
-              allLeagues.length > 0 && selectedIds.length === allLeagues.length
+              allLeagues.length > 0 && allLeagues.every(l => selectedIds.includes(l.id))
             }
             onCheckedChange={toggleSelectAll}
           />

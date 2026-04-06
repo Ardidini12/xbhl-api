@@ -40,12 +40,12 @@ const SeasonActions = ({ season }: SeasonActionsProps) => {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="icon" aria-label="Open actions menu">
             <MoreVertical className="size-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => {}} disabled>
+          <DropdownMenuItem disabled>
             <LogIn className="mr-2 size-4" />
             Enter Season
           </DropdownMenuItem>
@@ -54,7 +54,10 @@ const SeasonActions = ({ season }: SeasonActionsProps) => {
             Edit
           </DropdownMenuItem>
           {!season.end_date && (
-            <DropdownMenuItem onClick={() => endSeasonMutation.mutate()}>
+            <DropdownMenuItem
+              onClick={() => endSeasonMutation.mutate()}
+              disabled={endSeasonMutation.isPending}
+            >
               <CalendarX className="mr-2 size-4" />
               End Season
             </DropdownMenuItem>
@@ -76,6 +79,7 @@ const SeasonActions = ({ season }: SeasonActionsProps) => {
       />
       <DeleteSeason
         ids={[season.id]}
+        leagueId={season.league_id}
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         onSuccess={() => setDeleteOpen(false)}

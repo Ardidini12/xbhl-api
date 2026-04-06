@@ -15,12 +15,13 @@ import { LoadingButton } from "@/components/ui/loading-button"
 
 interface DeleteSeasonProps {
   ids: string[]
+  leagueId: string
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
 }
 
-const DeleteSeason = ({ ids, open, onOpenChange, onSuccess }: DeleteSeasonProps) => {
+const DeleteSeason = ({ ids, leagueId, open, onOpenChange, onSuccess }: DeleteSeasonProps) => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
@@ -42,7 +43,7 @@ const DeleteSeason = ({ ids, open, onOpenChange, onSuccess }: DeleteSeasonProps)
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["seasons"] })
+      queryClient.invalidateQueries({ queryKey: ["seasons", leagueId] })
     },
   })
 
