@@ -1,16 +1,17 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useEffect } from "react"
-
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+import { type LeaguePublic, LeaguesService, type LeagueUpdate } from "@/client"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog"
 import {
   Form,
@@ -21,11 +22,9 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { LeaguesService, type LeaguePublic, type LeagueUpdate } from "@/client"
+import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
-import { LoadingButton } from "@/components/ui/loading-button"
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
@@ -83,7 +82,9 @@ const EditLeague = ({ league, open, onOpenChange }: EditLeagueProps) => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit League</DialogTitle>
-          <DialogDescription>Update the league details below.</DialogDescription>
+          <DialogDescription>
+            Update the league details below.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

@@ -1,17 +1,18 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { useEffect } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { format } from "date-fns"
-
+import { useEffect } from "react"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+import { type SeasonPublic, SeasonsService, type SeasonUpdate } from "@/client"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog"
 import {
   Form,
@@ -22,11 +23,9 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { SeasonsService, type SeasonPublic, type SeasonUpdate } from "@/client"
+import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
-import { LoadingButton } from "@/components/ui/loading-button"
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
@@ -49,7 +48,9 @@ const EditSeason = ({ season, open, onOpenChange }: EditSeasonProps) => {
     defaultValues: {
       name: season.name,
       description: season.description || "",
-      start_date: season.start_date ? format(new Date(season.start_date), "yyyy-MM-dd'T'HH:mm") : "",
+      start_date: season.start_date
+        ? format(new Date(season.start_date), "yyyy-MM-dd'T'HH:mm")
+        : "",
     },
   })
 
@@ -58,7 +59,9 @@ const EditSeason = ({ season, open, onOpenChange }: EditSeasonProps) => {
       form.reset({
         name: season.name,
         description: season.description || "",
-        start_date: season.start_date ? format(new Date(season.start_date), "yyyy-MM-dd'T'HH:mm") : "",
+        start_date: season.start_date
+          ? format(new Date(season.start_date), "yyyy-MM-dd'T'HH:mm")
+          : "",
       })
     }
   }, [open, season, form])
@@ -69,7 +72,9 @@ const EditSeason = ({ season, open, onOpenChange }: EditSeasonProps) => {
         id: season.id,
         requestBody: {
           ...data,
-          start_date: data.start_date ? new Date(data.start_date).toISOString() : null,
+          start_date: data.start_date
+            ? new Date(data.start_date).toISOString()
+            : null,
         } as SeasonUpdate,
       }),
     onSuccess: () => {
@@ -91,7 +96,9 @@ const EditSeason = ({ season, open, onOpenChange }: EditSeasonProps) => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Season</DialogTitle>
-          <DialogDescription>Update the season details below.</DialogDescription>
+          <DialogDescription>
+            Update the season details below.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

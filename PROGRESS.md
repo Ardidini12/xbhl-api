@@ -58,3 +58,16 @@ This file tracks the features implemented, architectural decisions made, and the
 - **Navigation & Type Safety:**
     - **Fix:** Corrected broken imports and navigation logic in `Sidebar.tsx`.
     - **Regression Guard:** Enabled strict type-checking (`tsc`) in the CI pipeline to fail on broken route imports or navigation type errors.
+
+### [Feature] Clubs Management & Relationships - 2026-04-07
+- Implemented `Club` model with automated `ea_id` fetching from EA Pro Clubs API.
+- Added many-to-many relationships between `Club`, `Season`, and `League` using link tables (`ClubSeasonLink`, `ClubLeagueLink`).
+- Configured deletion logic to preserve clubs when linked seasons or leagues are deleted (history cleanup only).
+- Created administrative Clubs management interface:
+    - Infinite scroll and dynamic search.
+    - Support for single and bulk club creation (with name cleaning).
+    - Support for single and bulk deletion.
+    - Logo display and EA ID integration.
+- Refactored admin routing to support nested `/admin/clubs` path.
+- Applied database migrations for the new `Club` model and relationship links.
+- Verified all backend tests pass, including EA ID extraction and CRUD operations.

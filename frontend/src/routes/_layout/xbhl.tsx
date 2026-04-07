@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
-import { UsersService } from "@/client"
 import { z } from "zod"
+import { UsersService } from "@/client"
 
 const XbhlLayout = () => {
   return <Outlet />

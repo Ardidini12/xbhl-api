@@ -46,8 +46,8 @@ export function Main({ items }: MainProps) {
                   isActive={isActive}
                   asChild
                 >
-                  <RouterLink 
-                    to={item.path} 
+                  <RouterLink
+                    to={item.path}
                     search={item.search}
                     onClick={handleMenuClick}
                   >
