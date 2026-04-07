@@ -32,7 +32,7 @@ const DeleteClub = ({
     mutationFn: (id: string) => ClubsService.deleteClub({ id }),
     onSuccess: () => {
       showSuccessToast("Club deleted successfully")
-      queryClient.invalidateQueries({ queryKey: ["clubs"] })
+      queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] === "clubs" })
       onSuccess?.()
       onOpenChange(false)
     },
@@ -46,7 +46,7 @@ const DeleteClub = ({
       ClubsService.bulkDeleteClubs({ requestBody: ids }),
     onSuccess: () => {
       showSuccessToast("Clubs deleted successfully")
-      queryClient.invalidateQueries({ queryKey: ["clubs"] })
+      queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] === "clubs" })
       onSuccess?.()
       onOpenChange(false)
     },

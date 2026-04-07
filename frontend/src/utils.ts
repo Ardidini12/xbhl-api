@@ -14,11 +14,11 @@ function extractErrorMessage(err: ApiError): string {
 }
 
 export const handleError = function (
-  this: (msg: string) => void,
+  this: (msg: string, error?: any) => void,
   err: ApiError,
 ) {
   const errorMessage = extractErrorMessage(err)
-  this(errorMessage)
+  this(errorMessage, err)
 }
 
 export const getInitials = (name: string): string => {

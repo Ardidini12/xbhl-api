@@ -1,4 +1,4 @@
-import { Edit, FileText, MoreVertical, Trash } from "lucide-react"
+import { Edit, MoreVertical, Trash } from "lucide-react"
 import { useState } from "react"
 
 import type { ClubPublic } from "@/client"
@@ -30,10 +30,7 @@ const ClubActions = ({ club }: ClubActionsProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => {}}>
-            <FileText className="mr-2 size-4" />
-            Club details
-          </DropdownMenuItem>
+
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
             <Edit className="mr-2 size-4" />
             Edit
