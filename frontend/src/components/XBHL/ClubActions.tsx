@@ -1,7 +1,7 @@
-import { useNavigate } from "@tanstack/react-router"
-import { Edit, LogIn, MoreVertical, Trash } from "lucide-react"
+import { Edit, FileText, MoreVertical, Trash } from "lucide-react"
 import { useState } from "react"
-import type { LeaguePublic } from "@/client"
+
+import type { ClubPublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -9,37 +9,30 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import DeleteLeague from "./DeleteLeague"
-import EditLeague from "./EditLeague"
+import DeleteClub from "./DeleteClub"
+import EditClub from "./EditClub"
 
-interface LeagueActionsProps {
-  league: LeaguePublic
+interface ClubActionsProps {
+  club: ClubPublic
 }
 
-const LeagueActions = ({ league }: LeagueActionsProps) => {
+const ClubActions = ({ club }: ClubActionsProps) => {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const navigate = useNavigate()
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Open actions menu">
+          <Button variant="ghost" size="icon" className="size-8 p-0">
             <MoreVertical className="size-4" />
+            <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() =>
-              navigate({
-                to: "/xbhl/$leagueId",
-                params: { leagueId: league.id },
-              })
-            }
-          >
-            <LogIn className="mr-2 size-4" />
-            Enter League
+          <DropdownMenuItem onClick={() => {}}>
+            <FileText className="mr-2 size-4" />
+            Club details
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
             <Edit className="mr-2 size-4" />
@@ -47,7 +40,7 @@ const LeagueActions = ({ league }: LeagueActionsProps) => {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setDeleteOpen(true)}
-            className="text-destructive"
+            className="text-destructive focus:text-destructive"
           >
             <Trash className="mr-2 size-4" />
             Delete
@@ -55,15 +48,14 @@ const LeagueActions = ({ league }: LeagueActionsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <EditLeague league={league} open={editOpen} onOpenChange={setEditOpen} />
-      <DeleteLeague
-        ids={[league.id]}
+      <EditClub club={club} open={editOpen} onOpenChange={setEditOpen} />
+      <DeleteClub
+        ids={[club.id]}
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        onSuccess={() => setDeleteOpen(false)}
       />
     </>
   )
 }
 
-export default LeagueActions
+export default ClubActions

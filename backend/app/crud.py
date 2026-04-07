@@ -5,6 +5,9 @@ from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
 from app.models import (
+    Club,
+    ClubCreate,
+    ClubUpdate,
     League,
     LeagueCreate,
     LeagueUpdate,
@@ -102,3 +105,20 @@ def update_season(*, session: Session, db_season: Season, season_in: SeasonUpdat
     session.commit()
     session.refresh(db_season)
     return db_season
+
+
+def create_club(*, session: Session, club_in: ClubCreate) -> Club:
+    db_obj = Club.model_validate(club_in)
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    return db_obj
+
+
+def update_club(*, session: Session, db_club: Club, club_in: ClubUpdate) -> Any:
+    club_data = club_in.model_dump(exclude_unset=True)
+    db_club.sqlmodel_update(club_data)
+    session.add(db_club)
+    session.commit()
+    session.refresh(db_club)
+    return db_club

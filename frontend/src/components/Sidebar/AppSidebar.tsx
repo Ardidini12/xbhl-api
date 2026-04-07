@@ -1,4 +1,4 @@
-import { Home, Trophy, Users } from "lucide-react"
+import { Home, Shield, Trophy, Users } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -21,7 +21,13 @@ export function AppSidebar() {
     ? [
         ...baseItems,
         { icon: Users, title: "Admin", path: "/admin" },
-        { icon: Trophy, title: "XBHL", path: "/xbhl", search: { search: undefined } },
+        { icon: Shield, title: "Clubs", path: "/admin/clubs" },
+        {
+          icon: Trophy,
+          title: "XBHL",
+          path: "/xbhl",
+          search: { search: undefined },
+        },
       ]
     : baseItems
 

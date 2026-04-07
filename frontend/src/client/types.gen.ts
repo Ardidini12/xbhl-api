@@ -9,6 +9,31 @@ export type Body_login_login_access_token = {
     client_secret?: (string | null);
 };
 
+export type ClubCreate = {
+    name: string;
+    logo?: (string | null);
+    ea_id?: (string | null);
+};
+
+export type ClubPublic = {
+    name: string;
+    logo?: (string | null);
+    ea_id?: (string | null);
+    id: string;
+    created_at?: (string | null);
+};
+
+export type ClubsPublic = {
+    data: Array<ClubPublic>;
+    count: number;
+};
+
+export type ClubUpdate = {
+    name?: (string | null);
+    logo?: (string | null);
+    ea_id?: (string | null);
+};
+
 export type HTTPValidationError = {
     detail?: Array<ValidationError>;
 };
@@ -74,8 +99,6 @@ export type SeasonsPublic = {
 export type SeasonUpdate = {
     name?: (string | null);
     description?: (string | null);
-    start_date?: (string | null);
-    end_date?: (string | null);
 };
 
 export type Token = {
@@ -134,6 +157,51 @@ export type ValidationError = {
     msg: string;
     type: string;
 };
+
+export type ClubsReadClubsData = {
+    limit?: number;
+    search?: (string | null);
+    skip?: number;
+};
+
+export type ClubsReadClubsResponse = (ClubsPublic);
+
+export type ClubsCreateClubData = {
+    requestBody: ClubCreate;
+};
+
+export type ClubsCreateClubResponse = (ClubPublic);
+
+export type ClubsReadClubData = {
+    id: string;
+};
+
+export type ClubsReadClubResponse = (ClubPublic);
+
+export type ClubsUpdateClubData = {
+    id: string;
+    requestBody: ClubUpdate;
+};
+
+export type ClubsUpdateClubResponse = (ClubPublic);
+
+export type ClubsDeleteClubData = {
+    id: string;
+};
+
+export type ClubsDeleteClubResponse = (Message);
+
+export type ClubsBulkCreateClubsData = {
+    requestBody: Array<ClubCreate>;
+};
+
+export type ClubsBulkCreateClubsResponse = (Message);
+
+export type ClubsBulkDeleteClubsData = {
+    requestBody: Array<(string)>;
+};
+
+export type ClubsBulkDeleteClubsResponse = (Message);
 
 export type LeaguesReadLeaguesData = {
     limit?: number;

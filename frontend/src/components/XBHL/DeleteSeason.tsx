@@ -1,4 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { SeasonsService } from "@/client"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -7,11 +9,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { SeasonsService } from "@/client"
+import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
-import { LoadingButton } from "@/components/ui/loading-button"
 
 interface DeleteSeasonProps {
   ids: string[]
@@ -21,7 +21,13 @@ interface DeleteSeasonProps {
   onSuccess?: () => void
 }
 
-const DeleteSeason = ({ ids, leagueId, open, onOpenChange, onSuccess }: DeleteSeasonProps) => {
+const DeleteSeason = ({
+  ids,
+  leagueId,
+  open,
+  onOpenChange,
+  onSuccess,
+}: DeleteSeasonProps) => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
@@ -36,7 +42,7 @@ const DeleteSeason = ({ ids, leagueId, open, onOpenChange, onSuccess }: DeleteSe
       showSuccessToast(
         ids.length === 1
           ? "Season deleted successfully"
-          : `${ids.length} seasons deleted successfully`
+          : `${ids.length} seasons deleted successfully`,
       )
       onOpenChange(false)
       onSuccess?.()

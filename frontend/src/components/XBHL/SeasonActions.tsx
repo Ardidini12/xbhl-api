@@ -1,19 +1,18 @@
-import { MoreVertical, Edit, Trash, LogIn, CalendarX } from "lucide-react"
-import { useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-
+import { CalendarX, Edit, LogIn, MoreVertical, Trash } from "lucide-react"
+import { useState } from "react"
+import { type SeasonPublic, SeasonsService } from "@/client"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Button } from "@/components/ui/button"
-import { SeasonsService, type SeasonPublic } from "@/client"
-import EditSeason from "./EditSeason"
-import DeleteSeason from "./DeleteSeason"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import DeleteSeason from "./DeleteSeason"
+import EditSeason from "./EditSeason"
 
 interface SeasonActionsProps {
   season: SeasonPublic
@@ -72,11 +71,7 @@ const SeasonActions = ({ season }: SeasonActionsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <EditSeason
-        season={season}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-      />
+      <EditSeason season={season} open={editOpen} onOpenChange={setEditOpen} />
       <DeleteSeason
         ids={[season.id]}
         leagueId={season.league_id}

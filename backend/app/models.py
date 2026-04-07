@@ -82,6 +82,17 @@ class LeagueUpdate(LeagueBase):
     name: str | None = Field(default=None, min_length=1, max_length=255)  # type: ignore
 
 
+# Link tables for many-to-many relationships
+class ClubSeasonLink(SQLModel, table=True):
+    club_id: uuid.UUID = Field(foreign_key="club.id", primary_key=True, ondelete="CASCADE")
+    season_id: uuid.UUID = Field(foreign_key="season.id", primary_key=True, ondelete="CASCADE")
+
+
+class ClubLeagueLink(SQLModel, table=True):
+    club_id: uuid.UUID = Field(foreign_key="club.id", primary_key=True, ondelete="CASCADE")
+    league_id: uuid.UUID = Field(foreign_key="league.id", primary_key=True, ondelete="CASCADE")
+
+
 # Database model, database table inferred from class name
 class League(LeagueBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -90,6 +101,7 @@ class League(LeagueBase, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     seasons: list["Season"] = Relationship(back_populates="league", cascade_delete=True)
+    clubs: list["Club"] = Relationship(back_populates="leagues", link_model=ClubLeagueLink)
 
 
 # Properties to return via API, id is always required
@@ -138,6 +150,7 @@ class Season(SeasonBase, table=True):
     )
     league_id: uuid.UUID = Field(foreign_key="league.id", nullable=False, ondelete="CASCADE", index=True)
     league: "League" = Relationship(back_populates="seasons")
+    clubs: list["Club"] = Relationship(back_populates="seasons", link_model=ClubSeasonLink)
 
 
 # Properties to return via API
@@ -147,6 +160,47 @@ class SeasonPublic(SeasonBase):
 
 class SeasonsPublic(SQLModel):
     data: list[SeasonPublic]
+    count: int
+
+
+# Club models
+class ClubBase(SQLModel):
+    name: str = Field(min_length=1, max_length=255)
+    logo: str | None = Field(default=None, max_length=255)
+    ea_id: str | None = Field(default=None, max_length=255)
+
+
+# Properties to receive on club creation
+class ClubCreate(ClubBase):
+    pass
+
+
+# Properties to receive on club update
+class ClubUpdate(SQLModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    logo: str | None = Field(default=None, max_length=255)
+    ea_id: str | None = Field(default=None, max_length=255)
+
+
+# Database model
+class Club(ClubBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    seasons: list["Season"] = Relationship(back_populates="clubs", link_model=ClubSeasonLink)
+    leagues: list["League"] = Relationship(back_populates="clubs", link_model=ClubLeagueLink)
+
+
+# Properties to return via API
+class ClubPublic(ClubBase):
+    id: uuid.UUID
+    created_at: datetime | None = None
+
+
+class ClubsPublic(SQLModel):
+    data: list[ClubPublic]
     count: int
 
 

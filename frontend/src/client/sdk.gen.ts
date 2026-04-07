@@ -3,7 +3,160 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueData, LeaguesReadLeagueResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse, LeaguesBulkDeleteLeaguesData, LeaguesBulkDeleteLeaguesResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, SeasonsReadSeasonsData, SeasonsReadSeasonsResponse, SeasonsCreateSeasonData, SeasonsCreateSeasonResponse, SeasonsUpdateSeasonData, SeasonsUpdateSeasonResponse, SeasonsDeleteSeasonData, SeasonsDeleteSeasonResponse, SeasonsEndSeasonData, SeasonsEndSeasonResponse, SeasonsBulkDeleteSeasonsData, SeasonsBulkDeleteSeasonsResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { ClubsReadClubsData, ClubsReadClubsResponse, ClubsCreateClubData, ClubsCreateClubResponse, ClubsReadClubData, ClubsReadClubResponse, ClubsUpdateClubData, ClubsUpdateClubResponse, ClubsDeleteClubData, ClubsDeleteClubResponse, ClubsBulkCreateClubsData, ClubsBulkCreateClubsResponse, ClubsBulkDeleteClubsData, ClubsBulkDeleteClubsResponse, LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueData, LeaguesReadLeagueResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse, LeaguesBulkDeleteLeaguesData, LeaguesBulkDeleteLeaguesResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, SeasonsReadSeasonsData, SeasonsReadSeasonsResponse, SeasonsCreateSeasonData, SeasonsCreateSeasonResponse, SeasonsUpdateSeasonData, SeasonsUpdateSeasonResponse, SeasonsDeleteSeasonData, SeasonsDeleteSeasonResponse, SeasonsEndSeasonData, SeasonsEndSeasonResponse, SeasonsBulkDeleteSeasonsData, SeasonsBulkDeleteSeasonsResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+
+export class ClubsService {
+    /**
+     * Read Clubs
+     * Retrieve clubs.
+     * @param data The data for the request.
+     * @param data.search
+     * @param data.skip
+     * @param data.limit
+     * @returns ClubsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readClubs(data: ClubsReadClubsData = {}): CancelablePromise<ClubsReadClubsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/clubs/',
+            query: {
+                search: data.search,
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Club
+     * Create new club.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns ClubPublic Successful Response
+     * @throws ApiError
+     */
+    public static createClub(data: ClubsCreateClubData): CancelablePromise<ClubsCreateClubResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/clubs/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Club
+     * Get club by ID.
+     * @param data The data for the request.
+     * @param data.id
+     * @returns ClubPublic Successful Response
+     * @throws ApiError
+     */
+    public static readClub(data: ClubsReadClubData): CancelablePromise<ClubsReadClubResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/clubs/{id}',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Club
+     * Update a club.
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.requestBody
+     * @returns ClubPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateClub(data: ClubsUpdateClubData): CancelablePromise<ClubsUpdateClubResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/clubs/{id}',
+            path: {
+                id: data.id
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Club
+     * Delete a club.
+     * @param data The data for the request.
+     * @param data.id
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteClub(data: ClubsDeleteClubData): CancelablePromise<ClubsDeleteClubResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/clubs/{id}',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Bulk Create Clubs
+     * Create multiple clubs.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static bulkCreateClubs(data: ClubsBulkCreateClubsData): CancelablePromise<ClubsBulkCreateClubsResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/clubs/bulk',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Bulk Delete Clubs
+     * Delete multiple clubs.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static bulkDeleteClubs(data: ClubsBulkDeleteClubsData): CancelablePromise<ClubsBulkDeleteClubsResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/clubs/bulk-delete',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
 
 export class LeaguesService {
     /**
