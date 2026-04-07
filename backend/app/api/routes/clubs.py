@@ -1,5 +1,7 @@
+import logging
 import uuid
 from typing import Any
+from urllib.parse import quote
 import httpx
 import asyncio
 
@@ -20,28 +22,49 @@ from app.models import (
     Message,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/clubs", tags=["clubs"])
+
+# Shared AsyncClient – initialized once, reused across requests
+_http_client: httpx.AsyncClient | None = None
+
+def get_http_client() -> httpx.AsyncClient:
+    global _http_client
+    if _http_client is None or _http_client.is_closed:
+        _http_client = httpx.AsyncClient()
+    return _http_client
+
+# Semaphore to cap concurrent EA API requests
+_ea_semaphore = asyncio.Semaphore(5)
+
+# Hard limit on bulk payload size
+BULK_MAX_CLUBS = 100
 
 async def fetch_ea_id(club_name: str) -> str | None:
     # Remove extra spaces as requested
     cleaned_name = " ".join(club_name.split())
-    url = f"https://proclubs.ea.com/api/nhl/clubs/search?platform=common-gen5&clubName={cleaned_name}"
+    encoded_name = quote(cleaned_name)
+    url = f"https://proclubs.ea.com/api/nhl/clubs/search?platform=common-gen5&clubName={encoded_name}"
     headers = {
         "accept": "application/json",
         "origin": "https://www.ea.com",
         "referer": "https://www.ea.com/",
         "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
     }
-    async with httpx.AsyncClient() as client:
+    async with _ea_semaphore:
         try:
+            client = get_http_client()
             response = await client.get(url, headers=headers, timeout=10.0)
             if response.status_code == 200:
                 data = response.json()
                 if data and isinstance(data, dict):
                     # The response is { "clubId": { ... } }
                     return list(data.keys())[0]
-        except Exception:
-            pass
+        except httpx.RequestError as exc:
+            logger.error("Network error fetching EA ID for %r: %s", club_name, exc)
+        except Exception as exc:
+            logger.error("Unexpected error fetching EA ID for %r: %s", club_name, exc)
     return None
 
 @router.get("/", response_model=ClubsPublic)
@@ -106,6 +129,12 @@ async def bulk_create_clubs(*, session: SessionDep, clubs_in: list[ClubCreate]) 
     """
     Create multiple clubs.
     """
+    if len(clubs_in) > BULK_MAX_CLUBS:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Too many clubs in a single request. Maximum allowed is {BULK_MAX_CLUBS}.",
+        )
+
     async def process_club(club_in: ClubCreate):
         club_in.name = " ".join(club_in.name.split())
         ea_id = await fetch_ea_id(club_in.name)
@@ -113,7 +142,7 @@ async def bulk_create_clubs(*, session: SessionDep, clubs_in: list[ClubCreate]) 
             club_in.ea_id = ea_id
         return club_in
 
-    # Process in parallel with some concurrency limit if needed, but for now just asyncio.gather
+    # Process with bounded concurrency (semaphore already limits EA calls)
     processed_clubs = await asyncio.gather(*[process_club(c) for c in clubs_in])
     
     for club_in in processed_clubs:
@@ -139,10 +168,12 @@ async def update_club(
         raise HTTPException(status_code=404, detail="Club not found")
     
     if club_in.name:
-        club_in.name = " ".join(club_in.name.split())
-        # Re-fetch EA ID if name changed
-        if club_in.name != db_club.name:
-            ea_id = await fetch_ea_id(club_in.name)
+        normalized_new = " ".join(club_in.name.split())
+        normalized_existing = " ".join(db_club.name.split())
+        club_in.name = normalized_new
+        # Re-fetch EA ID only when the normalized name actually changed
+        if normalized_new != normalized_existing:
+            ea_id = await fetch_ea_id(normalized_new)
             if ea_id:
                 club_in.ea_id = ea_id
                 
@@ -164,11 +195,23 @@ def delete_club(session: SessionDep, id: uuid.UUID) -> Message:
 @router.post("/bulk-delete", dependencies=[Depends(get_current_active_superuser)])
 def bulk_delete_clubs(session: SessionDep, ids: list[uuid.UUID] = Body(...)) -> Message:
     """
-    Delete multiple clubs.
+    Delete multiple clubs, reporting which IDs were deleted and which were not found.
     """
+    deleted_ids: list[str] = []
+    not_found_ids: list[str] = []
+
     for id in ids:
         club = session.get(Club, id)
         if club:
             session.delete(club)
+            deleted_ids.append(str(id))
+        else:
+            not_found_ids.append(str(id))
+
     session.commit()
-    return Message(message="Clubs deleted successfully")
+
+    parts = [f"Deleted {len(deleted_ids)} club(s)."]
+    if not_found_ids:
+        parts.append(f"Not found: {', '.join(not_found_ids)}.")
+
+    return Message(message=" ".join(parts))

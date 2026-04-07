@@ -44,7 +44,7 @@ const Clubs = () => {
 
   useEffect(() => {
     setSelectedIds([])
-  }, [])
+  }, [search])
 
   useEffect(() => {
     const observer = new IntersectionObserver(

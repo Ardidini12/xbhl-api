@@ -31,7 +31,7 @@ const Seasons = () => {
 
   useEffect(() => {
     setSelectedIds([])
-  }, [])
+  }, [leagueId, search])
 
   const { data: league, isError: isLeagueError } = useQuery({
     queryKey: ["leagues", leagueId],

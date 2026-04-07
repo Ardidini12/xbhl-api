@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -50,13 +51,23 @@ const EditClub = ({ club, open, onOpenChange }: EditClubProps) => {
     },
   })
 
+  // Reset form whenever the dialog is opened or the club prop changes
+  useEffect(() => {
+    form.reset({
+      name: club.name,
+      logo: club.logo || "",
+      ea_id: club.ea_id || "",
+    })
+  }, [club, form])
+
   const mutation = useMutation({
     mutationFn: (data: ClubUpdate) =>
       ClubsService.updateClub({ id: club.id, requestBody: data }),
     onSuccess: () => {
       showSuccessToast("Club updated successfully")
       onOpenChange(false)
-      queryClient.invalidateQueries({ queryKey: ["clubs"] })
+      // Invalidate ALL club queries (including filtered ones like ["clubs", search])
+      queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] === "clubs" })
     },
     onError: (error) => {
       showErrorToast("Error updating club", error)
@@ -84,7 +95,7 @@ const EditClub = ({ club, open, onOpenChange }: EditClubProps) => {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Club Name</FormLabel>
+                  <FormLabel>Club Name *</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter club name" {...field} />
                   </FormControl>
@@ -97,7 +108,7 @@ const EditClub = ({ club, open, onOpenChange }: EditClubProps) => {
               name="logo"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Logo URL</FormLabel>
+                  <FormLabel>Logo URL (Optional)</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="https://example.com/logo.png"
@@ -113,7 +124,7 @@ const EditClub = ({ club, open, onOpenChange }: EditClubProps) => {
               name="ea_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>EA ID</FormLabel>
+                  <FormLabel>EA ID (Optional)</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="Enter EA ID or leave blank to auto-fetch"

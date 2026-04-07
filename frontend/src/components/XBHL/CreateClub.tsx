@@ -120,7 +120,7 @@ const CreateClub = ({ open, onOpenChange }: CreateClubProps) => {
           <DialogTitle>Add Club</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "single" | "bulk")}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="single">Single Club</TabsTrigger>
             <TabsTrigger value="bulk">Bulk Add</TabsTrigger>
@@ -137,7 +137,7 @@ const CreateClub = ({ open, onOpenChange }: CreateClubProps) => {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Club Name</FormLabel>
+                      <FormLabel>Club Name *</FormLabel>
                       <FormControl>
                         <Input placeholder="Enter club name" {...field} />
                       </FormControl>

@@ -1,4 +1,7 @@
 import uuid
+import pytest
+import respx
+import httpx
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
@@ -6,40 +9,88 @@ from app.core.config import settings
 from app.models import Club, ClubCreate
 from tests.utils.utils import random_lower_string
 
+# ---------------------------------------------------------------------------
+# Deterministic EA API mock
+# ---------------------------------------------------------------------------
+EA_MOCK_RESPONSES = {
+    "Zambroneez": {"8501": {"clubName": "Zambroneez"}},
+    "QCHL3s Canadien MTL": {"220": {"clubName": "QCHL3s Canadien MTL"}},
+}
+
+EA_BASE_URL = "https://proclubs.ea.com/api/nhl/clubs/search"
+
+
+@pytest.fixture()
+def mock_ea_api():
+    """Intercept all EA Pro Clubs search requests and return deterministic data."""
+    with respx.mock(assert_all_called=False) as mock:
+        for club_name, payload in EA_MOCK_RESPONSES.items():
+            from urllib.parse import quote
+            encoded = quote(club_name)
+            mock.get(
+                f"{EA_BASE_URL}",
+                params=None,
+            ).mock(side_effect=_make_ea_handler(payload))
+
+        # Catch-all: return empty object (no EA ID) for any other club
+        mock.get(url__startswith=EA_BASE_URL).mock(
+            return_value=httpx.Response(200, json={})
+        )
+        yield mock
+
+
+def _make_ea_handler(payload):
+    """Return a respx side_effect that checks the clubName param."""
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=payload)
+    return handler
+
+
+# ---------------------------------------------------------------------------
+# Tests
+# ---------------------------------------------------------------------------
 
 def test_create_club(
-    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+    client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:
-    name = "Zambroneez"  # Using one of the provided names to verify EA ID fetch
-    logo = "http://example.com/logo.png"
-    data = {"name": name, "logo": logo}
-    response = client.post(
-        f"{settings.API_V1_STR}/clubs/",
-        headers=superuser_token_headers,
-        json=data,
-    )
+    with respx.mock(assert_all_called=False) as mock:
+        mock.get(url__startswith=EA_BASE_URL).mock(
+            return_value=httpx.Response(200, json={"8501": {"clubName": "Zambroneez"}})
+        )
+        name = "Zambroneez"
+        logo = "http://example.com/logo.png"
+        data = {"name": name, "logo": logo}
+        response = client.post(
+            f"{settings.API_V1_STR}/clubs/",
+            headers=superuser_token_headers,
+            json=data,
+        )
     assert response.status_code == 200
     content = response.json()
     assert content["name"] == name
     assert content["logo"] == logo
-    assert content["ea_id"] == "8501"  # Expected EA ID for Zambroneez
+    assert content["ea_id"] == "8501"
     assert "id" in content
 
 
 def test_create_club_with_big_name(
-    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+    client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:
-    name = "QCHL3s Canadien MTL"
-    data = {"name": name}
-    response = client.post(
-        f"{settings.API_V1_STR}/clubs/",
-        headers=superuser_token_headers,
-        json=data,
-    )
+    with respx.mock(assert_all_called=False) as mock:
+        mock.get(url__startswith=EA_BASE_URL).mock(
+            return_value=httpx.Response(200, json={"220": {"clubName": "QCHL3s Canadien MTL"}})
+        )
+        name = "QCHL3s Canadien MTL"
+        data = {"name": name}
+        response = client.post(
+            f"{settings.API_V1_STR}/clubs/",
+            headers=superuser_token_headers,
+            json=data,
+        )
     assert response.status_code == 200
     content = response.json()
     assert content["name"] == name
-    assert content["ea_id"] == "220"  # Expected EA ID for QCHL3s Canadien MTL
+    assert content["ea_id"] == "220"
 
 
 def test_read_clubs(
@@ -70,13 +121,17 @@ def test_update_club(
     db.commit()
     db.refresh(club)
 
-    new_name = "Zambroneez"
-    data = {"name": new_name}
-    response = client.patch(
-        f"{settings.API_V1_STR}/clubs/{club.id}",
-        headers=superuser_token_headers,
-        json=data,
-    )
+    with respx.mock(assert_all_called=False) as mock:
+        mock.get(url__startswith=EA_BASE_URL).mock(
+            return_value=httpx.Response(200, json={"8501": {"clubName": "Zambroneez"}})
+        )
+        new_name = "Zambroneez"
+        data = {"name": new_name}
+        response = client.patch(
+            f"{settings.API_V1_STR}/clubs/{club.id}",
+            headers=superuser_token_headers,
+            json=data,
+        )
     assert response.status_code == 200
     content = response.json()
     assert content["name"] == new_name
@@ -102,27 +157,34 @@ def test_delete_club(
 
 
 def test_bulk_create_clubs(
-    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+    client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:
-    data = [
-        {"name": "Zambroneez"},
-        {"name": "QCHL3s Canadien MTL"}
-    ]
-    response = client.post(
-        f"{settings.API_V1_STR}/clubs/bulk",
-        headers=superuser_token_headers,
-        json=data,
-    )
+    with respx.mock(assert_all_called=False) as mock:
+        mock.get(url__startswith=EA_BASE_URL).mock(
+            return_value=httpx.Response(200, json={"8501": {"clubName": "Zambroneez"}})
+        )
+        data = [
+            {"name": "Zambroneez"},
+            {"name": "QCHL3s Canadien MTL"}
+        ]
+        response = client.post(
+            f"{settings.API_V1_STR}/clubs/bulk",
+            headers=superuser_token_headers,
+            json=data,
+        )
     assert response.status_code == 200
     content = response.json()
     assert "Successfully created 2 clubs" in content["message"]
-    
-    # Verify they exist in DB with correct EA IDs
+
+    # Verify Zambroneez exists in DB with correct EA ID – search by name, not index
     response = client.get(
         f"{settings.API_V1_STR}/clubs/?search=Zambroneez",
         headers=superuser_token_headers,
     )
-    assert response.json()["data"][0]["ea_id"] == "8501"
+    clubs = response.json()["data"]
+    zambroneez = next((c for c in clubs if c["name"] == "Zambroneez"), None)
+    assert zambroneez is not None, "Zambroneez not found in response"
+    assert zambroneez["ea_id"] == "8501"
 
 
 def test_bulk_delete_clubs(
@@ -144,4 +206,4 @@ def test_bulk_delete_clubs(
     )
     assert response.status_code == 200
     content = response.json()
-    assert content["message"] == "Clubs deleted successfully"
+    assert "Deleted 2 club(s)" in content["message"]

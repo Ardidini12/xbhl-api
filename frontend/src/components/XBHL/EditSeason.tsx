@@ -1,6 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { format } from "date-fns"
 import { useEffect } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
@@ -27,10 +26,10 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
+// start_date is intentionally NOT in this schema – SeasonUpdate does not accept it
 const formSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
   description: z.string().max(255).optional(),
-  start_date: z.string().optional(),
 })
 
 interface EditSeasonProps {
@@ -48,9 +47,6 @@ const EditSeason = ({ season, open, onOpenChange }: EditSeasonProps) => {
     defaultValues: {
       name: season.name,
       description: season.description || "",
-      start_date: season.start_date
-        ? format(new Date(season.start_date), "yyyy-MM-dd'T'HH:mm")
-        : "",
     },
   })
 
@@ -59,9 +55,6 @@ const EditSeason = ({ season, open, onOpenChange }: EditSeasonProps) => {
       form.reset({
         name: season.name,
         description: season.description || "",
-        start_date: season.start_date
-          ? format(new Date(season.start_date), "yyyy-MM-dd'T'HH:mm")
-          : "",
       })
     }
   }, [open, season, form])
@@ -70,12 +63,7 @@ const EditSeason = ({ season, open, onOpenChange }: EditSeasonProps) => {
     mutationFn: (data: z.infer<typeof formSchema>) =>
       SeasonsService.updateSeason({
         id: season.id,
-        requestBody: {
-          ...data,
-          start_date: data.start_date
-            ? new Date(data.start_date).toISOString()
-            : null,
-        } as SeasonUpdate,
+        requestBody: data as SeasonUpdate,
       }),
     onSuccess: () => {
       showSuccessToast("Season updated successfully")
@@ -123,19 +111,6 @@ const EditSeason = ({ season, open, onOpenChange }: EditSeasonProps) => {
                   <FormLabel>Description (Optional)</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter description" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="start_date"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Start Date</FormLabel>
-                  <FormControl>
-                    <Input type="datetime-local" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
