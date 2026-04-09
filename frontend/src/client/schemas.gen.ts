@@ -347,6 +347,89 @@ export const LeaguesPublicSchema = {
     title: 'LeaguesPublic'
 } as const;
 
+export const MatchPublicSchema = {
+    properties: {
+        match_id: {
+            type: 'string',
+            title: 'Match Id'
+        },
+        league_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'League Id'
+        },
+        season_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Season Id'
+        },
+        raw_data: {
+            additionalProperties: true,
+            type: 'object',
+            title: 'Raw Data'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        }
+    },
+    type: 'object',
+    required: ['match_id', 'league_id', 'season_id'],
+    title: 'MatchPublic'
+} as const;
+
+export const MatchUpdateSchema = {
+    properties: {
+        raw_data: {
+            additionalProperties: true,
+            type: 'object',
+            title: 'Raw Data'
+        }
+    },
+    type: 'object',
+    required: ['raw_data'],
+    title: 'MatchUpdate'
+} as const;
+
+export const MatchesPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/MatchPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'MatchesPublic'
+} as const;
+
 export const MessageSchema = {
     properties: {
         message: {
@@ -400,6 +483,199 @@ export const PrivateUserCreateSchema = {
     type: 'object',
     required: ['email', 'password', 'full_name'],
     title: 'PrivateUserCreate'
+} as const;
+
+export const SchedulerCreateSchema = {
+    properties: {
+        league_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'League Id'
+        },
+        season_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Season Id'
+        },
+        days: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Days'
+        },
+        start_time: {
+            type: 'string',
+            format: 'time',
+            title: 'Start Time'
+        },
+        end_time: {
+            type: 'string',
+            format: 'time',
+            title: 'End Time'
+        },
+        interval_minutes: {
+            type: 'integer',
+            title: 'Interval Minutes',
+            default: 15
+        },
+        is_enabled: {
+            type: 'boolean',
+            title: 'Is Enabled',
+            default: true
+        }
+    },
+    type: 'object',
+    required: ['league_id', 'season_id', 'start_time', 'end_time'],
+    title: 'SchedulerCreate'
+} as const;
+
+export const SchedulerPublicSchema = {
+    properties: {
+        league_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'League Id'
+        },
+        season_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Season Id'
+        },
+        days: {
+            items: {
+                type: 'string'
+            },
+            type: 'array',
+            title: 'Days'
+        },
+        start_time: {
+            type: 'string',
+            format: 'time',
+            title: 'Start Time'
+        },
+        end_time: {
+            type: 'string',
+            format: 'time',
+            title: 'End Time'
+        },
+        interval_minutes: {
+            type: 'integer',
+            title: 'Interval Minutes',
+            default: 15
+        },
+        is_enabled: {
+            type: 'boolean',
+            title: 'Is Enabled',
+            default: true
+        },
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        last_run_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Last Run At'
+        }
+    },
+    type: 'object',
+    required: ['league_id', 'season_id', 'start_time', 'end_time', 'id'],
+    title: 'SchedulerPublic'
+} as const;
+
+export const SchedulerUpdateSchema = {
+    properties: {
+        days: {
+            anyOf: [
+                {
+                    items: {
+                        type: 'string'
+                    },
+                    type: 'array'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Days'
+        },
+        start_time: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Start Time'
+        },
+        end_time: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'End Time'
+        },
+        interval_minutes: {
+            anyOf: [
+                {
+                    type: 'integer'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Interval Minutes'
+        },
+        is_enabled: {
+            anyOf: [
+                {
+                    type: 'boolean'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Is Enabled'
+        }
+    },
+    type: 'object',
+    title: 'SchedulerUpdate'
+} as const;
+
+export const SchedulersPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/SchedulerPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'SchedulersPublic'
 } as const;
 
 export const SeasonCreateSchema = {

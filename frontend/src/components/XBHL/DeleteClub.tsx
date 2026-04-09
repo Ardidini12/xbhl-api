@@ -32,7 +32,9 @@ const DeleteClub = ({
     mutationFn: (id: string) => ClubsService.deleteClub({ id }),
     onSuccess: () => {
       showSuccessToast("Club deleted successfully")
-      queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] === "clubs" })
+      queryClient.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === "clubs",
+      })
       onSuccess?.()
       onOpenChange(false)
     },
@@ -46,7 +48,9 @@ const DeleteClub = ({
       ClubsService.bulkDeleteClubs({ requestBody: ids }),
     onSuccess: () => {
       showSuccessToast("Clubs deleted successfully")
-      queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] === "clubs" })
+      queryClient.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === "clubs",
+      })
       onSuccess?.()
       onOpenChange(false)
     },
@@ -78,14 +82,18 @@ const DeleteClub = ({
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={deleteSingleMutation.isPending || deleteBulkMutation.isPending}
+            disabled={
+              deleteSingleMutation.isPending || deleteBulkMutation.isPending
+            }
           >
             Cancel
           </Button>
           <Button
             onClick={handleDelete}
             variant="destructive"
-            disabled={deleteSingleMutation.isPending || deleteBulkMutation.isPending}
+            disabled={
+              deleteSingleMutation.isPending || deleteBulkMutation.isPending
+            }
           >
             {deleteSingleMutation.isPending || deleteBulkMutation.isPending
               ? "Deleting..."

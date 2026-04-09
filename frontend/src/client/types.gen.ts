@@ -60,6 +60,28 @@ export type LeagueUpdate = {
     description?: (string | null);
 };
 
+export type MatchesPublic = {
+    data: Array<MatchPublic>;
+    count: number;
+};
+
+export type MatchPublic = {
+    match_id: string;
+    league_id: string;
+    season_id: string;
+    raw_data?: {
+        [key: string]: unknown;
+    };
+    created_at?: (string | null);
+    updated_at?: (string | null);
+};
+
+export type MatchUpdate = {
+    raw_data: {
+        [key: string]: unknown;
+    };
+};
+
 export type Message = {
     message: string;
 };
@@ -74,6 +96,41 @@ export type PrivateUserCreate = {
     password: string;
     full_name: string;
     is_verified?: boolean;
+};
+
+export type SchedulerCreate = {
+    league_id: string;
+    season_id: string;
+    days?: Array<(string)>;
+    start_time: string;
+    end_time: string;
+    interval_minutes?: number;
+    is_enabled?: boolean;
+};
+
+export type SchedulerPublic = {
+    league_id: string;
+    season_id: string;
+    days?: Array<(string)>;
+    start_time: string;
+    end_time: string;
+    interval_minutes?: number;
+    is_enabled?: boolean;
+    id: string;
+    last_run_at?: (string | null);
+};
+
+export type SchedulersPublic = {
+    data: Array<SchedulerPublic>;
+    count: number;
+};
+
+export type SchedulerUpdate = {
+    days?: (Array<(string)> | null);
+    start_time?: (string | null);
+    end_time?: (string | null);
+    interval_minutes?: (number | null);
+    is_enabled?: (boolean | null);
 };
 
 export type SeasonCreate = {
@@ -268,11 +325,76 @@ export type LoginRecoverPasswordHtmlContentData = {
 
 export type LoginRecoverPasswordHtmlContentResponse = (string);
 
+export type MatchesReadMatchesData = {
+    clubName?: (string | null);
+    limit?: number;
+    skip?: number;
+};
+
+export type MatchesReadMatchesResponse = (MatchesPublic);
+
+export type MatchesUpdateMatchData = {
+    matchId: string;
+    requestBody: MatchUpdate;
+};
+
+export type MatchesUpdateMatchResponse = (MatchPublic);
+
+export type MatchesDeleteMatchData = {
+    matchId: string;
+};
+
+export type MatchesDeleteMatchResponse = (Message);
+
+export type MatchesBulkDeleteMatchesData = {
+    requestBody: Array<(string)>;
+};
+
+export type MatchesBulkDeleteMatchesResponse = (Message);
+
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;
 };
 
 export type PrivateCreateUserResponse = (UserPublic);
+
+export type SchedulersReadSchedulersData = {
+    limit?: number;
+    skip?: number;
+};
+
+export type SchedulersReadSchedulersResponse = (SchedulersPublic);
+
+export type SchedulersCreateSchedulerData = {
+    requestBody: SchedulerCreate;
+};
+
+export type SchedulersCreateSchedulerResponse = (SchedulerPublic);
+
+export type SchedulersUpdateSchedulerData = {
+    id: string;
+    requestBody: SchedulerUpdate;
+};
+
+export type SchedulersUpdateSchedulerResponse = (SchedulerPublic);
+
+export type SchedulersDeleteSchedulerData = {
+    id: string;
+};
+
+export type SchedulersDeleteSchedulerResponse = (Message);
+
+export type SchedulersStartSchedulerData = {
+    id: string;
+};
+
+export type SchedulersStartSchedulerResponse = (SchedulerPublic);
+
+export type SchedulersStopSchedulerData = {
+    id: string;
+};
+
+export type SchedulersStopSchedulerResponse = (SchedulerPublic);
 
 export type SeasonsReadSeasonsData = {
     leagueId?: (string | null);

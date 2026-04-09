@@ -21,6 +21,8 @@ import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutXbhlIndexRouteImport } from './routes/_layout/xbhl/index'
 import { Route as LayoutAdminIndexRouteImport } from './routes/_layout/admin/index'
 import { Route as LayoutXbhlLeagueIdRouteImport } from './routes/_layout/xbhl/$leagueId'
+import { Route as LayoutAdminSchedulersRouteImport } from './routes/_layout/admin/schedulers'
+import { Route as LayoutAdminMatchesRouteImport } from './routes/_layout/admin/matches'
 import { Route as LayoutAdminClubsRouteImport } from './routes/_layout/admin/clubs'
 
 const SignupRoute = SignupRouteImport.update({
@@ -82,6 +84,16 @@ const LayoutXbhlLeagueIdRoute = LayoutXbhlLeagueIdRouteImport.update({
   path: '/$leagueId',
   getParentRoute: () => LayoutXbhlRoute,
 } as any)
+const LayoutAdminSchedulersRoute = LayoutAdminSchedulersRouteImport.update({
+  id: '/schedulers',
+  path: '/schedulers',
+  getParentRoute: () => LayoutAdminRoute,
+} as any)
+const LayoutAdminMatchesRoute = LayoutAdminMatchesRouteImport.update({
+  id: '/matches',
+  path: '/matches',
+  getParentRoute: () => LayoutAdminRoute,
+} as any)
 const LayoutAdminClubsRoute = LayoutAdminClubsRouteImport.update({
   id: '/clubs',
   path: '/clubs',
@@ -98,6 +110,8 @@ export interface FileRoutesByFullPath {
   '/settings': typeof LayoutSettingsRoute
   '/xbhl': typeof LayoutXbhlRouteWithChildren
   '/admin/clubs': typeof LayoutAdminClubsRoute
+  '/admin/matches': typeof LayoutAdminMatchesRoute
+  '/admin/schedulers': typeof LayoutAdminSchedulersRoute
   '/xbhl/$leagueId': typeof LayoutXbhlLeagueIdRoute
   '/admin/': typeof LayoutAdminIndexRoute
   '/xbhl/': typeof LayoutXbhlIndexRoute
@@ -110,6 +124,8 @@ export interface FileRoutesByTo {
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
   '/admin/clubs': typeof LayoutAdminClubsRoute
+  '/admin/matches': typeof LayoutAdminMatchesRoute
+  '/admin/schedulers': typeof LayoutAdminSchedulersRoute
   '/xbhl/$leagueId': typeof LayoutXbhlLeagueIdRoute
   '/admin': typeof LayoutAdminIndexRoute
   '/xbhl': typeof LayoutXbhlIndexRoute
@@ -126,6 +142,8 @@ export interface FileRoutesById {
   '/_layout/xbhl': typeof LayoutXbhlRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
   '/_layout/admin/clubs': typeof LayoutAdminClubsRoute
+  '/_layout/admin/matches': typeof LayoutAdminMatchesRoute
+  '/_layout/admin/schedulers': typeof LayoutAdminSchedulersRoute
   '/_layout/xbhl/$leagueId': typeof LayoutXbhlLeagueIdRoute
   '/_layout/admin/': typeof LayoutAdminIndexRoute
   '/_layout/xbhl/': typeof LayoutXbhlIndexRoute
@@ -142,6 +160,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/xbhl'
     | '/admin/clubs'
+    | '/admin/matches'
+    | '/admin/schedulers'
     | '/xbhl/$leagueId'
     | '/admin/'
     | '/xbhl/'
@@ -154,6 +174,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/'
     | '/admin/clubs'
+    | '/admin/matches'
+    | '/admin/schedulers'
     | '/xbhl/$leagueId'
     | '/admin'
     | '/xbhl'
@@ -169,6 +191,8 @@ export interface FileRouteTypes {
     | '/_layout/xbhl'
     | '/_layout/'
     | '/_layout/admin/clubs'
+    | '/_layout/admin/matches'
+    | '/_layout/admin/schedulers'
     | '/_layout/xbhl/$leagueId'
     | '/_layout/admin/'
     | '/_layout/xbhl/'
@@ -268,6 +292,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutXbhlLeagueIdRouteImport
       parentRoute: typeof LayoutXbhlRoute
     }
+    '/_layout/admin/schedulers': {
+      id: '/_layout/admin/schedulers'
+      path: '/schedulers'
+      fullPath: '/admin/schedulers'
+      preLoaderRoute: typeof LayoutAdminSchedulersRouteImport
+      parentRoute: typeof LayoutAdminRoute
+    }
+    '/_layout/admin/matches': {
+      id: '/_layout/admin/matches'
+      path: '/matches'
+      fullPath: '/admin/matches'
+      preLoaderRoute: typeof LayoutAdminMatchesRouteImport
+      parentRoute: typeof LayoutAdminRoute
+    }
     '/_layout/admin/clubs': {
       id: '/_layout/admin/clubs'
       path: '/clubs'
@@ -280,11 +318,15 @@ declare module '@tanstack/react-router' {
 
 interface LayoutAdminRouteChildren {
   LayoutAdminClubsRoute: typeof LayoutAdminClubsRoute
+  LayoutAdminMatchesRoute: typeof LayoutAdminMatchesRoute
+  LayoutAdminSchedulersRoute: typeof LayoutAdminSchedulersRoute
   LayoutAdminIndexRoute: typeof LayoutAdminIndexRoute
 }
 
 const LayoutAdminRouteChildren: LayoutAdminRouteChildren = {
   LayoutAdminClubsRoute: LayoutAdminClubsRoute,
+  LayoutAdminMatchesRoute: LayoutAdminMatchesRoute,
+  LayoutAdminSchedulersRoute: LayoutAdminSchedulersRoute,
   LayoutAdminIndexRoute: LayoutAdminIndexRoute,
 }
 

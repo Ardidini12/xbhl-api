@@ -44,7 +44,7 @@ const Leagues = () => {
 
   useEffect(() => {
     setSelectedIds([])
-  }, [search])
+  }, [])
 
   useEffect(() => {
     const observer = new IntersectionObserver(

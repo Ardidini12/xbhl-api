@@ -1,20 +1,19 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { Search } from "lucide-react"
-import { useEffect, useMemo, useRef, useState } from "react"
-import { Suspense } from "react"
+import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 
 import { type UserPublic, UsersService } from "@/client"
 import AddUser from "@/components/Admin/AddUser"
 import { columns, type UserTableData } from "@/components/Admin/columns"
 import { DataTable } from "@/components/Common/DataTable"
-import { Input } from "@/components/ui/input"
 import PendingUsers from "@/components/Pending/PendingUsers"
+import { Input } from "@/components/ui/input"
 import useAuth from "@/hooks/useAuth"
 
-export const Route = createFileRoute("/_layout/admin/")(({
+export const Route = createFileRoute("/_layout/admin/")({
   component: Admin,
-} as any))
+} as any)
 
 const PAGE_SIZE = 100
 
@@ -43,7 +42,7 @@ function UsersTableContent() {
   const [, setReset] = useState(0)
   useEffect(() => {
     setReset((n) => n + 1)
-  }, [search])
+  }, [])
 
   useEffect(() => {
     const observer = new IntersectionObserver(
