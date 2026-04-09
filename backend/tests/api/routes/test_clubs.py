@@ -1,7 +1,6 @@
-import uuid
+import httpx
 import pytest
 import respx
-import httpx
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
@@ -24,9 +23,7 @@ EA_BASE_URL = "https://proclubs.ea.com/api/nhl/clubs/search"
 def mock_ea_api():
     """Intercept all EA Pro Clubs search requests and return deterministic data."""
     with respx.mock(assert_all_called=False) as mock:
-        for club_name, payload in EA_MOCK_RESPONSES.items():
-            from urllib.parse import quote
-            encoded = quote(club_name)
+        for _club_name, payload in EA_MOCK_RESPONSES.items():
             mock.get(
                 f"{EA_BASE_URL}",
                 params=None,
@@ -41,7 +38,7 @@ def mock_ea_api():
 
 def _make_ea_handler(payload):
     """Return a respx side_effect that checks the clubName param."""
-    def handler(request: httpx.Request) -> httpx.Response:
+    def handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json=payload)
     return handler
 

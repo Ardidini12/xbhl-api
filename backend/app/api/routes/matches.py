@@ -1,16 +1,15 @@
-import uuid
-from typing import Any
 from datetime import datetime, timezone
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import cast, String
-from sqlmodel import Session, select, func
+from sqlalchemy import String, cast
+from sqlmodel import Session, func, select
 
 from app.api.deps import get_current_active_superuser, get_db
 from app.models import (
     Match,
-    MatchPublic,
     MatchesPublic,
+    MatchPublic,
     MatchUpdate,
     Message,
 )
@@ -23,7 +22,7 @@ def read_matches(
     skip: int = 0,
     limit: int = 100,
     club_name: str | None = None,
-    current_user: Any = Depends(get_current_active_superuser),
+    _current_user: Any = Depends(get_current_active_superuser),
 ) -> Any:
     """
     Retrieve matches. Filter by club name (case-insensitive) in raw_data.
@@ -31,10 +30,10 @@ def read_matches(
     statement = select(Match)
     if club_name:
         statement = statement.where(cast(Match.raw_data, String).ilike(f"%{club_name}%"))
-    
+
     count_statement = select(func.count()).select_from(statement.subquery())
     count = session.exec(count_statement).one()
-    
+
     statement = statement.order_by(Match.created_at.desc()).offset(skip).limit(limit)
     matches = session.exec(statement).all()
 
@@ -46,7 +45,7 @@ def update_match(
     session: Session = Depends(get_db),
     match_id: str,
     match_in: MatchUpdate,
-    current_user: Any = Depends(get_current_active_superuser),
+    _current_user: Any = Depends(get_current_active_superuser),
 ) -> Any:
     """
     Update match raw data.
@@ -66,7 +65,7 @@ def delete_match(
     *,
     session: Session = Depends(get_db),
     match_id: str,
-    current_user: Any = Depends(get_current_active_superuser),
+    _current_user: Any = Depends(get_current_active_superuser),
 ) -> Message:
     """
     Delete a match.
@@ -83,7 +82,7 @@ def bulk_delete_matches(
     *,
     session: Session = Depends(get_db),
     match_ids: list[str],
-    current_user: Any = Depends(get_current_active_superuser),
+    _current_user: Any = Depends(get_current_active_superuser),
 ) -> Message:
     """
     Bulk delete matches.

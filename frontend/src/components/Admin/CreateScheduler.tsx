@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
+import { useEffect } from "react"
 import * as z from "zod"
 import { type SchedulerCreate, SchedulersService, LeaguesService, SeasonsService } from "@/client"
 import { Button } from "@/components/ui/button"
@@ -81,6 +82,11 @@ const CreateScheduler = ({ open, onOpenChange }: CreateSchedulerProps) => {
     queryFn: () => SeasonsService.readSeasons({ leagueId: leagueId, limit: 100 }),
     enabled: !!leagueId,
   })
+
+  // Clear season_id when league_id changes
+  useEffect(() => {
+    form.setValue("season_id", "")
+  }, [leagueId, form])
 
   const mutation = useMutation({
     mutationFn: (data: FormValues) => {

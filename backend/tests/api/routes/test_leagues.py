@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from app.core.config import settings
 from app.models import League, LeagueCreate, Season, SeasonCreate
@@ -7,7 +7,7 @@ from tests.utils.utils import random_lower_string
 
 
 def test_create_league(
-    client: TestClient, superuser_token_headers: dict[str, str], db: Session
+    client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:
     name = random_lower_string()
     description = random_lower_string()

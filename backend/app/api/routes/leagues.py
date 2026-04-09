@@ -1,12 +1,11 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlmodel import col, func, select
 
 from app import crud
 from app.api.deps import (
-    CurrentUser,
     SessionDep,
     get_current_active_superuser,
 )
@@ -14,8 +13,8 @@ from app.models import (
     League,
     LeagueCreate,
     LeaguePublic,
-    LeagueUpdate,
     LeaguesPublic,
+    LeagueUpdate,
     Message,
 )
 
@@ -39,11 +38,11 @@ def read_leagues(
 
     count_statement = select(func.count()).select_from(statement.subquery())
     count = session.exec(count_statement).one()
-    
+
     max_limit = 100
     limit = min(max(1, limit), max_limit)
     skip = max(0, skip)
-    
+
     statement = statement.order_by(League.id).offset(skip).limit(limit)
     leagues = session.exec(statement).all()
 

@@ -1,8 +1,10 @@
-import httpx
-from datetime import datetime, timezone
-from sqlmodel import Session
-from app.models import Season, Match, Scheduler
 import logging
+from datetime import datetime, timezone
+
+import httpx
+from sqlmodel import Session
+
+from app.models import Match, Scheduler, Season
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +24,11 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> None:
     if not season:
         logger.error(f"Season {scheduler.season_id} not found for scheduler {scheduler.id}")
         return
-    
+
     # Use relationship to get clubs
     clubs = season.clubs
     ea_club_ids = [club.ea_id for club in clubs if club.ea_id]
-    
+
     if not ea_club_ids:
         logger.info(f"No clubs with EA ID found for season {scheduler.season_id}")
         return
@@ -42,16 +44,17 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> None:
                 response = await client.get(EA_API_URL, headers=HEADERS, params=params)
                 response.raise_for_status()
                 matches_data = response.json()
-                
+
                 if not isinstance(matches_data, list):
                     logger.error(f"Unexpected response format from EA API for club {ea_id}")
                     continue
 
                 for match_data in matches_data:
-                    match_id = str(match_data.get('matchId'))
-                    if not match_id:
+                    raw_id = match_data.get('matchId')
+                    if raw_id is None or raw_id == '':
                         continue
-                    
+                    match_id = str(raw_id)
+
                     # Check if match already exists
                     existing_match = session.get(Match, match_id)
                     if not existing_match:
@@ -70,9 +73,10 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> None:
 
                 session.commit()
             except Exception as e:
+                session.rollback()
                 logger.error(f"Error fetching data for club {ea_id}: {e}")
                 continue
-                
+
     scheduler.last_run_at = datetime.now(timezone.utc)
     session.add(scheduler)
     session.commit()

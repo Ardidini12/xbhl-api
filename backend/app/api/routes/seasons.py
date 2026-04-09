@@ -2,13 +2,12 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Body
-from sqlalchemy import cast, String
+from fastapi import APIRouter, Body, Depends, HTTPException
+from sqlalchemy import String, cast
 from sqlmodel import col, func, select
 
 from app import crud
 from app.api.deps import (
-    CurrentUser,
     SessionDep,
     get_current_active_superuser,
 )
@@ -17,8 +16,8 @@ from app.models import (
     Season,
     SeasonCreate,
     SeasonPublic,
-    SeasonUpdate,
     SeasonsPublic,
+    SeasonUpdate,
 )
 
 router = APIRouter(prefix="/seasons", tags=["seasons"])
@@ -38,7 +37,7 @@ def read_seasons(
     statement = select(Season)
     if league_id:
         statement = statement.where(Season.league_id == league_id)
-    
+
     if search:
         search_filter = f"%{search}%"
         statement = statement.where(
@@ -50,7 +49,7 @@ def read_seasons(
 
     count_statement = select(func.count()).select_from(statement.subquery())
     count = session.exec(count_statement).one()
-    
+
     statement = statement.offset(skip).limit(limit)
     seasons = session.exec(statement).all()
 

@@ -1,18 +1,23 @@
-import sentry_sdk
 from contextlib import asynccontextmanager
+
+import sentry_sdk
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.main import api_router
 from app.core.config import settings
-from app.core.scheduler import start_all_jobs
+from app.core.scheduler import async_scheduler, start_all_jobs
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    start_all_jobs()
-    yield
+async def lifespan(_app: FastAPI):
+    try:
+        start_all_jobs()
+        yield
+    finally:
+        if async_scheduler.running:
+            async_scheduler.shutdown(wait=False)
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:

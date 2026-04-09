@@ -33,8 +33,19 @@ const Schedulers = () => {
     })
 
   const allSchedulers = useMemo(() => {
-    return data?.pages.flatMap((page) => page.data) ?? []
-  }, [data])
+    const schedulers = data?.pages.flatMap((page) => page.data) ?? []
+    if (!search) return schedulers
+
+    const searchLower = search.toLowerCase()
+    return schedulers.filter((scheduler) => {
+      const daysStr = ((scheduler.days as string[]) || []).join(' ').toLowerCase()
+      return (
+        scheduler.league_id.toLowerCase().includes(searchLower) ||
+        scheduler.season_id.toLowerCase().includes(searchLower) ||
+        daysStr.includes(searchLower)
+      )
+    })
+  }, [data, search])
 
   const totalSchedulers = data?.pages[0]?.count ?? 0
 
