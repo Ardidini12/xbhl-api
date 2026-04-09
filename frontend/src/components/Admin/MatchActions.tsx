@@ -1,7 +1,7 @@
-import { Edit, MoreVertical, Trash } from "lucide-react"
+import { MoreVertical, Trash } from "lucide-react"
 import { useState } from "react"
 
-import type { ClubPublic } from "@/client"
+import { type MatchPublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -9,34 +9,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import DeleteClub from "./DeleteClub"
-import EditClub from "./EditClub"
+import DeleteMatch from "./DeleteMatch"
 
-interface ClubActionsProps {
-  club: ClubPublic
+interface MatchActionsProps {
+  match: MatchPublic
 }
 
-const ClubActions = ({ club }: ClubActionsProps) => {
-  const [editOpen, setEditOpen] = useState(false)
+const MatchActions = ({ match }: MatchActionsProps) => {
   const [deleteOpen, setDeleteOpen] = useState(false)
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-8 p-0">
+          <Button variant="ghost" size="icon">
             <MoreVertical className="size-4" />
-            <span className="sr-only">Open menu</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setEditOpen(true)}>
-            <Edit className="mr-2 size-4" />
-            Edit
-          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setDeleteOpen(true)}
-            className="text-destructive focus:text-destructive"
+            className="text-destructive"
           >
             <Trash className="mr-2 size-4" />
             Delete
@@ -44,9 +37,8 @@ const ClubActions = ({ club }: ClubActionsProps) => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <EditClub club={club} open={editOpen} onOpenChange={setEditOpen} />
-      <DeleteClub
-        ids={[club.id]}
+      <DeleteMatch
+        id={match.match_id}
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
       />
@@ -54,4 +46,4 @@ const ClubActions = ({ club }: ClubActionsProps) => {
   )
 }
 
-export default ClubActions
+export default MatchActions

@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { ClubsReadClubsData, ClubsReadClubsResponse, ClubsCreateClubData, ClubsCreateClubResponse, ClubsReadClubData, ClubsReadClubResponse, ClubsUpdateClubData, ClubsUpdateClubResponse, ClubsDeleteClubData, ClubsDeleteClubResponse, ClubsBulkCreateClubsData, ClubsBulkCreateClubsResponse, ClubsBulkDeleteClubsData, ClubsBulkDeleteClubsResponse, LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueData, LeaguesReadLeagueResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse, LeaguesBulkDeleteLeaguesData, LeaguesBulkDeleteLeaguesResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, PrivateCreateUserData, PrivateCreateUserResponse, SeasonsReadSeasonsData, SeasonsReadSeasonsResponse, SeasonsCreateSeasonData, SeasonsCreateSeasonResponse, SeasonsUpdateSeasonData, SeasonsUpdateSeasonResponse, SeasonsDeleteSeasonData, SeasonsDeleteSeasonResponse, SeasonsEndSeasonData, SeasonsEndSeasonResponse, SeasonsBulkDeleteSeasonsData, SeasonsBulkDeleteSeasonsResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { ClubsReadClubsData, ClubsReadClubsResponse, ClubsCreateClubData, ClubsCreateClubResponse, ClubsReadClubData, ClubsReadClubResponse, ClubsUpdateClubData, ClubsUpdateClubResponse, ClubsDeleteClubData, ClubsDeleteClubResponse, ClubsBulkCreateClubsData, ClubsBulkCreateClubsResponse, ClubsBulkDeleteClubsData, ClubsBulkDeleteClubsResponse, LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueData, LeaguesReadLeagueResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse, LeaguesBulkDeleteLeaguesData, LeaguesBulkDeleteLeaguesResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, MatchesReadMatchesData, MatchesReadMatchesResponse, MatchesUpdateMatchData, MatchesUpdateMatchResponse, MatchesDeleteMatchData, MatchesDeleteMatchResponse, MatchesBulkDeleteMatchesData, MatchesBulkDeleteMatchesResponse, PrivateCreateUserData, PrivateCreateUserResponse, SchedulersReadSchedulersData, SchedulersReadSchedulersResponse, SchedulersCreateSchedulerData, SchedulersCreateSchedulerResponse, SchedulersUpdateSchedulerData, SchedulersUpdateSchedulerResponse, SchedulersDeleteSchedulerData, SchedulersDeleteSchedulerResponse, SchedulersStartSchedulerData, SchedulersStartSchedulerResponse, SchedulersStopSchedulerData, SchedulersStopSchedulerResponse, SeasonsReadSeasonsData, SeasonsReadSeasonsResponse, SeasonsCreateSeasonData, SeasonsCreateSeasonResponse, SeasonsUpdateSeasonData, SeasonsUpdateSeasonResponse, SeasonsDeleteSeasonData, SeasonsDeleteSeasonResponse, SeasonsEndSeasonData, SeasonsEndSeasonResponse, SeasonsBulkDeleteSeasonsData, SeasonsBulkDeleteSeasonsResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class ClubsService {
     /**
@@ -139,7 +139,7 @@ export class ClubsService {
     
     /**
      * Bulk Delete Clubs
-     * Delete multiple clubs.
+     * Delete multiple clubs, reporting which IDs were deleted and which were not found.
      * @param data The data for the request.
      * @param data.requestBody
      * @returns Message Successful Response
@@ -388,6 +388,98 @@ export class LoginService {
     }
 }
 
+export class MatchesService {
+    /**
+     * Read Matches
+     * Retrieve matches. Filter by club name (case-insensitive) in raw_data.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @param data.clubName
+     * @returns MatchesPublic Successful Response
+     * @throws ApiError
+     */
+    public static readMatches(data: MatchesReadMatchesData = {}): CancelablePromise<MatchesReadMatchesResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/matches/',
+            query: {
+                skip: data.skip,
+                limit: data.limit,
+                club_name: data.clubName
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Match
+     * Update match raw data.
+     * @param data The data for the request.
+     * @param data.matchId
+     * @param data.requestBody
+     * @returns MatchPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateMatch(data: MatchesUpdateMatchData): CancelablePromise<MatchesUpdateMatchResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/matches/{match_id}',
+            path: {
+                match_id: data.matchId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Match
+     * Delete a match.
+     * @param data The data for the request.
+     * @param data.matchId
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteMatch(data: MatchesDeleteMatchData): CancelablePromise<MatchesDeleteMatchResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/matches/{match_id}',
+            path: {
+                match_id: data.matchId
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Bulk Delete Matches
+     * Bulk delete matches.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static bulkDeleteMatches(data: MatchesBulkDeleteMatchesData): CancelablePromise<MatchesBulkDeleteMatchesResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/matches/bulk-delete',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
 export class PrivateService {
     /**
      * Create User
@@ -403,6 +495,138 @@ export class PrivateService {
             url: '/api/v1/private/users/',
             body: data.requestBody,
             mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+}
+
+export class SchedulersService {
+    /**
+     * Read Schedulers
+     * Retrieve schedulers.
+     * @param data The data for the request.
+     * @param data.skip
+     * @param data.limit
+     * @returns SchedulersPublic Successful Response
+     * @throws ApiError
+     */
+    public static readSchedulers(data: SchedulersReadSchedulersData = {}): CancelablePromise<SchedulersReadSchedulersResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/schedulers/',
+            query: {
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Create Scheduler
+     * Create new scheduler.
+     * @param data The data for the request.
+     * @param data.requestBody
+     * @returns SchedulerPublic Successful Response
+     * @throws ApiError
+     */
+    public static createScheduler(data: SchedulersCreateSchedulerData): CancelablePromise<SchedulersCreateSchedulerResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/schedulers/',
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Scheduler
+     * Update a scheduler.
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.requestBody
+     * @returns SchedulerPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateScheduler(data: SchedulersUpdateSchedulerData): CancelablePromise<SchedulersUpdateSchedulerResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/schedulers/{id}',
+            path: {
+                id: data.id
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Delete Scheduler
+     * Delete a scheduler.
+     * @param data The data for the request.
+     * @param data.id
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static deleteScheduler(data: SchedulersDeleteSchedulerData): CancelablePromise<SchedulersDeleteSchedulerResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/schedulers/{id}',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Start Scheduler
+     * Start (enable) a scheduler.
+     * @param data The data for the request.
+     * @param data.id
+     * @returns SchedulerPublic Successful Response
+     * @throws ApiError
+     */
+    public static startScheduler(data: SchedulersStartSchedulerData): CancelablePromise<SchedulersStartSchedulerResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/schedulers/{id}/start',
+            path: {
+                id: data.id
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Stop Scheduler
+     * Stop (disable) a scheduler.
+     * @param data The data for the request.
+     * @param data.id
+     * @returns SchedulerPublic Successful Response
+     * @throws ApiError
+     */
+    public static stopScheduler(data: SchedulersStopSchedulerData): CancelablePromise<SchedulersStopSchedulerResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/schedulers/{id}/stop',
+            path: {
+                id: data.id
+            },
             errors: {
                 422: 'Validation Error'
             }

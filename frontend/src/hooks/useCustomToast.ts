@@ -8,7 +8,10 @@ const useCustomToast = () => {
   }
 
   const showErrorToast = (description: string, error?: any) => {
-    const errorDetail = error?.message || error?.detail || (typeof error === 'string' ? error : undefined)
+    const errorDetail =
+      error?.message ||
+      error?.detail ||
+      (typeof error === "string" ? error : undefined)
     toast.error(description, {
       description: errorDetail,
     })

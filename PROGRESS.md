@@ -71,3 +71,23 @@ This file tracks the features implemented, architectural decisions made, and the
 - Refactored admin routing to support nested `/admin/clubs` path.
 - Applied database migrations for the new `Club` model and relationship links.
 - Verified all backend tests pass, including EA ID extraction and CRUD operations.
+
+### [Feature] Admin Scheduler & Match Management System - 2026-04-09
+- Implemented background task system using `APScheduler` to pull NHL game data from EA Pro Clubs API.
+- Added `Scheduler` and `Match` data models:
+    - `Scheduler`: Stores league/season targets, days of week, start/end times, and intervals.
+    - `Match`: Stores raw JSON data from EA API with `matchId` primary key for automatic deduplication.
+- Developed `ea_api` service for automated data pulling:
+    - Authenticated requests using browser headers to bypass protection.
+    - Deduplication logic to prevent redundant storage.
+- Created Administrative Schedulers Dashboard:
+    - Real-time status tracking: 🟢 Running (inside window), 🟡 Idle (outside window), 🔴 Stopped.
+    - Dynamic job management (Start/Stop/Edit updates background tasks immediately).
+    - Infinite scroll and league/season filtering.
+- Created Administrative Matches Dashboard:
+    - List view with Match ID, Club vs Club display, and EST timestamps.
+    - **Expandable JSON Editor**: Allows admins to modify raw match data directly in the UI.
+    - Support for bulk deletion and case-insensitive club name search.
+- Configured FastAPI lifespan to initialize and resume background jobs on server startup.
+- Applied database migrations for `scheduler` and `match` tables.
+- Regenerated frontend API client to support new scheduler and match services.

@@ -1,8 +1,8 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, time, timezone
 
 from pydantic import EmailStr
-from sqlalchemy import DateTime
+from sqlalchemy import JSON, DateTime, UniqueConstraint
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -223,3 +223,89 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+# Scheduler models
+class SchedulerBase(SQLModel):
+    league_id: uuid.UUID = Field(foreign_key="league.id", ondelete="CASCADE", index=True)
+    season_id: uuid.UUID = Field(foreign_key="season.id", ondelete="CASCADE", index=True)
+    days: list[str] = Field(default_factory=list, sa_type=JSON)  # type: ignore
+    start_time: time
+    end_time: time
+    interval_minutes: int = Field(default=15)
+    is_enabled: bool = Field(default=True)
+
+
+# Properties to receive on scheduler creation
+class SchedulerCreate(SchedulerBase):
+    pass
+
+
+# Properties to receive on scheduler update
+class SchedulerUpdate(SQLModel):
+    days: list[str] | None = None
+    start_time: time | None = None
+    end_time: time | None = None
+    interval_minutes: int | None = None
+    is_enabled: bool | None = None
+
+
+# Database model
+class Scheduler(SchedulerBase, table=True):
+    __table_args__ = (UniqueConstraint("league_id", "season_id", name="uq_scheduler_league_season"),)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    last_run_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    league: "League" = Relationship()
+    season: "Season" = Relationship()
+
+
+# Properties to return via API
+class SchedulerPublic(SchedulerBase):
+    id: uuid.UUID
+    last_run_at: datetime | None = None
+
+
+class SchedulersPublic(SQLModel):
+    data: list[SchedulerPublic]
+    count: int
+
+
+# Match models
+class MatchBase(SQLModel):
+    match_id: str = Field(primary_key=True)
+    league_id: uuid.UUID = Field(foreign_key="league.id", ondelete="CASCADE", index=True)
+    season_id: uuid.UUID = Field(foreign_key="season.id", ondelete="CASCADE", index=True)
+    raw_data: dict = Field(default_factory=dict, sa_type=JSON)  # type: ignore
+
+
+# Properties to receive on match update
+class MatchUpdate(SQLModel):
+    raw_data: dict
+
+
+# Database model
+class Match(MatchBase, table=True):
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    updated_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    league: "League" = Relationship()
+    season: "Season" = Relationship()
+
+
+# Properties to return via API
+class MatchPublic(MatchBase):
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class MatchesPublic(SQLModel):
+    data: list[MatchPublic]
+    count: int

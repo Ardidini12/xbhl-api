@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import React, { useState } from "react"
+import type React from "react"
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
@@ -55,7 +56,8 @@ const CreateClub = ({ open, onOpenChange }: CreateClubProps) => {
   })
 
   const mutation = useMutation({
-    mutationFn: (data: ClubCreate) => ClubsService.createClub({ requestBody: data }),
+    mutationFn: (data: ClubCreate) =>
+      ClubsService.createClub({ requestBody: data }),
     onSuccess: () => {
       showSuccessToast("Club created successfully")
       onOpenChange(false)
@@ -80,7 +82,6 @@ const CreateClub = ({ open, onOpenChange }: CreateClubProps) => {
       showErrorToast("Error creating clubs", error)
     },
   })
-
 
   const onSubmit = (data: ClubFormValues) => {
     mutation.mutate({
@@ -120,7 +121,10 @@ const CreateClub = ({ open, onOpenChange }: CreateClubProps) => {
           <DialogTitle>Add Club</DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "single" | "bulk")}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v) => setActiveTab(v as "single" | "bulk")}
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="single">Single Club</TabsTrigger>
             <TabsTrigger value="bulk">Bulk Add</TabsTrigger>
@@ -199,7 +203,9 @@ const CreateClub = ({ open, onOpenChange }: CreateClubProps) => {
                   "flex min-h-[200px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
                 )}
                 value={bulkText}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setBulkText(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setBulkText(e.target.value)
+                }
               />
               <p className="text-xs text-muted-foreground">
                 Logo is optional. Names will be cleaned of extra spaces

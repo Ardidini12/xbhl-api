@@ -67,7 +67,9 @@ const EditClub = ({ club, open, onOpenChange }: EditClubProps) => {
       showSuccessToast("Club updated successfully")
       onOpenChange(false)
       // Invalidate ALL club queries (including filtered ones like ["clubs", search])
-      queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] === "clubs" })
+      queryClient.invalidateQueries({
+        predicate: (q) => q.queryKey[0] === "clubs",
+      })
     },
     onError: (error) => {
       showErrorToast("Error updating club", error)
