@@ -53,7 +53,10 @@ const SchedulerActions = ({ scheduler }: SchedulerActionsProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => toggleMutation.mutate()}>
+          <DropdownMenuItem
+            onClick={() => toggleMutation.mutate()}
+            disabled={toggleMutation.isPending}
+          >
             {scheduler.is_enabled ? (
               <>
                 <Square className="mr-2 size-4" />

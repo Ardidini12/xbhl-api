@@ -232,7 +232,7 @@ class SchedulerBase(SQLModel):
     days: list[str] = Field(default_factory=list, sa_type=JSON)  # type: ignore
     start_time: time
     end_time: time
-    interval_minutes: int = Field(default=15)
+    interval_minutes: int = Field(default=15, ge=1)
     is_enabled: bool = Field(default=True)
 
 
@@ -246,7 +246,7 @@ class SchedulerUpdate(SQLModel):
     days: list[str] | None = None
     start_time: time | None = None
     end_time: time | None = None
-    interval_minutes: int | None = None
+    interval_minutes: int | None = Field(default=None, ge=1)
     is_enabled: bool | None = None
 
 

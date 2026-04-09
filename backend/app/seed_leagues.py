@@ -1,8 +1,9 @@
 import logging
+
 from sqlmodel import Session, select
+
 from app.core.db import engine
 from app.models import League, LeagueCreate
-from app import crud
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,7 +24,7 @@ def seed_leagues() -> None:
                 description=f"Description for XBHL League {i:03d}"
             )
             leagues.append(League.model_validate(league_in))
-        
+
         session.add_all(leagues)
         session.commit()
         logger.info("Successfully seeded 100 leagues")

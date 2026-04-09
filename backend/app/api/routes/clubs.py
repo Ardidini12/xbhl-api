@@ -1,11 +1,11 @@
+import asyncio
 import logging
 import uuid
 from typing import Any
 from urllib.parse import quote
-import httpx
-import asyncio
 
-from fastapi import APIRouter, Depends, HTTPException, Body
+import httpx
+from fastapi import APIRouter, Body, Depends, HTTPException
 from sqlmodel import col, func, select
 
 from app import crud
@@ -17,8 +17,8 @@ from app.models import (
     Club,
     ClubCreate,
     ClubPublic,
-    ClubUpdate,
     ClubsPublic,
+    ClubUpdate,
     Message,
 )
 
@@ -84,11 +84,11 @@ def read_clubs(
 
     count_statement = select(func.count()).select_from(statement.subquery())
     count = session.exec(count_statement).one()
-    
+
     max_limit = 100
     limit = min(max(1, limit), max_limit)
     skip = max(0, skip)
-    
+
     statement = statement.order_by(Club.name).offset(skip).limit(limit)
     clubs = session.exec(statement).all()
 
@@ -113,12 +113,12 @@ async def create_club(*, session: SessionDep, club_in: ClubCreate) -> Any:
     """
     # Clean name
     club_in.name = " ".join(club_in.name.split())
-    
+
     # Fetch EA ID if not provided or even if provided (prompt says "anytime we save any clubs... we search for its ea id")
     ea_id = await fetch_ea_id(club_in.name)
     if ea_id:
         club_in.ea_id = ea_id
-        
+
     club = crud.create_club(session=session, club_in=club_in)
     return club
 
@@ -144,11 +144,11 @@ async def bulk_create_clubs(*, session: SessionDep, clubs_in: list[ClubCreate]) 
 
     # Process with bounded concurrency (semaphore already limits EA calls)
     processed_clubs = await asyncio.gather(*[process_club(c) for c in clubs_in])
-    
+
     for club_in in processed_clubs:
         db_obj = Club.model_validate(club_in)
         session.add(db_obj)
-    
+
     session.commit()
     return Message(message=f"Successfully created {len(clubs_in)} clubs")
 
@@ -166,7 +166,7 @@ async def update_club(
     db_club = session.get(Club, id)
     if not db_club:
         raise HTTPException(status_code=404, detail="Club not found")
-    
+
     if club_in.name:
         normalized_new = " ".join(club_in.name.split())
         normalized_existing = " ".join(db_club.name.split())
@@ -176,7 +176,7 @@ async def update_club(
             ea_id = await fetch_ea_id(normalized_new)
             if ea_id:
                 club_in.ea_id = ea_id
-                
+
     club = crud.update_club(session=session, db_club=db_club, club_in=club_in)
     return club
 
