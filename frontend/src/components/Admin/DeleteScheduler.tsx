@@ -47,7 +47,8 @@ const DeleteScheduler = ({ id, open, onOpenChange }: DeleteSchedulerProps) => {
         <DialogHeader>
           <DialogTitle>Delete Scheduler</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this scheduler? This action cannot be undone.
+            Are you sure you want to delete this scheduler? This action cannot
+            be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

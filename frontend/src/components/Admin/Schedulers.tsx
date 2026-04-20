@@ -3,11 +3,11 @@ import { AlertCircle, Plus, Search } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { type SchedulerPublic, SchedulersService } from "@/client"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import CreateScheduler from "./CreateScheduler"
 import SchedulerActions from "./SchedulerActions"
-import { Badge } from "@/components/ui/badge"
 
 const Schedulers = () => {
   const [createOpen, setCreateOpen] = useState(false)
@@ -38,10 +38,12 @@ const Schedulers = () => {
 
     const searchLower = search.toLowerCase()
     return schedulers.filter((scheduler) => {
-      const daysStr = ((scheduler.days as string[]) || []).join(' ').toLowerCase()
+      const daysStr = ((scheduler.days as string[]) || [])
+        .join(" ")
+        .toLowerCase()
       return (
-        scheduler.league_id.toLowerCase().includes(searchLower) ||
-        scheduler.season_id.toLowerCase().includes(searchLower) ||
+        (scheduler.league_name?.toLowerCase() || "").includes(searchLower) ||
+        (scheduler.season_name?.toLowerCase() || "").includes(searchLower) ||
         daysStr.includes(searchLower)
       )
     })
@@ -67,22 +69,35 @@ const Schedulers = () => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   const getStatus = (scheduler: SchedulerPublic) => {
-    if (!scheduler.is_enabled) return { label: "Stopped", variant: "destructive" as const }
-    
+    if (!scheduler.is_enabled)
+      return { label: "Stopped", variant: "destructive" as const }
+
     const now = new Date()
-    const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+    const days = [
+      "Sunday",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ]
     const currentDay = days[now.getDay()]
-    
+
     // Check day
     const schedulerDays = (scheduler.days as string[]) || []
-    if (!schedulerDays.includes(currentDay)) return { label: "Active - Idle", variant: "secondary" as const }
-    
+    if (!schedulerDays.includes(currentDay))
+      return { label: "Active - Idle", variant: "secondary" as const }
+
     // Check time
     const currentTimeStr = now.toTimeString().slice(0, 5) // HH:mm
-    if (currentTimeStr >= scheduler.start_time && currentTimeStr <= scheduler.end_time) {
-        return { label: "Active - Running", variant: "default" as const }
+    if (
+      currentTimeStr >= scheduler.start_time &&
+      currentTimeStr <= scheduler.end_time
+    ) {
+      return { label: "Active - Running", variant: "default" as const }
     }
-    
+
     return { label: "Active - Idle", variant: "secondary" as const }
   }
 
@@ -137,14 +152,14 @@ const Schedulers = () => {
                 className="grid grid-cols-6 gap-4 items-center px-4 py-4 hover:bg-muted/50 transition-colors"
               >
                 <div className="col-span-1 truncate font-medium">
-                  {/* We need to fetch names, but for now display IDs or use some cache */}
-                  {scheduler.league_id.slice(0, 8)} / {scheduler.season_id.slice(0, 8)}
+                  {scheduler.league_name} / {scheduler.season_name}
                 </div>
                 <div className="col-span-1 text-sm text-muted-foreground">
                   {schedulerDays.join(", ")}
                 </div>
                 <div className="col-span-1 text-sm text-muted-foreground">
-                  {scheduler.start_time.slice(0, 5)} - {scheduler.end_time.slice(0, 5)}
+                  {scheduler.start_time.slice(0, 5)} -{" "}
+                  {scheduler.end_time.slice(0, 5)}
                 </div>
                 <div className="col-span-1 text-sm text-muted-foreground">
                   {scheduler.interval_minutes} min

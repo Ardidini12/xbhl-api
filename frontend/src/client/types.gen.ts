@@ -118,6 +118,8 @@ export type SchedulerPublic = {
     is_enabled?: boolean;
     id: string;
     last_run_at?: (string | null);
+    league_name?: (string | null);
+    season_name?: (string | null);
 };
 
 export type SchedulersPublic = {
