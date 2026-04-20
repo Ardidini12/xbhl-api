@@ -1,7 +1,7 @@
 import { MoreVertical, Trash } from "lucide-react"
 import { useState } from "react"
 
-import { type MatchPublic } from "@/client"
+import type { MatchPublic } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,

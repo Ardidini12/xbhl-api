@@ -1,12 +1,22 @@
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { AlertCircle, Search, Trash, ChevronDown, ChevronUp } from "lucide-react"
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query"
+import {
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  Trash,
+} from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { type MatchPublic, MatchesService } from "@/client"
+import { MatchesService, type MatchPublic } from "@/client"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
@@ -18,7 +28,7 @@ const Matches = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [editingData, setEditingData] = useState<string>("")
   const loadMoreRef = useRef<HTMLDivElement>(null)
-  
+
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
@@ -84,7 +94,8 @@ const Matches = () => {
   }
 
   const bulkDeleteMutation = useMutation({
-    mutationFn: () => MatchesService.bulkDeleteMatches({ requestBody: selectedIds }),
+    mutationFn: () =>
+      MatchesService.bulkDeleteMatches({ requestBody: selectedIds }),
     onSuccess: () => {
       showSuccessToast("Matches deleted successfully")
       setSelectedIds([])
@@ -98,8 +109,8 @@ const Matches = () => {
   })
 
   const updateMatchMutation = useMutation({
-    mutationFn: ({ id, raw_data }: { id: string, raw_data: any }) => 
-        MatchesService.updateMatch({ matchId: id, requestBody: { raw_data } }),
+    mutationFn: ({ id, raw_data }: { id: string; raw_data: any }) =>
+      MatchesService.updateMatch({ matchId: id, requestBody: { raw_data } }),
     onSuccess: () => {
       showSuccessToast("Match updated successfully")
       setExpandedId(null)
@@ -126,31 +137,31 @@ const Matches = () => {
     const clubs = Object.values(raw_data?.clubs || {}) as any[]
     const club1 = clubs[0]
     const club2 = clubs[1]
-    
+
     if (!club1 || !club2) return { club1: "N/A", club2: "N/A", score: "N/A" }
-    
+
     return {
-        club1: club1.details?.name || "Unknown",
-        club2: club2.details?.name || "Unknown",
-        score: `${club1.score} - ${club2.score}`
+      club1: club1.details?.name || "Unknown",
+      club2: club2.details?.name || "Unknown",
+      score: `${club1.score} - ${club2.score}`,
     }
   }
 
   const handleExpand = (match: MatchPublic) => {
     if (expandedId === match.match_id) {
-        setExpandedId(null)
+      setExpandedId(null)
     } else {
-        setExpandedId(match.match_id)
-        setEditingData(JSON.stringify(match.raw_data, null, 2))
+      setExpandedId(match.match_id)
+      setEditingData(JSON.stringify(match.raw_data, null, 2))
     }
   }
 
   const handleSaveRaw = (id: string) => {
     try {
-        const parsed = JSON.parse(editingData)
-        updateMatchMutation.mutate({ id, raw_data: parsed })
-    } catch (e) {
-        showErrorToast("Invalid JSON format")
+      const parsed = JSON.parse(editingData)
+      updateMatchMutation.mutate({ id, raw_data: parsed })
+    } catch (_e) {
+      showErrorToast("Invalid JSON format")
     }
   }
 
@@ -160,10 +171,10 @@ const Matches = () => {
         <h1 className="text-2xl font-bold tracking-tight">Matches</h1>
         <div className="flex gap-2">
           {selectedIds.length > 0 && (
-            <Button 
-                variant="destructive" 
-                onClick={() => bulkDeleteMutation.mutate()}
-                disabled={bulkDeleteMutation.isPending}
+            <Button
+              variant="destructive"
+              onClick={() => bulkDeleteMutation.mutate()}
+              disabled={bulkDeleteMutation.isPending}
             >
               <Trash className="mr-2 size-4" />
               Delete {selectedIds.length} selected
@@ -211,7 +222,7 @@ const Matches = () => {
             const display = getMatchDisplay(match)
             const isExpanded = expandedId === match.match_id
             const raw_data = match.raw_data as any
-            
+
             return (
               <div key={match.match_id} className="flex flex-col">
                 <div
@@ -220,51 +231,70 @@ const Matches = () => {
                 >
                   <div onClick={(e) => e.stopPropagation()}>
                     <Checkbox
-                        checked={selectedIds.includes(match.match_id)}
-                        onCheckedChange={() => toggleSelect(match.match_id)}
+                      checked={selectedIds.includes(match.match_id)}
+                      onCheckedChange={() => toggleSelect(match.match_id)}
                     />
                   </div>
                   <div className="flex-1 grid grid-cols-4 gap-4">
                     <div className="flex flex-col">
-                        <span className="text-xs text-muted-foreground font-mono">{match.match_id}</span>
-                        <span className="text-sm font-medium">{formatEST(Number(raw_data?.timestamp || 0))}</span>
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {match.match_id}
+                      </span>
+                      <span className="text-sm font-medium">
+                        {formatEST(Number(raw_data?.timestamp || 0))}
+                      </span>
                     </div>
                     <div className="col-span-2 flex items-center justify-center gap-4 font-semibold">
-                        <span className="flex-1 text-right">{display.club1}</span>
-                        <Badge variant="outline" className="px-3 py-1 text-lg font-bold">
-                            {display.score}
-                        </Badge>
-                        <span className="flex-1 text-left">{display.club2}</span>
+                      <span className="flex-1 text-right">{display.club1}</span>
+                      <Badge
+                        variant="outline"
+                        className="px-3 py-1 text-lg font-bold"
+                      >
+                        {display.score}
+                      </Badge>
+                      <span className="flex-1 text-left">{display.club2}</span>
                     </div>
                     <div className="flex justify-end items-center gap-2">
-                        {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
-                        <MatchActions match={match} />
+                      {isExpanded ? (
+                        <ChevronUp className="size-4" />
+                      ) : (
+                        <ChevronDown className="size-4" />
+                      )}
+                      <MatchActions match={match} />
                     </div>
                   </div>
                 </div>
-                
+
                 {isExpanded && (
-                    <div className="px-4 pb-4 flex flex-col gap-4 bg-muted/30">
-                        <div className="flex flex-col gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Raw Match Data (JSON)</label>
-                            <textarea
-                                className="w-full h-96 p-4 font-mono text-xs bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                value={editingData}
-                                onChange={(e) => setEditingData(e.target.value)}
-                                onClick={(e) => e.stopPropagation()}
-                            />
-                        </div>
-                        <div className="flex justify-end gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setExpandedId(null)}>Cancel</Button>
-                            <LoadingButton 
-                                size="sm" 
-                                onClick={() => handleSaveRaw(match.match_id)}
-                                loading={updateMatchMutation.isPending}
-                            >
-                                Save Changes
-                            </LoadingButton>
-                        </div>
+                  <div className="px-4 pb-4 flex flex-col gap-4 bg-muted/30">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        Raw Match Data (JSON)
+                      </label>
+                      <textarea
+                        className="w-full h-96 p-4 font-mono text-xs bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                        value={editingData}
+                        onChange={(e) => setEditingData(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
                     </div>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setExpandedId(null)}
+                      >
+                        Cancel
+                      </Button>
+                      <LoadingButton
+                        size="sm"
+                        onClick={() => handleSaveRaw(match.match_id)}
+                        loading={updateMatchMutation.isPending}
+                      >
+                        Save Changes
+                      </LoadingButton>
+                    </div>
+                  </div>
                 )}
               </div>
             )

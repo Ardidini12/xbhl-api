@@ -2,8 +2,13 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { type SchedulerPublic, type SchedulerUpdate, SchedulersService } from "@/client"
+import {
+  type SchedulerPublic,
+  SchedulersService,
+  type SchedulerUpdate,
+} from "@/client"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -21,19 +26,28 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 const daysOfWeek = [
-  "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
 ]
 
 const formSchema = z.object({
   days: z.array(z.string()).min(1, "Select at least one day"),
-  start_time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
-  end_time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
+  start_time: z
+    .string()
+    .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
+  end_time: z
+    .string()
+    .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
   interval_minutes: z.number().min(1, "Minimum 1 minute"),
 })
 
@@ -45,7 +59,11 @@ interface EditSchedulerProps {
   onOpenChange: (open: boolean) => void
 }
 
-const EditScheduler = ({ scheduler, open, onOpenChange }: EditSchedulerProps) => {
+const EditScheduler = ({
+  scheduler,
+  open,
+  onOpenChange,
+}: EditSchedulerProps) => {
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
@@ -61,10 +79,10 @@ const EditScheduler = ({ scheduler, open, onOpenChange }: EditSchedulerProps) =>
 
   const mutation = useMutation({
     mutationFn: (data: FormValues) => {
-        return SchedulersService.updateScheduler({
-            id: scheduler.id,
-            requestBody: data as SchedulerUpdate,
-        })
+      return SchedulersService.updateScheduler({
+        id: scheduler.id,
+        requestBody: data as SchedulerUpdate,
+      })
     },
     onSuccess: () => {
       showSuccessToast("Scheduler updated successfully")
@@ -88,7 +106,7 @@ const EditScheduler = ({ scheduler, open, onOpenChange }: EditSchedulerProps) =>
         <DialogHeader>
           <DialogTitle>Edit Scheduler</DialogTitle>
           <DialogDescription>
-            Update the configuration for this background puller.
+            Update the configuration for {scheduler.league_name} / {scheduler.season_name}.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -119,8 +137,8 @@ const EditScheduler = ({ scheduler, open, onOpenChange }: EditSchedulerProps) =>
                                       ? field.onChange([...field.value, day])
                                       : field.onChange(
                                           field.value?.filter(
-                                            (value) => value !== day
-                                          )
+                                            (value) => value !== day,
+                                          ),
                                         )
                                   }}
                                 />
@@ -139,32 +157,32 @@ const EditScheduler = ({ scheduler, open, onOpenChange }: EditSchedulerProps) =>
               )}
             />
             <div className="grid grid-cols-2 gap-4">
-                <FormField
+              <FormField
                 control={form.control}
                 name="start_time"
                 render={({ field }) => (
-                    <FormItem>
+                  <FormItem>
                     <FormLabel>Start Time</FormLabel>
                     <FormControl>
-                        <Input type="time" {...field} />
+                      <Input type="time" {...field} />
                     </FormControl>
                     <FormMessage />
-                    </FormItem>
+                  </FormItem>
                 )}
-                />
-                <FormField
+              />
+              <FormField
                 control={form.control}
                 name="end_time"
                 render={({ field }) => (
-                    <FormItem>
+                  <FormItem>
                     <FormLabel>End Time</FormLabel>
                     <FormControl>
-                        <Input type="time" {...field} />
+                      <Input type="time" {...field} />
                     </FormControl>
                     <FormMessage />
-                    </FormItem>
+                  </FormItem>
                 )}
-                />
+              />
             </div>
             <FormField
               control={form.control}
@@ -173,7 +191,11 @@ const EditScheduler = ({ scheduler, open, onOpenChange }: EditSchedulerProps) =>
                 <FormItem>
                   <FormLabel>Interval (minutes)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

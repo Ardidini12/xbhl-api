@@ -516,6 +516,7 @@ export const SchedulerCreateSchema = {
         },
         interval_minutes: {
             type: 'integer',
+            minimum: 1,
             title: 'Interval Minutes',
             default: 15
         },
@@ -561,6 +562,7 @@ export const SchedulerPublicSchema = {
         },
         interval_minutes: {
             type: 'integer',
+            minimum: 1,
             title: 'Interval Minutes',
             default: 15
         },
@@ -585,6 +587,28 @@ export const SchedulerPublicSchema = {
                 }
             ],
             title: 'Last Run At'
+        },
+        league_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'League Name'
+        },
+        season_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Season Name'
         }
     },
     type: 'object',
@@ -635,7 +659,8 @@ export const SchedulerUpdateSchema = {
         interval_minutes: {
             anyOf: [
                 {
-                    type: 'integer'
+                    type: 'integer',
+                    minimum: 1
                 },
                 {
                     type: 'null'

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { MoreVertical, Play, Square, Trash, Edit } from "lucide-react"
+import { Edit, MoreVertical, Play, Square, Trash } from "lucide-react"
 import { useState } from "react"
 
 import { type SchedulerPublic, SchedulersService } from "@/client"
@@ -34,7 +34,9 @@ const SchedulerActions = ({ scheduler }: SchedulerActionsProps) => {
       return SchedulersService.startScheduler({ id: scheduler.id })
     },
     onSuccess: () => {
-      showSuccessToast(`Scheduler ${scheduler.is_enabled ? "stopped" : "started"} successfully`)
+      showSuccessToast(
+        `Scheduler ${scheduler.is_enabled ? "stopped" : "started"} successfully`,
+      )
     },
     onError: (err: any) => {
       handleError.call(showErrorToast, err)

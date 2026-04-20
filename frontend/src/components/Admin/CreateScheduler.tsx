@@ -1,10 +1,16 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { useForm } from "react-hook-form"
 import { useEffect } from "react"
+import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { type SchedulerCreate, SchedulersService, LeaguesService, SeasonsService } from "@/client"
+import {
+  LeaguesService,
+  type SchedulerCreate,
+  SchedulersService,
+  SeasonsService,
+} from "@/client"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -22,6 +28,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { LoadingButton } from "@/components/ui/loading-button"
 import {
   Select,
   SelectContent,
@@ -29,21 +36,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 const daysOfWeek = [
-  "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
 ]
 
 const formSchema = z.object({
   league_id: z.string().uuid("Invalid league ID"),
   season_id: z.string().uuid("Invalid season ID"),
   days: z.array(z.string()).min(1, "Select at least one day"),
-  start_time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
-  end_time: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
+  start_time: z
+    .string()
+    .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
+  end_time: z
+    .string()
+    .regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
   interval_minutes: z.number().min(1, "Minimum 1 minute"),
 })
 
@@ -79,20 +94,21 @@ const CreateScheduler = ({ open, onOpenChange }: CreateSchedulerProps) => {
 
   const { data: seasons } = useQuery({
     queryKey: ["seasons", leagueId],
-    queryFn: () => SeasonsService.readSeasons({ leagueId: leagueId, limit: 100 }),
+    queryFn: () =>
+      SeasonsService.readSeasons({ leagueId: leagueId, limit: 100 }),
     enabled: !!leagueId,
   })
 
   // Clear season_id when league_id changes
   useEffect(() => {
     form.setValue("season_id", "")
-  }, [leagueId, form])
+  }, [form])
 
   const mutation = useMutation({
     mutationFn: (data: FormValues) => {
-        return SchedulersService.createScheduler({
-            requestBody: data as SchedulerCreate,
-        })
+      return SchedulersService.createScheduler({
+        requestBody: data as SchedulerCreate,
+      })
     },
     onSuccess: () => {
       showSuccessToast("Scheduler created successfully")
@@ -128,7 +144,10 @@ const CreateScheduler = ({ open, onOpenChange }: CreateSchedulerProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>League</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a league" />
@@ -152,8 +171,8 @@ const CreateScheduler = ({ open, onOpenChange }: CreateSchedulerProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Season</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     defaultValue={field.value}
                     disabled={!leagueId}
                   >
@@ -200,8 +219,8 @@ const CreateScheduler = ({ open, onOpenChange }: CreateSchedulerProps) => {
                                       ? field.onChange([...field.value, day])
                                       : field.onChange(
                                           field.value?.filter(
-                                            (value) => value !== day
-                                          )
+                                            (value) => value !== day,
+                                          ),
                                         )
                                   }}
                                 />
@@ -220,32 +239,32 @@ const CreateScheduler = ({ open, onOpenChange }: CreateSchedulerProps) => {
               )}
             />
             <div className="grid grid-cols-2 gap-4">
-                <FormField
+              <FormField
                 control={form.control}
                 name="start_time"
                 render={({ field }) => (
-                    <FormItem>
+                  <FormItem>
                     <FormLabel>Start Time</FormLabel>
                     <FormControl>
-                        <Input type="time" {...field} />
+                      <Input type="time" {...field} />
                     </FormControl>
                     <FormMessage />
-                    </FormItem>
+                  </FormItem>
                 )}
-                />
-                <FormField
+              />
+              <FormField
                 control={form.control}
                 name="end_time"
                 render={({ field }) => (
-                    <FormItem>
+                  <FormItem>
                     <FormLabel>End Time</FormLabel>
                     <FormControl>
-                        <Input type="time" {...field} />
+                      <Input type="time" {...field} />
                     </FormControl>
                     <FormMessage />
-                    </FormItem>
+                  </FormItem>
                 )}
-                />
+              />
             </div>
             <FormField
               control={form.control}
@@ -254,7 +273,11 @@ const CreateScheduler = ({ open, onOpenChange }: CreateSchedulerProps) => {
                 <FormItem>
                   <FormLabel>Interval (minutes)</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} onChange={(e) => field.onChange(e.target.valueAsNumber)} />
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

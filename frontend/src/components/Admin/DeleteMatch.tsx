@@ -47,7 +47,8 @@ const DeleteMatch = ({ id, open, onOpenChange }: DeleteMatchProps) => {
         <DialogHeader>
           <DialogTitle>Delete Match</DialogTitle>
           <DialogDescription>
-            Are you sure you want to delete this match record? This action cannot be undone.
+            Are you sure you want to delete this match record? This action
+            cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
