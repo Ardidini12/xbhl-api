@@ -87,9 +87,11 @@ def bulk_delete_matches(
     """
     Bulk delete matches.
     """
+    deleted_count = 0
     for match_id in match_ids:
         db_match = session.get(Match, match_id)
         if db_match:
             session.delete(db_match)
+            deleted_count += 1
     session.commit()
-    return Message(message=f"{len(match_ids)} matches deleted successfully")
+    return Message(message=f"{deleted_count} matches deleted successfully")

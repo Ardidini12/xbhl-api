@@ -3,21 +3,25 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query"
-import {
-  AlertCircle,
-  ChevronDown,
-  ChevronUp,
-  Search,
-  Trash,
-} from "lucide-react"
+import { AlertCircle, Search, Trash } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { MatchesService, type MatchPublic } from "@/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
+import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 import MatchActions from "./MatchActions"
@@ -25,7 +29,7 @@ import MatchActions from "./MatchActions"
 const Matches = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [search, setSearch] = useState("")
-  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [editingMatch, setEditingMatch] = useState<MatchPublic | null>(null)
   const [editingData, setEditingData] = useState<string>("")
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
@@ -113,7 +117,7 @@ const Matches = () => {
       MatchesService.updateMatch({ matchId: id, requestBody: { raw_data } }),
     onSuccess: () => {
       showSuccessToast("Match updated successfully")
-      setExpandedId(null)
+      setEditingMatch(null)
     },
     onError: (err: any) => {
       handleError.call(showErrorToast, err)
@@ -147,13 +151,9 @@ const Matches = () => {
     }
   }
 
-  const handleExpand = (match: MatchPublic) => {
-    if (expandedId === match.match_id) {
-      setExpandedId(null)
-    } else {
-      setExpandedId(match.match_id)
-      setEditingData(JSON.stringify(match.raw_data, null, 2))
-    }
+  const handleEdit = (match: MatchPublic) => {
+    setEditingMatch(match)
+    setEditingData(JSON.stringify(match.raw_data, null, 2))
   }
 
   const handleSaveRaw = (id: string) => {
@@ -220,14 +220,13 @@ const Matches = () => {
         <div className="divide-y">
           {allMatches.map((match: MatchPublic) => {
             const display = getMatchDisplay(match)
-            const isExpanded = expandedId === match.match_id
             const raw_data = match.raw_data as any
 
             return (
               <div key={match.match_id} className="flex flex-col">
                 <div
                   className="flex items-center gap-4 px-4 py-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => handleExpand(match)}
+                  onClick={() => handleEdit(match)}
                 >
                   <div onClick={(e) => e.stopPropagation()}>
                     <Checkbox
@@ -255,47 +254,10 @@ const Matches = () => {
                       <span className="flex-1 text-left">{display.club2}</span>
                     </div>
                     <div className="flex justify-end items-center gap-2">
-                      {isExpanded ? (
-                        <ChevronUp className="size-4" />
-                      ) : (
-                        <ChevronDown className="size-4" />
-                      )}
                       <MatchActions match={match} />
                     </div>
                   </div>
                 </div>
-
-                {isExpanded && (
-                  <div className="px-4 pb-4 flex flex-col gap-4 bg-muted/30">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                        Raw Match Data (JSON)
-                      </label>
-                      <textarea
-                        className="w-full h-96 p-4 font-mono text-xs bg-background border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                        value={editingData}
-                        onChange={(e) => setEditingData(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setExpandedId(null)}
-                      >
-                        Cancel
-                      </Button>
-                      <LoadingButton
-                        size="sm"
-                        onClick={() => handleSaveRaw(match.match_id)}
-                        loading={updateMatchMutation.isPending}
-                      >
-                        Save Changes
-                      </LoadingButton>
-                    </div>
-                  </div>
-                )}
               </div>
             )
           })}
@@ -326,6 +288,48 @@ const Matches = () => {
                 : null}
         </div>
       </div>
+
+      <Dialog
+        open={!!editingMatch}
+        onOpenChange={(open) => !open && setEditingMatch(null)}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Match Raw Data</DialogTitle>
+            <DialogDescription>
+              Update the JSON data for match {editingMatch?.match_id}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="rawMatchData" className="text-sm font-medium">
+                Raw Match Data (JSON) <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="rawMatchData"
+                className="h-96 font-mono text-xs"
+                value={editingData}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setEditingData(e.target.value)
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingMatch(null)}>
+              Cancel
+            </Button>
+            <LoadingButton
+              onClick={() =>
+                editingMatch && handleSaveRaw(editingMatch.match_id)
+              }
+              loading={updateMatchMutation.isPending}
+            >
+              Save Changes
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

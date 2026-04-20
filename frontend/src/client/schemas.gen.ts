@@ -589,30 +589,16 @@ export const SchedulerPublicSchema = {
             title: 'Last Run At'
         },
         league_name: {
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ],
+            type: 'string',
             title: 'League Name'
         },
         season_name: {
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ],
+            type: 'string',
             title: 'Season Name'
         }
     },
     type: 'object',
-    required: ['league_id', 'season_id', 'start_time', 'end_time', 'id'],
+    required: ['league_id', 'season_id', 'start_time', 'end_time', 'id', 'league_name', 'season_name'],
     title: 'SchedulerPublic'
 } as const;
 
