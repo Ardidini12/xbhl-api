@@ -92,8 +92,8 @@ const Schedulers = () => {
     // Check time
     const currentTimeStr = now.toTimeString().slice(0, 5) // HH:mm
     if (
-      currentTimeStr >= scheduler.start_time &&
-      currentTimeStr <= scheduler.end_time
+      currentTimeStr >= scheduler.start_time.slice(0, 5) &&
+      currentTimeStr <= scheduler.end_time.slice(0, 5)
     ) {
       return { label: "Active - Running", variant: "default" as const }
     }

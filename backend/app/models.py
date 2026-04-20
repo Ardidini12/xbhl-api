@@ -266,8 +266,8 @@ class Scheduler(SchedulerBase, table=True):
 class SchedulerPublic(SchedulerBase):
     id: uuid.UUID
     last_run_at: datetime | None = None
-    league_name: str | None = None
-    season_name: str | None = None
+    league_name: str
+    season_name: str
 
 
 class SchedulersPublic(SQLModel):

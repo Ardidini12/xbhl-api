@@ -106,7 +106,8 @@ const EditScheduler = ({
         <DialogHeader>
           <DialogTitle>Edit Scheduler</DialogTitle>
           <DialogDescription>
-            Update the configuration for {scheduler.league_name} / {scheduler.season_name}.
+            Update the configuration for {scheduler.league_name ?? "—"} /{" "}
+            {scheduler.season_name ?? "—"}.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

@@ -102,7 +102,7 @@ const CreateScheduler = ({ open, onOpenChange }: CreateSchedulerProps) => {
   // Clear season_id when league_id changes
   useEffect(() => {
     form.setValue("season_id", "")
-  }, [form])
+  }, [leagueId, form.setValue])
 
   const mutation = useMutation({
     mutationFn: (data: FormValues) => {

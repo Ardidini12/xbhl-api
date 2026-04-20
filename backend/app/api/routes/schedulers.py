@@ -20,6 +20,24 @@ from app.models import (
 
 router = APIRouter(prefix="/schedulers", tags=["schedulers"])
 
+
+def _to_public(session: Session, db_scheduler: Scheduler) -> SchedulerPublic:
+    """
+    Helper to hydrate names and build public DTO.
+    """
+    league = session.get(League, db_scheduler.league_id)
+    season = session.get(Season, db_scheduler.season_id)
+
+    if not league or not season:
+        raise HTTPException(status_code=404, detail="League or Season not found")
+
+    return SchedulerPublic(
+        **db_scheduler.model_dump(),
+        league_name=league.name,
+        season_name=season.name,
+    )
+
+
 @router.get("/", response_model=SchedulersPublic)
 def read_schedulers(
     session: Session = Depends(get_db),
@@ -34,7 +52,9 @@ def read_schedulers(
     count = session.exec(count_statement).one()
 
     statement = (
-        select(Scheduler, League.name.label("league_name"), Season.name.label("season_name"))
+        select(
+            Scheduler, League.name.label("league_name"), Season.name.label("season_name")
+        )
         .join(League, Scheduler.league_id == League.id)
         .join(Season, Scheduler.season_id == Season.id)
         .offset(skip)
@@ -44,12 +64,15 @@ def read_schedulers(
 
     data = []
     for db_scheduler, league_name, season_name in results:
-        scheduler_public = SchedulerPublic.model_validate(db_scheduler)
-        scheduler_public.league_name = league_name
-        scheduler_public.season_name = season_name
+        scheduler_public = SchedulerPublic(
+            **db_scheduler.model_dump(),
+            league_name=league_name,
+            season_name=season_name,
+        )
         data.append(scheduler_public)
 
     return SchedulersPublic(data=data, count=count)
+
 
 @router.post("/", response_model=SchedulerPublic)
 def create_scheduler(
@@ -67,12 +90,11 @@ def create_scheduler(
         session.commit()
     except IntegrityError:
         session.rollback()
-        raise HTTPException(status_code=400, detail="Scheduler for this league and season already exists")
+        raise HTTPException(
+            status_code=400,
+            detail="Scheduler for this league and season already exists",
+        )
     session.refresh(db_scheduler)
-
-    # Get names for the response
-    league = session.get(League, db_scheduler.league_id)
-    season = session.get(Season, db_scheduler.season_id)
 
     try:
         add_scheduler_job(db_scheduler)
@@ -81,10 +103,8 @@ def create_scheduler(
         session.commit()
         raise HTTPException(status_code=500, detail="Failed to schedule job")
 
-    scheduler_public = SchedulerPublic.model_validate(db_scheduler)
-    scheduler_public.league_name = league.name if league else None
-    scheduler_public.season_name = season.name if season else None
-    return scheduler_public
+    return _to_public(session, db_scheduler)
+
 
 @router.patch("/{id}", response_model=SchedulerPublic)
 def update_scheduler(
@@ -106,10 +126,6 @@ def update_scheduler(
     session.commit()
     session.refresh(db_scheduler)
 
-    # Get names for the response
-    league = session.get(League, db_scheduler.league_id)
-    season = session.get(Season, db_scheduler.season_id)
-
     # Update job
     try:
         remove_scheduler_job(id)
@@ -119,10 +135,8 @@ def update_scheduler(
         session.rollback()
         raise HTTPException(status_code=500, detail="Failed to update scheduler job")
 
-    scheduler_public = SchedulerPublic.model_validate(db_scheduler)
-    scheduler_public.league_name = league.name if league else None
-    scheduler_public.season_name = season.name if season else None
-    return scheduler_public
+    return _to_public(session, db_scheduler)
+
 
 @router.delete("/{id}")
 def delete_scheduler(
@@ -145,6 +159,7 @@ def delete_scheduler(
     session.commit()
     return Message(message="Scheduler deleted successfully")
 
+
 @router.post("/{id}/start", response_model=SchedulerPublic)
 def start_scheduler(
     *,
@@ -163,10 +178,6 @@ def start_scheduler(
     session.commit()
     session.refresh(db_scheduler)
 
-    # Get names for the response
-    league = session.get(League, db_scheduler.league_id)
-    season = session.get(Season, db_scheduler.season_id)
-
     try:
         add_scheduler_job(db_scheduler)
     except Exception:
@@ -175,10 +186,8 @@ def start_scheduler(
         session.commit()
         raise HTTPException(status_code=500, detail="Failed to start scheduler job")
 
-    scheduler_public = SchedulerPublic.model_validate(db_scheduler)
-    scheduler_public.league_name = league.name if league else None
-    scheduler_public.season_name = season.name if season else None
-    return scheduler_public
+    return _to_public(session, db_scheduler)
+
 
 @router.post("/{id}/stop", response_model=SchedulerPublic)
 def stop_scheduler(
@@ -198,10 +207,6 @@ def stop_scheduler(
     session.commit()
     session.refresh(db_scheduler)
 
-    # Get names for the response
-    league = session.get(League, db_scheduler.league_id)
-    season = session.get(Season, db_scheduler.season_id)
-
     try:
         remove_scheduler_job(id)
     except Exception:
@@ -210,7 +215,4 @@ def stop_scheduler(
         session.commit()
         raise HTTPException(status_code=500, detail="Failed to stop scheduler job")
 
-    scheduler_public = SchedulerPublic.model_validate(db_scheduler)
-    scheduler_public.league_name = league.name if league else None
-    scheduler_public.season_name = season.name if season else None
-    return scheduler_public
+    return _to_public(session, db_scheduler)

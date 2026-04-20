@@ -91,4 +91,5 @@ This file tracks the features implemented, architectural decisions made, and the
 - Configured FastAPI lifespan to initialize and resume background jobs on server startup.
 - Applied database migrations for `scheduler` and `match` tables.
 - Regenerated frontend API client to support new scheduler and match services.
-- Changed League/Season at Scheduler page to show actual League/Season name not ids.
+- Changed League/Season on the Scheduler page to show actual League and Season names, not IDs.
+
