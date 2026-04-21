@@ -398,6 +398,29 @@ export type SchedulersStopSchedulerData = {
 
 export type SchedulersStopSchedulerResponse = (SchedulerPublic);
 
+export type SeasonsReadSeasonClubsData = {
+    id: string;
+    limit?: number;
+    search?: (string | null);
+    skip?: number;
+};
+
+export type SeasonsReadSeasonClubsResponse = (ClubsPublic);
+
+export type SeasonsAddClubsToSeasonData = {
+    id: string;
+    requestBody: Array<(string)>;
+};
+
+export type SeasonsAddClubsToSeasonResponse = (Message);
+
+export type SeasonsRemoveClubsFromSeasonData = {
+    id: string;
+    requestBody: Array<(string)>;
+};
+
+export type SeasonsRemoveClubsFromSeasonResponse = (Message);
+
 export type SeasonsReadSeasonsData = {
     leagueId?: (string | null);
     limit?: number;
@@ -412,6 +435,12 @@ export type SeasonsCreateSeasonData = {
 };
 
 export type SeasonsCreateSeasonResponse = (SeasonPublic);
+
+export type SeasonsReadSeasonData = {
+    id: string;
+};
+
+export type SeasonsReadSeasonResponse = (SeasonPublic);
 
 export type SeasonsUpdateSeasonData = {
     id: string;

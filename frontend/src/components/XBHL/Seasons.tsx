@@ -12,7 +12,7 @@ import CreateSeason from "./CreateSeason"
 import DeleteSeason from "./DeleteSeason"
 import SeasonActions from "./SeasonActions"
 
-const route = getRouteApi("/_layout/xbhl/$leagueId")
+const route = getRouteApi("/_layout/xbhl/$leagueId/")
 
 const Seasons = () => {
   const { leagueId } = route.useParams()
@@ -31,7 +31,7 @@ const Seasons = () => {
 
   useEffect(() => {
     setSelectedIds([])
-  }, [leagueId])
+  }, [])
 
   const { data: league, isError: isLeagueError } = useQuery({
     queryKey: ["leagues", leagueId],

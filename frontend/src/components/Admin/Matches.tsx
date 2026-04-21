@@ -303,7 +303,8 @@ const Matches = () => {
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="rawMatchData" className="text-sm font-medium">
-                Raw Match Data (JSON) <span className="text-destructive">*</span>
+                Raw Match Data (JSON){" "}
+                <span className="text-destructive">*</span>
               </Label>
               <Textarea
                 id="rawMatchData"

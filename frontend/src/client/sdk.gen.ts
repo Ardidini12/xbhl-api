@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { ClubsReadClubsData, ClubsReadClubsResponse, ClubsCreateClubData, ClubsCreateClubResponse, ClubsReadClubData, ClubsReadClubResponse, ClubsUpdateClubData, ClubsUpdateClubResponse, ClubsDeleteClubData, ClubsDeleteClubResponse, ClubsBulkCreateClubsData, ClubsBulkCreateClubsResponse, ClubsBulkDeleteClubsData, ClubsBulkDeleteClubsResponse, LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueData, LeaguesReadLeagueResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse, LeaguesBulkDeleteLeaguesData, LeaguesBulkDeleteLeaguesResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, MatchesReadMatchesData, MatchesReadMatchesResponse, MatchesUpdateMatchData, MatchesUpdateMatchResponse, MatchesDeleteMatchData, MatchesDeleteMatchResponse, MatchesBulkDeleteMatchesData, MatchesBulkDeleteMatchesResponse, PrivateCreateUserData, PrivateCreateUserResponse, SchedulersReadSchedulersData, SchedulersReadSchedulersResponse, SchedulersCreateSchedulerData, SchedulersCreateSchedulerResponse, SchedulersUpdateSchedulerData, SchedulersUpdateSchedulerResponse, SchedulersDeleteSchedulerData, SchedulersDeleteSchedulerResponse, SchedulersStartSchedulerData, SchedulersStartSchedulerResponse, SchedulersStopSchedulerData, SchedulersStopSchedulerResponse, SeasonsReadSeasonsData, SeasonsReadSeasonsResponse, SeasonsCreateSeasonData, SeasonsCreateSeasonResponse, SeasonsUpdateSeasonData, SeasonsUpdateSeasonResponse, SeasonsDeleteSeasonData, SeasonsDeleteSeasonResponse, SeasonsEndSeasonData, SeasonsEndSeasonResponse, SeasonsBulkDeleteSeasonsData, SeasonsBulkDeleteSeasonsResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { ClubsReadClubsData, ClubsReadClubsResponse, ClubsCreateClubData, ClubsCreateClubResponse, ClubsReadClubData, ClubsReadClubResponse, ClubsUpdateClubData, ClubsUpdateClubResponse, ClubsDeleteClubData, ClubsDeleteClubResponse, ClubsBulkCreateClubsData, ClubsBulkCreateClubsResponse, ClubsBulkDeleteClubsData, ClubsBulkDeleteClubsResponse, LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueData, LeaguesReadLeagueResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse, LeaguesBulkDeleteLeaguesData, LeaguesBulkDeleteLeaguesResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, MatchesReadMatchesData, MatchesReadMatchesResponse, MatchesUpdateMatchData, MatchesUpdateMatchResponse, MatchesDeleteMatchData, MatchesDeleteMatchResponse, MatchesBulkDeleteMatchesData, MatchesBulkDeleteMatchesResponse, PrivateCreateUserData, PrivateCreateUserResponse, SchedulersReadSchedulersData, SchedulersReadSchedulersResponse, SchedulersCreateSchedulerData, SchedulersCreateSchedulerResponse, SchedulersUpdateSchedulerData, SchedulersUpdateSchedulerResponse, SchedulersDeleteSchedulerData, SchedulersDeleteSchedulerResponse, SchedulersStartSchedulerData, SchedulersStartSchedulerResponse, SchedulersStopSchedulerData, SchedulersStopSchedulerResponse, SeasonsReadSeasonClubsData, SeasonsReadSeasonClubsResponse, SeasonsAddClubsToSeasonData, SeasonsAddClubsToSeasonResponse, SeasonsRemoveClubsFromSeasonData, SeasonsRemoveClubsFromSeasonResponse, SeasonsReadSeasonsData, SeasonsReadSeasonsResponse, SeasonsCreateSeasonData, SeasonsCreateSeasonResponse, SeasonsReadSeasonData, SeasonsReadSeasonResponse, SeasonsUpdateSeasonData, SeasonsUpdateSeasonResponse, SeasonsDeleteSeasonData, SeasonsDeleteSeasonResponse, SeasonsEndSeasonData, SeasonsEndSeasonResponse, SeasonsBulkDeleteSeasonsData, SeasonsBulkDeleteSeasonsResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class ClubsService {
     /**
@@ -636,6 +636,83 @@ export class SchedulersService {
 
 export class SeasonsService {
     /**
+     * Read Season Clubs
+     * Retrieve clubs for a specific season.
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.search
+     * @param data.skip
+     * @param data.limit
+     * @returns ClubsPublic Successful Response
+     * @throws ApiError
+     */
+    public static readSeasonClubs(data: SeasonsReadSeasonClubsData): CancelablePromise<SeasonsReadSeasonClubsResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/seasons/{id}/clubs',
+            path: {
+                id: data.id
+            },
+            query: {
+                search: data.search,
+                skip: data.skip,
+                limit: data.limit
+            },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Add Clubs To Season
+     * Add clubs to a season.
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.requestBody
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static addClubsToSeason(data: SeasonsAddClubsToSeasonData): CancelablePromise<SeasonsAddClubsToSeasonResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/seasons/{id}/clubs',
+            path: {
+                id: data.id
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Remove Clubs From Season
+     * Remove clubs from a season.
+     * @param data The data for the request.
+     * @param data.id
+     * @param data.requestBody
+     * @returns Message Successful Response
+     * @throws ApiError
+     */
+    public static removeClubsFromSeason(data: SeasonsRemoveClubsFromSeasonData): CancelablePromise<SeasonsRemoveClubsFromSeasonResponse> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/v1/seasons/{id}/clubs',
+            path: {
+                id: data.id
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
      * Read Seasons
      * Retrieve seasons.
      * @param data The data for the request.
@@ -676,6 +753,27 @@ export class SeasonsService {
             url: '/api/v1/seasons/',
             body: data.requestBody,
             mediaType: 'application/json',
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Read Season
+     * Get season by ID.
+     * @param data The data for the request.
+     * @param data.id
+     * @returns SeasonPublic Successful Response
+     * @throws ApiError
+     */
+    public static readSeason(data: SeasonsReadSeasonData): CancelablePromise<SeasonsReadSeasonResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/seasons/{id}',
+            path: {
+                id: data.id
+            },
             errors: {
                 422: 'Validation Error'
             }
