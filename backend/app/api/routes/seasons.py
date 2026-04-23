@@ -40,19 +40,9 @@ def read_season_clubs(
     if not season:
         raise HTTPException(status_code=404, detail="Season not found")
 
-    statement = select(Club).join(Season.clubs).where(Season.id == id)
-    if search:
-        search_filter = f"%{search}%"
-        statement = statement.where(
-            (col(Club.name).ilike(search_filter)) |
-            (col(Club.ea_id).ilike(search_filter))
-        )
-
-    count_statement = select(func.count()).select_from(statement.subquery())
-    count = session.exec(count_statement).one()
-
-    statement = statement.order_by(Club.name).offset(skip).limit(limit)
-    clubs = session.exec(statement).all()
+    clubs, count = crud.get_season_clubs(
+        session=session, season_id=id, search=search, skip=skip, limit=limit
+    )
 
     return ClubsPublic(data=clubs, count=count)
 
@@ -72,14 +62,22 @@ def add_clubs_to_season(
     if not season:
         raise HTTPException(status_code=404, detail="Season not found")
 
-    for club_id in club_ids:
-        club = session.get(Club, club_id)
-        if club and club not in season.clubs:
-            season.clubs.append(club)
+    # We still want to check for missing clubs to raise 404 if requested.
+    # The CRUD function could also do this, but keeping the check here for now.
+    clubs = session.exec(select(Club).where(col(Club.id).in_(club_ids))).all()
+    found_ids = {c.id for c in clubs}
+    missing_ids = set(club_ids) - found_ids
+    if missing_ids:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Clubs not found: {[str(mid) for mid in missing_ids]}",
+        )
 
-    session.add(season)
-    session.commit()
-    return Message(message="Clubs added to season successfully")
+    added = crud.add_clubs_to_season(session=session, db_season=season, club_ids=club_ids)
+
+    return Message(
+        message=f"{added} club(s) added to season ({len(club_ids) - added} already present)"
+    )
 
 
 @router.delete(
@@ -97,10 +95,8 @@ def remove_clubs_from_season(
     if not season:
         raise HTTPException(status_code=404, detail="Season not found")
 
-    season.clubs = [c for c in season.clubs if c.id not in club_ids]
+    crud.remove_clubs_from_season(session=session, db_season=season, club_ids=club_ids)
 
-    session.add(season)
-    session.commit()
     return Message(message="Clubs removed from season successfully")
 
 

@@ -110,6 +110,17 @@ const AddClubsToSeason = ({
     )
   }
 
+  const toggleSelectAll = () => {
+    if (
+      availableClubs.length > 0 &&
+      selectedIds.length === availableClubs.length
+    ) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(availableClubs.map((c) => c.id))
+    }
+  }
+
   const handleAdd = () => {
     if (selectedIds.length > 0) {
       addClubsMutation.mutate(selectedIds)
@@ -140,6 +151,27 @@ const AddClubsToSeason = ({
 
           <div className="flex-1 overflow-y-auto border rounded-md">
             <div className="divide-y">
+              {availableClubs.length > 0 && (
+                <div className="flex items-center gap-3 px-3 py-2 bg-muted/50 sticky top-0 z-10 border-b">
+                  <Checkbox
+                    id="select-all-clubs"
+                    checked={
+                      selectedIds.length === availableClubs.length
+                        ? true
+                        : selectedIds.length > 0
+                          ? "indeterminate"
+                          : false
+                    }
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  <label
+                    htmlFor="select-all-clubs"
+                    className="flex-1 text-sm font-semibold leading-none cursor-pointer"
+                  >
+                    Select All Loaded ({availableClubs.length})
+                  </label>
+                </div>
+              )}
               {availableClubs.map((club: ClubPublic) => (
                 <div
                   key={club.id}
@@ -181,7 +213,7 @@ const AddClubsToSeason = ({
                 </div>
               )}
 
-              {availableClubs.length === 0 && status === "success" && (
+              {availableClubs.length === 0 && status === "success" && !hasNextPage && (
                 <div className="p-4 text-center text-sm text-muted-foreground">
                   No more clubs found.
                 </div>
