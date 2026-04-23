@@ -16,6 +16,16 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { type ClubPublic, SeasonsService } from "@/client"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -41,15 +51,16 @@ const SeasonDetail = () => {
   const [search, setSearch] = useState("")
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
+  const [removalOpen, setRemovalOpen] = useState(false)
+  const [removalData, setRemovalData] = useState<{
+    ids: string[]
+    names: string[]
+  } | null>(null)
+
   const { data: season, isError: isSeasonError } = useQuery({
     queryKey: ["seasons", seasonId],
     queryFn: () => SeasonsService.readSeason({ id: seasonId }),
   })
-
-  // Correction: I should probably use readSeasons with a search or just use what I have.
-  // Actually, I'll check sdk.gen.ts again for SeasonsService.readSeason.
-  // I'll assume for now I might need to add it or use readSeasons.
-  // Looking back at my backend change, I didn't add read_season. I should have.
 
   const {
     data: clubsData,
@@ -110,11 +121,14 @@ const SeasonDetail = () => {
       showSuccessToast("Clubs removed from season")
       queryClient.invalidateQueries({ queryKey: ["season-clubs", seasonId] })
       setSelectedIds([])
+      setRemovalOpen(false)
+      setRemovalData(null)
     },
     onError: (err) => {
       showErrorToast("Error removing clubs", err)
     },
   })
+
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
@@ -129,6 +143,17 @@ const SeasonDetail = () => {
       setSelectedIds([])
     } else {
       setSelectedIds(allSeasonClubs.map((c) => c.id))
+    }
+  }
+
+  const handleRemoveClick = (ids: string[], names: string[]) => {
+    setRemovalData({ ids, names })
+    setRemovalOpen(true)
+  }
+
+  const confirmRemove = () => {
+    if (removalData) {
+      removeClubsMutation.mutate(removalData.ids)
     }
   }
 
@@ -154,7 +179,12 @@ const SeasonDetail = () => {
           {selectedIds.length > 0 && (
             <Button
               variant="destructive"
-              onClick={() => removeClubsMutation.mutate(selectedIds)}
+              onClick={() => {
+                const names = allSeasonClubs
+                  .filter((c) => selectedIds.includes(c.id))
+                  .map((c) => c.name)
+                handleRemoveClick(selectedIds, names)
+              }}
               disabled={removeClubsMutation.isPending}
             >
               <Trash className="mr-2 size-4" />
@@ -194,13 +224,23 @@ const SeasonDetail = () => {
 
       <div className="rounded-md border bg-card">
         <div className="border-b px-4 py-3 flex items-center gap-4 bg-muted/50 font-medium text-sm">
-          <Checkbox
-            checked={
-              allSeasonClubs.length > 0 &&
-              selectedIds.length === allSeasonClubs.length
-            }
-            onCheckedChange={toggleSelectAll}
-          />
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={
+                totalClubs > 0 && selectedIds.length === totalClubs
+                  ? true
+                  : selectedIds.length > 0
+                    ? "indeterminate"
+                    : false
+              }
+              onCheckedChange={toggleSelectAll}
+            />
+            {allSeasonClubs.length > 0 && allSeasonClubs.length < totalClubs && (
+              <span className="text-xs text-muted-foreground hidden sm:inline">
+                Select all loaded ({allSeasonClubs.length})
+              </span>
+            )}
+          </div>
           <div className="w-10 h-10 flex items-center justify-center">Logo</div>
           <div className="flex-1">Club Name</div>
           <div>EA ID</div>
@@ -245,7 +285,7 @@ const SeasonDetail = () => {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem
                     className="text-destructive"
-                    onClick={() => removeClubsMutation.mutate([club.id])}
+                    onClick={() => handleRemoveClick([club.id], [club.name])}
                   >
                     <Trash className="mr-2 size-4" />
                     Remove from Season
@@ -288,6 +328,40 @@ const SeasonDetail = () => {
         open={addClubsOpen}
         onOpenChange={setAddClubsOpen}
       />
+
+      <AlertDialog open={removalOpen} onOpenChange={setRemovalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove{" "}
+              {removalData?.ids.length === 1 ? (
+                <span className="font-semibold">{removalData.names[0]}</span>
+              ) : (
+                <span className="font-semibold">
+                  {removalData?.ids.length} selected clubs
+                </span>
+              )}{" "}
+              from this season. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removeClubsMutation.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                confirmRemove()
+              }}
+              disabled={removeClubsMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {removeClubsMutation.isPending ? "Removing..." : "Remove"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

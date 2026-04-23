@@ -1,6 +1,7 @@
-from typing import Any
+import uuid
+from typing import Any, Sequence
 
-from sqlmodel import Session, select
+from sqlmodel import Session, col, func, select
 
 from app.core.security import get_password_hash, verify_password
 from app.models import (
@@ -121,3 +122,62 @@ def update_club(*, session: Session, db_club: Club, club_in: ClubUpdate) -> Any:
     session.commit()
     session.refresh(db_club)
     return db_club
+
+
+def get_season_clubs(
+    *,
+    session: Session,
+    season_id: uuid.UUID,
+    search: str | None = None,
+    skip: int = 0,
+    limit: int = 100,
+) -> tuple[Sequence[Club], int]:
+    statement = select(Club).join(Season.clubs).where(Season.id == season_id)
+    if search:
+        search_filter = f"%{search}%"
+        statement = statement.where(
+            (col(Club.name).ilike(search_filter)) |
+            (col(Club.ea_id).ilike(search_filter))
+        )
+
+    count_statement = select(func.count()).select_from(statement.subquery())
+    count = session.exec(count_statement).one()
+
+    statement = statement.order_by(Club.name).offset(skip).limit(limit)
+    clubs = session.exec(statement).all()
+
+    return clubs, count
+
+
+def add_clubs_to_season(
+    *, session: Session, db_season: Season, club_ids: list[uuid.UUID]
+) -> int:
+    clubs = session.exec(select(Club).where(col(Club.id).in_(club_ids))).all()
+    found_ids = {c.id for c in clubs}
+    missing_ids = set(club_ids) - found_ids
+    if missing_ids:
+        # We'll handle raising 404 in the route if needed,
+        # but the crud function should probably focus on adding what it found.
+        # Alternatively, we can pass the logic of "must find all" to the route.
+        pass
+
+    existing_ids = {c.id for c in db_season.clubs}
+    added = 0
+    for club in clubs:
+        if club.id not in existing_ids:
+            db_season.clubs.append(club)
+            added += 1
+
+    session.add(db_season)
+    session.commit()
+    session.refresh(db_season)
+    return added
+
+
+def remove_clubs_from_season(
+    *, session: Session, db_season: Season, club_ids: list[uuid.UUID]
+) -> None:
+    db_season.clubs = [c for c in db_season.clubs if c.id not in club_ids]
+    session.add(db_season)
+    session.commit()
+    session.refresh(db_season)
