@@ -7,7 +7,7 @@ from sqlmodel import Session, delete
 from app.core.config import settings
 from app.core.db import engine, init_db
 from app.main import app
-from app.models import League, Season, User
+from app.models import Club, League, Match, Scheduler, Season, User
 from tests.utils.user import authentication_token_from_email
 from tests.utils.utils import get_superuser_token_headers
 
@@ -15,9 +15,19 @@ from tests.utils.utils import get_superuser_token_headers
 @pytest.fixture(scope="session", autouse=True)
 def db() -> Generator[Session, None, None]:
     with Session(engine) as session:
+        session.execute(delete(Match))
+        session.execute(delete(Scheduler))
+        session.execute(delete(Season))
+        session.execute(delete(Club))
+        session.execute(delete(League))
+        session.execute(delete(User))
+        session.commit()
         init_db(session)
         yield session
+        session.execute(delete(Match))
+        session.execute(delete(Scheduler))
         session.execute(delete(Season))
+        session.execute(delete(Club))
         session.execute(delete(League))
         session.execute(delete(User))
         session.commit()

@@ -205,11 +205,8 @@ def test_create_duplicate_club(
         headers=superuser_token_headers,
         json=data,
     )
-    assert response.status_code == 200
-    id2 = response.json()["id"]
-
-    # Should be the same club
-    assert id1 == id2
+    assert response.status_code == 400
+    assert response.json()["detail"] == "A club with this name already exists."
 
 
 def test_bulk_create_duplicate_clubs(

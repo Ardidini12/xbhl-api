@@ -9,6 +9,7 @@ const useCustomToast = () => {
 
   const showErrorToast = (description: string, error?: any) => {
     const errorDetail =
+      error?.body?.detail ||
       error?.message ||
       error?.detail ||
       (typeof error === "string" ? error : undefined)

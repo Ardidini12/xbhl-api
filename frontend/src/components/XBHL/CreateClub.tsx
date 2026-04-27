@@ -55,13 +55,20 @@ const CreateClub = ({ open, onOpenChange }: CreateClubProps) => {
     },
   })
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      form.reset()
+      setBulkText("")
+    }
+    onOpenChange(newOpen)
+  }
+
   const mutation = useMutation({
     mutationFn: (data: ClubCreate) =>
       ClubsService.createClub({ requestBody: data }),
     onSuccess: () => {
       showSuccessToast("Club created successfully")
-      onOpenChange(false)
-      form.reset()
+      handleOpenChange(false)
       queryClient.invalidateQueries({ queryKey: ["clubs"] })
     },
     onError: (error) => {
@@ -74,8 +81,7 @@ const CreateClub = ({ open, onOpenChange }: CreateClubProps) => {
       ClubsService.bulkCreateClubs({ requestBody: data }),
     onSuccess: (res) => {
       showSuccessToast(res.message)
-      onOpenChange(false)
-      setBulkText("")
+      handleOpenChange(false)
       queryClient.invalidateQueries({ queryKey: ["clubs"] })
     },
     onError: (error) => {
@@ -115,7 +121,7 @@ const CreateClub = ({ open, onOpenChange }: CreateClubProps) => {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Add Club</DialogTitle>

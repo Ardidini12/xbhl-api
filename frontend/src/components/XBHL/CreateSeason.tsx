@@ -48,6 +48,13 @@ const CreateSeason = ({ open, onOpenChange, leagueId }: CreateSeasonProps) => {
     },
   })
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      form.reset()
+    }
+    onOpenChange(newOpen)
+  }
+
   const mutation = useMutation({
     mutationFn: (data: z.infer<typeof formSchema>) => {
       if (!leagueId || leagueId === "undefined") {
@@ -59,8 +66,7 @@ const CreateSeason = ({ open, onOpenChange, leagueId }: CreateSeasonProps) => {
     },
     onSuccess: () => {
       showSuccessToast("Season created successfully")
-      onOpenChange(false)
-      form.reset()
+      handleOpenChange(false)
     },
     onError: (err: any) => {
       handleError.call(showErrorToast, err)
@@ -75,7 +81,7 @@ const CreateSeason = ({ open, onOpenChange, leagueId }: CreateSeasonProps) => {
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Season</DialogTitle>
@@ -115,7 +121,7 @@ const CreateSeason = ({ open, onOpenChange, leagueId }: CreateSeasonProps) => {
               <Button
                 variant="outline"
                 type="button"
-                onClick={() => onOpenChange(false)}
+                onClick={() => handleOpenChange(false)}
               >
                 Cancel
               </Button>

@@ -114,6 +114,14 @@ async def create_club(*, session: SessionDep, club_in: ClubCreate) -> Any:
     # Clean name
     club_in.name = " ".join(club_in.name.split())
 
+    # Check if club already exists
+    existing_club = session.exec(select(Club).where(Club.name == club_in.name)).first()
+    if existing_club:
+        raise HTTPException(
+            status_code=400,
+            detail="A club with this name already exists.",
+        )
+
     # Fetch EA ID if not provided or even if provided (prompt says "anytime we save any clubs... we search for its ea id")
     ea_id = await fetch_ea_id(club_in.name)
     if ea_id:
@@ -146,6 +154,7 @@ async def bulk_create_clubs(*, session: SessionDep, clubs_in: list[ClubCreate]) 
     processed_clubs = await asyncio.gather(*[process_club(c) for c in clubs_in])
 
     created_count = 0
+    duplicates = []
     for club_in in processed_clubs:
         # Check if club already exists
         statement = select(Club).where(Club.name == club_in.name)
@@ -154,9 +163,16 @@ async def bulk_create_clubs(*, session: SessionDep, clubs_in: list[ClubCreate]) 
             db_obj = Club.model_validate(club_in)
             session.add(db_obj)
             created_count += 1
+        else:
+            duplicates.append(club_in.name)
 
     session.commit()
-    return Message(message=f"Successfully processed {len(clubs_in)} clubs. {created_count} new clubs created.")
+    
+    msg = f"Successfully processed {len(clubs_in)} clubs. {created_count} new clubs created."
+    if duplicates:
+        msg += f" The following clubs already exist and were skipped: {', '.join(duplicates)}."
+    
+    return Message(message=msg)
 
 @router.patch(
     "/{id}",

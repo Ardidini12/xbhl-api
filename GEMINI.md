@@ -49,6 +49,7 @@ This is a full-stack web application template featuring a FastAPI backend and a 
 - **CRUD:** Business logic is often abstracted into `backend/app/crud.py`.
 - **Formatting/Linting:** Managed by `ruff`. Run via `uv run prek run --all-files` at root.
 
+
 ### Frontend
 - **TanStack Router:** Always verify route IDs in `frontend/src/routeTree.gen.ts` when using `getRouteApi` or `navigate`. Note that route IDs for directories with an `index.tsx` (e.g., `xbhl/$leagueId.index.tsx`) must exactly match the generated output, often requiring a trailing slash (e.g., `/_layout/xbhl/$leagueId/`).
 - **Build Validation:** ALWAYS run `bun run build` in the `frontend` directory (or at least `tsc -p tsconfig.build.json`) before finalizing changes to catch TypeScript errors that would otherwise break the Docker build.
