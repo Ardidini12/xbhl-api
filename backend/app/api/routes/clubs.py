@@ -145,12 +145,18 @@ async def bulk_create_clubs(*, session: SessionDep, clubs_in: list[ClubCreate]) 
     # Process with bounded concurrency (semaphore already limits EA calls)
     processed_clubs = await asyncio.gather(*[process_club(c) for c in clubs_in])
 
+    created_count = 0
     for club_in in processed_clubs:
-        db_obj = Club.model_validate(club_in)
-        session.add(db_obj)
+        # Check if club already exists
+        statement = select(Club).where(Club.name == club_in.name)
+        existing_club = session.exec(statement).first()
+        if not existing_club:
+            db_obj = Club.model_validate(club_in)
+            session.add(db_obj)
+            created_count += 1
 
     session.commit()
-    return Message(message=f"Successfully created {len(clubs_in)} clubs")
+    return Message(message=f"Successfully processed {len(clubs_in)} clubs. {created_count} new clubs created.")
 
 @router.patch(
     "/{id}",

@@ -165,7 +165,7 @@ class SeasonsPublic(SQLModel):
 
 # Club models
 class ClubBase(SQLModel):
-    name: str = Field(min_length=1, max_length=255)
+    name: str = Field(min_length=1, max_length=255, unique=True, index=True)
     logo: str | None = Field(default=None, max_length=255)
     ea_id: str | None = Field(default=None, max_length=255)
 
@@ -258,6 +258,7 @@ class Scheduler(SchedulerBase, table=True):
         default=None,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
+    last_run_status: str | None = Field(default=None, max_length=1024)
     league: "League" = Relationship()
     season: "Season" = Relationship()
 
@@ -266,6 +267,7 @@ class Scheduler(SchedulerBase, table=True):
 class SchedulerPublic(SchedulerBase):
     id: uuid.UUID
     last_run_at: datetime | None = None
+    last_run_status: str | None = None
     league_name: str
     season_name: str
 

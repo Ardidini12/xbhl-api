@@ -18,20 +18,33 @@ HEADERS = {
     'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36'
 }
 
-async def pull_ea_data(session: Session, scheduler: Scheduler) -> None:
+async def pull_ea_data(session: Session, scheduler: Scheduler) -> str:
     # Get season for this scheduler
     season = session.get(Season, scheduler.season_id)
     if not season:
-        logger.error(f"Season {scheduler.season_id} not found for scheduler {scheduler.id}")
-        return
+        error_msg = f"Season {scheduler.season_id} not found for scheduler {scheduler.id}"
+        logger.error(error_msg)
+        scheduler.last_run_status = f"Error: {error_msg}"
+        session.add(scheduler)
+        session.commit()
+        return error_msg
 
     # Use relationship to get clubs
     clubs = season.clubs
     ea_club_ids = [club.ea_id for club in clubs if club.ea_id]
 
     if not ea_club_ids:
-        logger.info(f"No clubs with EA ID found for season {scheduler.season_id}")
-        return
+        msg = f"No clubs with EA ID found for season {scheduler.season_id}"
+        logger.info(msg)
+        scheduler.last_run_status = msg
+        scheduler.last_run_at = datetime.now(timezone.utc)
+        session.add(scheduler)
+        session.commit()
+        return msg
+
+    new_matches_count = 0
+    total_processed = 0
+    errors = []
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         for ea_id in ea_club_ids:
@@ -47,6 +60,7 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> None:
 
                 if not isinstance(matches_data, list):
                     logger.error(f"Unexpected response format from EA API for club {ea_id}")
+                    errors.append(f"Club {ea_id}: Unexpected format")
                     continue
 
                 for match_data in matches_data:
@@ -54,6 +68,7 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> None:
                     if raw_id is None or raw_id == '':
                         continue
                     match_id = str(raw_id)
+                    total_processed += 1
 
                     # Check if match already exists
                     existing_match = session.get(Match, match_id)
@@ -65,18 +80,23 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> None:
                             raw_data=match_data
                         )
                         session.add(new_match)
+                        new_matches_count += 1
                         logger.info(f"Inserted new match {match_id} for league {scheduler.league_id}")
-                    # else:
-                    #     # Optional: Update existing match data if needed
-                    #     existing_match.raw_data = match_data
-                    #     session.add(existing_match)
 
                 session.commit()
             except Exception as e:
                 session.rollback()
-                logger.error(f"Error fetching data for club {ea_id}: {e}")
+                err_msg = f"Error fetching data for club {ea_id}: {e}"
+                logger.error(err_msg)
+                errors.append(f"Club {ea_id}: {str(e)[:50]}")
                 continue
 
+    summary = f"Success: {new_matches_count} new matches from {total_processed} processed."
+    if errors:
+        summary += f" ({len(errors)} errors)"
+
     scheduler.last_run_at = datetime.now(timezone.utc)
+    scheduler.last_run_status = summary
     session.add(scheduler)
     session.commit()
+    return summary

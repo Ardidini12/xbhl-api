@@ -118,6 +118,7 @@ export type SchedulerPublic = {
     is_enabled?: boolean;
     id: string;
     last_run_at?: (string | null);
+    last_run_status?: (string | null);
     league_name: string;
     season_name: string;
 };
@@ -397,6 +398,12 @@ export type SchedulersStopSchedulerData = {
 };
 
 export type SchedulersStopSchedulerResponse = (SchedulerPublic);
+
+export type SchedulersRunSchedulerNowData = {
+    id: string;
+};
+
+export type SchedulersRunSchedulerNowResponse = (SchedulerPublic);
 
 export type SeasonsReadSeasonClubsData = {
     id: string;

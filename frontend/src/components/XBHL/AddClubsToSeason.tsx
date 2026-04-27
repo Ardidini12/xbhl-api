@@ -213,11 +213,13 @@ const AddClubsToSeason = ({
                 </div>
               )}
 
-              {availableClubs.length === 0 && status === "success" && !hasNextPage && (
-                <div className="p-4 text-center text-sm text-muted-foreground">
-                  No more clubs found.
-                </div>
-              )}
+              {availableClubs.length === 0 &&
+                status === "success" &&
+                !hasNextPage && (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    No more clubs found.
+                  </div>
+                )}
 
               <div ref={loadMoreRef} className="h-1" />
             </div>

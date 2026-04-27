@@ -121,3 +121,18 @@ I have implemented the Season Detail page and the club management functionality.
        - Included a back button for easy navigation to the seasons list.
 
   You can now navigate to a league, then "Enter Season" from any season's action menu to manage its clubs.
+
+### [Fix/Optimization] Club Name Uniqueness & Deduplication - 2026-04-27
+- **Database Integrity:**
+    - Added a `unique=True` constraint and index to the `name` field in the `Club` model.
+    - Implemented and executed a cleanup script to remove 60 duplicate club entries from the database prior to applying the migration.
+    - Applied Alembic migration `b0d0df7ae555` to enforce uniqueness at the database level.
+- **CRUD & API Enhancements:**
+    - Updated `crud.create_club` to return an existing club if a name collision is detected instead of raising an error or creating a duplicate.
+    - Updated `bulk_create_clubs` API route to handle duplicates gracefully, reporting the number of *new* clubs created.
+    - Integrated name normalization (cleaning extra spaces) into all creation and update paths.
+- **Verification:**
+    - Updated `test_clubs.py` to assert that creating a club with an existing name returns the original record.
+    - Added `test_bulk_create_duplicate_clubs` to verify graceful handling of duplicate names within a single bulk request.
+    - Fixed `test_update_club` to avoid accidental unique constraint violations during test runs.
+    - Verified all 9 club-related tests pass successfully.

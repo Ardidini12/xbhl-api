@@ -235,11 +235,12 @@ const SeasonDetail = () => {
               }
               onCheckedChange={toggleSelectAll}
             />
-            {allSeasonClubs.length > 0 && allSeasonClubs.length < totalClubs && (
-              <span className="text-xs text-muted-foreground hidden sm:inline">
-                Select all loaded ({allSeasonClubs.length})
-              </span>
-            )}
+            {allSeasonClubs.length > 0 &&
+              allSeasonClubs.length < totalClubs && (
+                <span className="text-xs text-muted-foreground hidden sm:inline">
+                  Select all loaded ({allSeasonClubs.length})
+                </span>
+              )}
           </div>
           <div className="w-10 h-10 flex items-center justify-center">Logo</div>
           <div className="flex-1">Club Name</div>

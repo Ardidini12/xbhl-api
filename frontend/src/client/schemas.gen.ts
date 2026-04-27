@@ -588,6 +588,17 @@ export const SchedulerPublicSchema = {
             ],
             title: 'Last Run At'
         },
+        last_run_status: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Last Run Status'
+        },
         league_name: {
             type: 'string',
             title: 'League Name'

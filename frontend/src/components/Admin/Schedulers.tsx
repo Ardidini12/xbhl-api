@@ -135,12 +135,13 @@ const Schedulers = () => {
 
       <div className="rounded-md border bg-card">
         <div className="divide-y">
-          <div className="grid grid-cols-6 gap-4 px-4 py-3 bg-muted/50 text-sm font-medium">
+          <div className="grid grid-cols-7 gap-4 px-4 py-3 bg-muted/50 text-sm font-medium">
             <div className="col-span-1">League/Season</div>
             <div className="col-span-1">Days</div>
             <div className="col-span-1">Timeframe (EST)</div>
-            <div className="col-span-1">Interval</div>
-            <div className="col-span-1">Status</div>
+            <div className="col-span-1 text-center">Interval</div>
+            <div className="col-span-1 text-center">Status</div>
+            <div className="col-span-1">Last Run Result</div>
             <div className="col-span-1 text-right">Actions</div>
           </div>
           {allSchedulers.map((scheduler: SchedulerPublic) => {
@@ -149,23 +150,26 @@ const Schedulers = () => {
             return (
               <div
                 key={scheduler.id}
-                className="grid grid-cols-6 gap-4 items-center px-4 py-4 hover:bg-muted/50 transition-colors"
+                className="grid grid-cols-7 gap-4 items-center px-4 py-4 hover:bg-muted/50 transition-colors"
               >
                 <div className="col-span-1 truncate font-medium">
                   {scheduler.league_name} / {scheduler.season_name}
                 </div>
-                <div className="col-span-1 text-sm text-muted-foreground">
+                <div className="col-span-1 text-xs text-muted-foreground">
                   {schedulerDays.join(", ")}
                 </div>
                 <div className="col-span-1 text-sm text-muted-foreground">
                   {scheduler.start_time.slice(0, 5)} -{" "}
                   {scheduler.end_time.slice(0, 5)}
                 </div>
-                <div className="col-span-1 text-sm text-muted-foreground">
+                <div className="col-span-1 text-sm text-muted-foreground text-center">
                   {scheduler.interval_minutes} min
                 </div>
-                <div className="col-span-1">
+                <div className="col-span-1 text-center">
                   <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                </div>
+                <div className="col-span-1 text-xs text-muted-foreground break-words italic">
+                  {scheduler.last_run_status || "Never run"}
                 </div>
                 <div className="col-span-1 text-right">
                   <SchedulerActions scheduler={scheduler} />

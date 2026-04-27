@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Edit, MoreVertical, Play, Square, Trash } from "lucide-react"
+import { Edit, MoreVertical, Play, PlayCircle, Square, Trash } from "lucide-react"
 import { useState } from "react"
 
 import { type SchedulerPublic, SchedulersService } from "@/client"
@@ -46,6 +46,22 @@ const SchedulerActions = ({ scheduler }: SchedulerActionsProps) => {
     },
   })
 
+  const runNowMutation = useMutation({
+    mutationFn: () => SchedulersService.runSchedulerNow({ id: scheduler.id }),
+    onSuccess: (data) => {
+      showSuccessToast(
+        `Manual pull completed: ${data.last_run_status || "Success"}`,
+      )
+    },
+    onError: (err: any) => {
+      handleError.call(showErrorToast, err)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["schedulers"] })
+      queryClient.invalidateQueries({ queryKey: ["matches"] })
+    },
+  })
+
   return (
     <>
       <DropdownMenu>
@@ -55,6 +71,14 @@ const SchedulerActions = ({ scheduler }: SchedulerActionsProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() => runNowMutation.mutate()}
+            disabled={runNowMutation.isPending}
+          >
+            <Play className="mr-2 size-4 text-green-500" />
+            Run Now
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => toggleMutation.mutate()}
             disabled={toggleMutation.isPending}
@@ -66,7 +90,7 @@ const SchedulerActions = ({ scheduler }: SchedulerActionsProps) => {
               </>
             ) : (
               <>
-                <Play className="mr-2 size-4" />
+                <PlayCircle className="mr-2 size-4" />
                 Start
               </>
             )}

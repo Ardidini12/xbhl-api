@@ -119,10 +119,10 @@ def test_update_club(
     db.refresh(club)
 
     with respx.mock(assert_all_called=False) as mock:
+        new_name = random_lower_string()
         mock.get(url__startswith=EA_BASE_URL).mock(
-            return_value=httpx.Response(200, json={"8501": {"clubName": "Zambroneez"}})
+            return_value=httpx.Response(200, json={"8501": {"clubName": new_name}})
         )
-        new_name = "Zambroneez"
         data = {"name": new_name}
         response = client.patch(
             f"{settings.API_V1_STR}/clubs/{club.id}",
@@ -171,7 +171,7 @@ def test_bulk_create_clubs(
         )
     assert response.status_code == 200
     content = response.json()
-    assert "Successfully created 2 clubs" in content["message"]
+    assert "Successfully processed 2 clubs" in content["message"]
 
     # Verify Zambroneez exists in DB with correct EA ID – search by name, not index
     response = client.get(
@@ -182,6 +182,55 @@ def test_bulk_create_clubs(
     zambroneez = next((c for c in clubs if c["name"] == "Zambroneez"), None)
     assert zambroneez is not None, "Zambroneez not found in response"
     assert zambroneez["ea_id"] == "8501"
+
+
+def test_create_duplicate_club(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    name = random_lower_string()
+    data = {"name": name}
+    
+    # Create first time
+    response = client.post(
+        f"{settings.API_V1_STR}/clubs/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 200
+    id1 = response.json()["id"]
+
+    # Create second time with same name
+    response = client.post(
+        f"{settings.API_V1_STR}/clubs/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 200
+    id2 = response.json()["id"]
+
+    # Should be the same club
+    assert id1 == id2
+
+
+def test_bulk_create_duplicate_clubs(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    name1 = random_lower_string()
+    name2 = random_lower_string()
+    data = [
+        {"name": name1},
+        {"name": name2},
+        {"name": name1}  # Duplicate in same request
+    ]
+    response = client.post(
+        f"{settings.API_V1_STR}/clubs/bulk",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert response.status_code == 200
+    content = response.json()
+    assert "Successfully processed 3 clubs" in content["message"]
+    assert "2 new clubs created" in content["message"]
 
 
 def test_bulk_delete_clubs(

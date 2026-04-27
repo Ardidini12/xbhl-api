@@ -108,6 +108,9 @@ def update_season(*, session: Session, db_season: Season, season_in: SeasonUpdat
 
 
 def create_club(*, session: Session, club_in: ClubCreate) -> Club:
+    db_obj = session.exec(select(Club).where(Club.name == club_in.name)).first()
+    if db_obj:
+        return db_obj
     db_obj = Club.model_validate(club_in)
     session.add(db_obj)
     session.commit()

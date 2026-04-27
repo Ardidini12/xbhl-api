@@ -216,3 +216,26 @@ def stop_scheduler(
         raise HTTPException(status_code=500, detail="Failed to stop scheduler job")
 
     return _to_public(session, db_scheduler)
+
+
+@router.post("/{id}/run", response_model=SchedulerPublic)
+async def run_scheduler_now(
+    *,
+    session: Session = Depends(get_db),
+    id: uuid.UUID,
+    _current_user: Any = Depends(get_current_active_superuser),
+) -> Any:
+    """
+    Trigger the scheduler pull immediately.
+    """
+    from app.services.ea_api import pull_ea_data
+
+    db_scheduler = session.get(Scheduler, id)
+    if not db_scheduler:
+        raise HTTPException(status_code=404, detail="Scheduler not found")
+
+    # This is a manual run, so we bypass the time window and just call the service
+    await pull_ea_data(session, db_scheduler)
+    session.refresh(db_scheduler)
+
+    return _to_public(session, db_scheduler)
