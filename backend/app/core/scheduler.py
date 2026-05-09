@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 async_scheduler = AsyncIOScheduler()
 
+
 async def scheduler_job(scheduler_id: uuid.UUID):
     with Session(engine) as session:
         db_scheduler = session.get(Scheduler, scheduler_id)
@@ -25,7 +26,7 @@ async def scheduler_job(scheduler_id: uuid.UUID):
         eastern_tz = ZoneInfo("America/New_York")
         now = datetime.now(eastern_tz)
 
-        current_day = now.strftime('%A')
+        current_day = now.strftime("%A")
         current_time = now.time()
 
         if current_day not in db_scheduler.days:
@@ -36,16 +37,24 @@ async def scheduler_job(scheduler_id: uuid.UUID):
         if db_scheduler.start_time <= db_scheduler.end_time:
             # Normal window (no midnight wrap)
             if not (db_scheduler.start_time <= current_time <= db_scheduler.end_time):
-                logger.debug(f"Scheduler {scheduler_id} skipped: outside time window {db_scheduler.start_time}-{db_scheduler.end_time}")
+                logger.debug(
+                    f"Scheduler {scheduler_id} skipped: outside time window {db_scheduler.start_time}-{db_scheduler.end_time}"
+                )
                 return
         else:
             # Overnight window (wraps midnight)
-            if not (current_time >= db_scheduler.start_time or current_time <= db_scheduler.end_time):
-                logger.debug(f"Scheduler {scheduler_id} skipped: outside time window {db_scheduler.start_time}-{db_scheduler.end_time}")
+            if not (
+                current_time >= db_scheduler.start_time
+                or current_time <= db_scheduler.end_time
+            ):
+                logger.debug(
+                    f"Scheduler {scheduler_id} skipped: outside time window {db_scheduler.start_time}-{db_scheduler.end_time}"
+                )
                 return
 
         logger.info(f"Running EA pull for scheduler {scheduler_id}")
         await pull_ea_data(session, db_scheduler)
+
 
 def add_scheduler_job(db_scheduler: Scheduler):
     if db_scheduler.is_enabled:
@@ -54,33 +63,39 @@ def add_scheduler_job(db_scheduler: Scheduler):
             trigger=IntervalTrigger(minutes=db_scheduler.interval_minutes),
             args=[db_scheduler.id],
             id=str(db_scheduler.id),
-            replace_existing=True
+            replace_existing=True,
         )
         logger.info(f"Added/Updated job for scheduler {db_scheduler.id}")
-        
+
         # Check if we are currently in the window and should run immediately
         eastern_tz = ZoneInfo("America/New_York")
         now = datetime.now(eastern_tz)
-        current_day = now.strftime('%A')
+        current_day = now.strftime("%A")
         current_time = now.time()
-        
+
         in_window = False
         if current_day in db_scheduler.days:
             if db_scheduler.start_time <= db_scheduler.end_time:
                 if db_scheduler.start_time <= current_time <= db_scheduler.end_time:
                     in_window = True
             else:
-                if current_time >= db_scheduler.start_time or current_time <= db_scheduler.end_time:
+                if (
+                    current_time >= db_scheduler.start_time
+                    or current_time <= db_scheduler.end_time
+                ):
                     in_window = True
-        
+
         if in_window:
-            logger.info(f"Scheduler {db_scheduler.id} is active now. Triggering immediate run.")
+            logger.info(
+                f"Scheduler {db_scheduler.id} is active now. Triggering immediate run."
+            )
             async_scheduler.add_job(
                 scheduler_job,
                 args=[db_scheduler.id],
                 id=f"{db_scheduler.id}_initial",
-                replace_existing=True
+                replace_existing=True,
             )
+
 
 def remove_scheduler_job(scheduler_id: uuid.UUID):
     try:
@@ -88,6 +103,7 @@ def remove_scheduler_job(scheduler_id: uuid.UUID):
         logger.info(f"Removed job for scheduler {scheduler_id}")
     except Exception:
         pass
+
 
 def start_all_jobs():
     with Session(engine) as session:

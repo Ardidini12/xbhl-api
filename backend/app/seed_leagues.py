@@ -8,6 +8,7 @@ from app.models import League, LeagueCreate
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def seed_leagues() -> None:
     with Session(engine) as session:
         # Check if we already have leagues to avoid duplicates if run multiple times
@@ -21,13 +22,14 @@ def seed_leagues() -> None:
         for i in range(1, 101):
             league_in = LeagueCreate(
                 name=f"League {i:03d}",
-                description=f"Description for XBHL League {i:03d}"
+                description=f"Description for XBHL League {i:03d}",
             )
             leagues.append(League.model_validate(league_in))
 
         session.add_all(leagues)
         session.commit()
         logger.info("Successfully seeded 100 leagues")
+
 
 if __name__ == "__main__":
     seed_leagues()

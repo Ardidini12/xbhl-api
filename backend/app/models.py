@@ -84,13 +84,21 @@ class LeagueUpdate(LeagueBase):
 
 # Link tables for many-to-many relationships
 class ClubSeasonLink(SQLModel, table=True):
-    club_id: uuid.UUID = Field(foreign_key="club.id", primary_key=True, ondelete="CASCADE")
-    season_id: uuid.UUID = Field(foreign_key="season.id", primary_key=True, ondelete="CASCADE")
+    club_id: uuid.UUID = Field(
+        foreign_key="club.id", primary_key=True, ondelete="CASCADE"
+    )
+    season_id: uuid.UUID = Field(
+        foreign_key="season.id", primary_key=True, ondelete="CASCADE"
+    )
 
 
 class ClubLeagueLink(SQLModel, table=True):
-    club_id: uuid.UUID = Field(foreign_key="club.id", primary_key=True, ondelete="CASCADE")
-    league_id: uuid.UUID = Field(foreign_key="league.id", primary_key=True, ondelete="CASCADE")
+    club_id: uuid.UUID = Field(
+        foreign_key="club.id", primary_key=True, ondelete="CASCADE"
+    )
+    league_id: uuid.UUID = Field(
+        foreign_key="league.id", primary_key=True, ondelete="CASCADE"
+    )
 
 
 # Database model, database table inferred from class name
@@ -101,7 +109,9 @@ class League(LeagueBase, table=True):
         sa_type=DateTime(timezone=True),  # type: ignore
     )
     seasons: list["Season"] = Relationship(back_populates="league", cascade_delete=True)
-    clubs: list["Club"] = Relationship(back_populates="leagues", link_model=ClubLeagueLink)
+    clubs: list["Club"] = Relationship(
+        back_populates="leagues", link_model=ClubLeagueLink
+    )
 
 
 # Properties to return via API, id is always required
@@ -148,9 +158,13 @@ class Season(SeasonBase, table=True):
         default=None,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
-    league_id: uuid.UUID = Field(foreign_key="league.id", nullable=False, ondelete="CASCADE", index=True)
+    league_id: uuid.UUID = Field(
+        foreign_key="league.id", nullable=False, ondelete="CASCADE", index=True
+    )
     league: "League" = Relationship(back_populates="seasons")
-    clubs: list["Club"] = Relationship(back_populates="seasons", link_model=ClubSeasonLink)
+    clubs: list["Club"] = Relationship(
+        back_populates="seasons", link_model=ClubSeasonLink
+    )
 
 
 # Properties to return via API
@@ -189,8 +203,12 @@ class Club(ClubBase, table=True):
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
-    seasons: list["Season"] = Relationship(back_populates="clubs", link_model=ClubSeasonLink)
-    leagues: list["League"] = Relationship(back_populates="clubs", link_model=ClubLeagueLink)
+    seasons: list["Season"] = Relationship(
+        back_populates="clubs", link_model=ClubSeasonLink
+    )
+    leagues: list["League"] = Relationship(
+        back_populates="clubs", link_model=ClubLeagueLink
+    )
 
 
 # Properties to return via API
@@ -227,8 +245,12 @@ class NewPassword(SQLModel):
 
 # Scheduler models
 class SchedulerBase(SQLModel):
-    league_id: uuid.UUID = Field(foreign_key="league.id", ondelete="CASCADE", index=True)
-    season_id: uuid.UUID = Field(foreign_key="season.id", ondelete="CASCADE", index=True)
+    league_id: uuid.UUID = Field(
+        foreign_key="league.id", ondelete="CASCADE", index=True
+    )
+    season_id: uuid.UUID = Field(
+        foreign_key="season.id", ondelete="CASCADE", index=True
+    )
     days: list[str] = Field(default_factory=list, sa_type=JSON)  # type: ignore
     start_time: time
     end_time: time
@@ -252,7 +274,9 @@ class SchedulerUpdate(SQLModel):
 
 # Database model
 class Scheduler(SchedulerBase, table=True):
-    __table_args__ = (UniqueConstraint("league_id", "season_id", name="uq_scheduler_league_season"),)
+    __table_args__ = (
+        UniqueConstraint("league_id", "season_id", name="uq_scheduler_league_season"),
+    )
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     last_run_at: datetime | None = Field(
         default=None,
@@ -280,8 +304,12 @@ class SchedulersPublic(SQLModel):
 # Match models
 class MatchBase(SQLModel):
     match_id: str = Field(primary_key=True)
-    league_id: uuid.UUID = Field(foreign_key="league.id", ondelete="CASCADE", index=True)
-    season_id: uuid.UUID = Field(foreign_key="season.id", ondelete="CASCADE", index=True)
+    league_id: uuid.UUID = Field(
+        foreign_key="league.id", ondelete="CASCADE", index=True
+    )
+    season_id: uuid.UUID = Field(
+        foreign_key="season.id", ondelete="CASCADE", index=True
+    )
     raw_data: dict = Field(default_factory=dict, sa_type=JSON)  # type: ignore
 
 

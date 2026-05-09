@@ -1,5 +1,6 @@
 import uuid
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 from sqlmodel import Session, col, func, select
 
@@ -81,7 +82,9 @@ def create_league(*, session: Session, league_in: LeagueCreate) -> League:
     return db_obj
 
 
-def update_league(*, session: Session, db_league: League, league_in: LeagueUpdate) -> Any:
+def update_league(
+    *, session: Session, db_league: League, league_in: LeagueUpdate
+) -> Any:
     league_data = league_in.model_dump(exclude_unset=True)
     db_league.sqlmodel_update(league_data)
     session.add(db_league)
@@ -98,7 +101,9 @@ def create_season(*, session: Session, season_in: SeasonCreate) -> Season:
     return db_obj
 
 
-def update_season(*, session: Session, db_season: Season, season_in: SeasonUpdate) -> Any:
+def update_season(
+    *, session: Session, db_season: Season, season_in: SeasonUpdate
+) -> Any:
     season_data = season_in.model_dump(exclude_unset=True)
     db_season.sqlmodel_update(season_data)
     session.add(db_season)
@@ -139,8 +144,8 @@ def get_season_clubs(
     if search:
         search_filter = f"%{search}%"
         statement = statement.where(
-            (col(Club.name).ilike(search_filter)) |
-            (col(Club.ea_id).ilike(search_filter))
+            (col(Club.name).ilike(search_filter))
+            | (col(Club.ea_id).ilike(search_filter))
         )
 
     count_statement = select(func.count()).select_from(statement.subquery())

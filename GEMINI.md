@@ -90,7 +90,7 @@ This is a full-stack web application template featuring a FastAPI backend and a 
 ## EA Match Pulling System
 - **API Constraints:** The EA API matches endpoint only returns the last 5 matches for a club. High-frequency polling (minimum 1-minute intervals) is required during active windows to speed up data return so users can be notified as soon as possible.
 - **Worker Architecture:** Pulling is performed using a high-concurrency worker pool (asyncio.Semaphore) to process hundreds of clubs in seconds.
-- **Validation Rules:** 
+- **Validation Rules:**
     - **Global Deduplication:** Every match is unique via the `matchId` primary key. Once saved, it will never be overwritten or duplicated.
     - **Data Capture:** During a scheduler's active window, ALL matches retrieved for clubs in that season are saved to ensure no match from the 5-match history is missed.
 - **Anti-Bot Measures:** Every API request rotates through a list of modern browser `User-Agent` strings and includes a randomized "jitter" delay to mimic human behavior and avoid IP flagging.
@@ -103,10 +103,12 @@ I have expanded the USER_AGENTS list, updated the relevant endpoints, and implem
 9 may 
 matches are now displayed by timestamp played, latest match is displayed first in matches tab.
 
-  - Backend: Updated backend/app/api/routes/matches.py to sort matches by the timestamp field within the raw_data JSON column using PostgreSQL-compatible SQLAlchemy syntax
-     (Match.raw_data["timestamp"].astext.cast(Integer).desc()). This ensures that pagination (infinite scroll) works correctly by fetching the latest matches first from the
-     database.
-   - Frontend: Updated frontend/src/components/Admin/Matches.tsx to sort the combined pages of matches in the allMatches useMemo. This provides a secondary layer of sorting to
-     ensure the display order is strictly correct based on the timestamp, regardless of fetch order.
+- Backend: Updated backend/app/api/routes/matches.py to sort matches by the timestamp field within the raw_data JSON column using PostgreSQL-compatible SQLAlchemy syntax
+  (Match.raw_data["timestamp"].astext.cast(Integer).desc()). This ensures that pagination (infinite scroll) works correctly by fetching the latest matches first from the
+  database.
+- Frontend: Updated frontend/src/components/Admin/Matches.tsx to sort the combined pages of matches in the allMatches useMemo. This provides a secondary layer of sorting to
+  ensure the display order is strictly correct based on the timestamp, regardless of fetch order.
 
-  These changes satisfy the requirement to display the latest game plays first, using the timestamp found in the raw data.
+These changes satisfy the requirement to display the latest game plays first, using the timestamp found in the raw data.
+
+
