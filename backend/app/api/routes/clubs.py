@@ -35,6 +35,8 @@ def get_http_client() -> httpx.AsyncClient:
         _http_client = httpx.AsyncClient()
     return _http_client
 
+from app.services.ea_api import get_headers
+
 # Semaphore to cap concurrent EA API requests
 _ea_semaphore = asyncio.Semaphore(5)
 
@@ -46,16 +48,11 @@ async def fetch_ea_id(club_name: str) -> str | None:
     cleaned_name = " ".join(club_name.split())
     encoded_name = quote(cleaned_name)
     url = f"https://proclubs.ea.com/api/nhl/clubs/search?platform=common-gen5&clubName={encoded_name}"
-    headers = {
-        "accept": "application/json",
-        "origin": "https://www.ea.com",
-        "referer": "https://www.ea.com/",
-        "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
-    }
+    
     async with _ea_semaphore:
         try:
             client = get_http_client()
-            response = await client.get(url, headers=headers, timeout=10.0)
+            response = await client.get(url, headers=get_headers(), timeout=10.0)
             if response.status_code == 200:
                 data = response.json()
                 if data and isinstance(data, dict):

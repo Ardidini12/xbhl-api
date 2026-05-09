@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import String, cast
+from sqlalchemy import Integer, String, cast
 from sqlmodel import Session, func, select
 
 from app.api.deps import get_current_active_superuser, get_db
@@ -15,6 +15,7 @@ from app.models import (
 )
 
 router = APIRouter(prefix="/matches", tags=["matches"])
+
 
 @router.get("/", response_model=MatchesPublic)
 def read_matches(
@@ -29,15 +30,24 @@ def read_matches(
     """
     statement = select(Match)
     if club_name:
-        statement = statement.where(cast(Match.raw_data, String).ilike(f"%{club_name}%"))
+        statement = statement.where(
+            cast(Match.raw_data, String).ilike(f"%{club_name}%")
+        )
 
     count_statement = select(func.count()).select_from(statement.subquery())
     count = session.exec(count_statement).one()
 
-    statement = statement.order_by(Match.created_at.desc()).offset(skip).limit(limit)
+    # Sort by timestamp in raw_data (JSON)
+    # Match.raw_data["timestamp"] accesses the field, astext converts to string, cast to Integer for proper numeric sort
+    statement = (
+        statement.order_by(Match.raw_data["timestamp"].astext.cast(Integer).desc())
+        .offset(skip)
+        .limit(limit)
+    )
     matches = session.exec(statement).all()
 
     return MatchesPublic(data=matches, count=count)
+
 
 @router.patch("/{match_id}", response_model=MatchPublic)
 def update_match(
@@ -60,6 +70,7 @@ def update_match(
     session.refresh(db_match)
     return db_match
 
+
 @router.delete("/{match_id}")
 def delete_match(
     *,
@@ -76,6 +87,7 @@ def delete_match(
     session.delete(db_match)
     session.commit()
     return Message(message="Match deleted successfully")
+
 
 @router.post("/bulk-delete")
 def bulk_delete_matches(

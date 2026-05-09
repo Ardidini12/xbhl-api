@@ -57,6 +57,30 @@ def add_scheduler_job(db_scheduler: Scheduler):
             replace_existing=True
         )
         logger.info(f"Added/Updated job for scheduler {db_scheduler.id}")
+        
+        # Check if we are currently in the window and should run immediately
+        eastern_tz = ZoneInfo("America/New_York")
+        now = datetime.now(eastern_tz)
+        current_day = now.strftime('%A')
+        current_time = now.time()
+        
+        in_window = False
+        if current_day in db_scheduler.days:
+            if db_scheduler.start_time <= db_scheduler.end_time:
+                if db_scheduler.start_time <= current_time <= db_scheduler.end_time:
+                    in_window = True
+            else:
+                if current_time >= db_scheduler.start_time or current_time <= db_scheduler.end_time:
+                    in_window = True
+        
+        if in_window:
+            logger.info(f"Scheduler {db_scheduler.id} is active now. Triggering immediate run.")
+            async_scheduler.add_job(
+                scheduler_job,
+                args=[db_scheduler.id],
+                id=f"{db_scheduler.id}_initial",
+                replace_existing=True
+            )
 
 def remove_scheduler_job(scheduler_id: uuid.UUID):
     try:
