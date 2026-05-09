@@ -56,7 +56,12 @@ const Matches = () => {
     })
 
   const allMatches = useMemo(() => {
-    return data?.pages.flatMap((page) => page.data) ?? []
+    const matches = data?.pages.flatMap((page) => page.data) ?? []
+    return [...matches].sort((a, b) => {
+      const timeA = Number((a.raw_data as any)?.timestamp || 0)
+      const timeB = Number((b.raw_data as any)?.timestamp || 0)
+      return timeB - timeA
+    })
   }, [data])
 
   const totalMatches = data?.pages[0]?.count ?? 0
