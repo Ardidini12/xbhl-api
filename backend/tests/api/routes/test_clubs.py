@@ -38,14 +38,17 @@ def mock_ea_api():
 
 def _make_ea_handler(payload):
     """Return a respx side_effect that checks the clubName param."""
+
     def handler(_request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json=payload)
+
     return handler
 
 
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 def test_create_club(
     client: TestClient, superuser_token_headers: dict[str, str]
@@ -75,7 +78,9 @@ def test_create_club_with_big_name(
 ) -> None:
     with respx.mock(assert_all_called=False) as mock:
         mock.get(url__startswith=EA_BASE_URL).mock(
-            return_value=httpx.Response(200, json={"220": {"clubName": "QCHL3s Canadien MTL"}})
+            return_value=httpx.Response(
+                200, json={"220": {"clubName": "QCHL3s Canadien MTL"}}
+            )
         )
         name = "QCHL3s Canadien MTL"
         data = {"name": name}
@@ -160,10 +165,7 @@ def test_bulk_create_clubs(
         mock.get(url__startswith=EA_BASE_URL).mock(
             return_value=httpx.Response(200, json={"8501": {"clubName": "Zambroneez"}})
         )
-        data = [
-            {"name": "Zambroneez"},
-            {"name": "QCHL3s Canadien MTL"}
-        ]
+        data = [{"name": "Zambroneez"}, {"name": "QCHL3s Canadien MTL"}]
         response = client.post(
             f"{settings.API_V1_STR}/clubs/bulk",
             headers=superuser_token_headers,
@@ -189,7 +191,7 @@ def test_create_duplicate_club(
 ) -> None:
     name = random_lower_string()
     data = {"name": name}
-    
+
     # Create first time
     response = client.post(
         f"{settings.API_V1_STR}/clubs/",
@@ -217,7 +219,7 @@ def test_bulk_create_duplicate_clubs(
     data = [
         {"name": name1},
         {"name": name2},
-        {"name": name1}  # Duplicate in same request
+        {"name": name1},  # Duplicate in same request
     ]
     response = client.post(
         f"{settings.API_V1_STR}/clubs/bulk",

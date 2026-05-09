@@ -53,7 +53,9 @@ def read_schedulers(
 
     statement = (
         select(
-            Scheduler, League.name.label("league_name"), Season.name.label("season_name")
+            Scheduler,
+            League.name.label("league_name"),
+            Season.name.label("season_name"),
         )
         .join(League, Scheduler.league_id == League.id)
         .join(Season, Scheduler.season_id == Season.id)

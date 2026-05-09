@@ -32,8 +32,8 @@ def read_leagues(
     if search:
         search_filter = f"%{search}%"
         statement = statement.where(
-            (col(League.name).ilike(search_filter)) |
-            (col(League.description).ilike(search_filter))
+            (col(League.name).ilike(search_filter))
+            | (col(League.description).ilike(search_filter))
         )
 
     count_statement = select(func.count()).select_from(statement.subquery())
@@ -61,7 +61,9 @@ def read_league(session: SessionDep, id: uuid.UUID) -> Any:
 
 
 @router.post(
-    "/", dependencies=[Depends(get_current_active_superuser)], response_model=LeaguePublic
+    "/",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=LeaguePublic,
 )
 def create_league(*, session: SessionDep, league_in: LeagueCreate) -> Any:
     """
@@ -103,7 +105,9 @@ def delete_league(session: SessionDep, id: uuid.UUID) -> Message:
 
 
 @router.post("/bulk-delete", dependencies=[Depends(get_current_active_superuser)])
-def bulk_delete_leagues(session: SessionDep, ids: list[uuid.UUID] = Body(...)) -> Message:
+def bulk_delete_leagues(
+    session: SessionDep, ids: list[uuid.UUID] = Body(...)
+) -> Message:
     """
     Delete multiple leagues.
     """

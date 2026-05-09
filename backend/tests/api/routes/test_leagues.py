@@ -133,8 +133,12 @@ def test_league_seasons_cascade_delete(
     db.refresh(league)
 
     # Create seasons for the league
-    s1 = Season.model_validate(SeasonCreate(name=random_lower_string(), league_id=league.id))
-    s2 = Season.model_validate(SeasonCreate(name=random_lower_string(), league_id=league.id))
+    s1 = Season.model_validate(
+        SeasonCreate(name=random_lower_string(), league_id=league.id)
+    )
+    s2 = Season.model_validate(
+        SeasonCreate(name=random_lower_string(), league_id=league.id)
+    )
     db.add(s1)
     db.add(s2)
     db.commit()

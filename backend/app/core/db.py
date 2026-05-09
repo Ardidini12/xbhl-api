@@ -1,10 +1,16 @@
+from sqlalchemy.orm import sessionmaker
 from sqlmodel import Session, create_engine, select
 
 from app import crud
 from app.core.config import settings
 from app.models import User, UserCreate
 
-engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
+engine = create_engine(
+    str(settings.SQLALCHEMY_DATABASE_URI),
+    pool_size=settings.EA_API_CONCURRENCY_LIMIT,
+    max_overflow=20,
+)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, class_=Session)
 
 
 # make sure all SQLModel models are imported (app.models) before initializing DB

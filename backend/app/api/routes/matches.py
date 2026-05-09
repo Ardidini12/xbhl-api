@@ -38,9 +38,18 @@ def read_matches(
     count = session.exec(count_statement).one()
 
     # Sort by timestamp in raw_data (JSON)
-    # Match.raw_data["timestamp"] accesses the field, astext converts to string, cast to Integer for proper numeric sort
+    # Defensive sorting: remove non-numeric chars, handle nulls/empty, and cast to Integer
+    # Also add match_id as a secondary sort key to ensure deterministic ordering on ties
+    timestamp_expr = func.coalesce(
+        func.nullif(
+            func.regexp_replace(Match.raw_data["timestamp"].astext, r"[^0-9]", "", "g"),
+            "",
+        ).cast(Integer),
+        0,
+    )
+
     statement = (
-        statement.order_by(Match.raw_data["timestamp"].astext.cast(Integer).desc())
+        statement.order_by(timestamp_expr.desc(), Match.match_id.desc())
         .offset(skip)
         .limit(limit)
     )

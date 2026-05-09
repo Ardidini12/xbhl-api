@@ -3,7 +3,7 @@ from collections.abc import Generator
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import event
-from sqlmodel import Session, create_engine
+from sqlmodel import Session
 
 from app.api.deps import get_db
 from app.core.config import settings
@@ -23,13 +23,13 @@ def setup_test_db() -> None:
 def db() -> Generator[Session, None, None]:
     # Connect to the database
     connection = engine.connect()
-    
+
     # Begin a non-ORM transaction
     transaction = connection.begin()
-    
+
     # Bind a new session to the connection
     session = Session(bind=connection)
-    
+
     # Start a nested transaction (savepoint)
     # This allows the app to call session.commit() which will only "commit" the savepoint
     nested = connection.begin_nested()
@@ -58,7 +58,7 @@ def client(db: Session) -> Generator[TestClient, None, None]:
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
-    app.dependency_overrides.clear()
+    app.dependency_overrides.pop(get_db, None)
 
 
 @pytest.fixture(scope="function")

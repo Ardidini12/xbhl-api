@@ -1,12 +1,9 @@
-import asyncio
-from typing import Any
-
 import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
 from app.core.config import settings
-from app.models import Club, ClubCreate, League, LeagueCreate, Match, Scheduler, SchedulerCreate, Season, SeasonCreate
+from app.models import LeagueCreate, Match, Scheduler, SeasonCreate
 from app.services.ea_api import pull_ea_data
 
 
@@ -15,7 +12,9 @@ async def test_scheduler_pull_integration(
     client: TestClient, superuser_token_headers: dict[str, str], db: Session
 ) -> None:
     # 1. Create a Test League
-    league_in = LeagueCreate(name="Test Integration League", description="Test League for EA Pull")
+    league_in = LeagueCreate(
+        name="Test Integration League", description="Test League for EA Pull"
+    )
     response = client.post(
         f"{settings.API_V1_STR}/leagues/",
         headers=superuser_token_headers,
@@ -84,11 +83,19 @@ async def test_scheduler_pull_integration(
     scheduler_in = {
         "league_id": league_id,
         "season_id": season_id,
-        "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        "days": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+            "Sunday",
+        ],
         "start_time": "00:00:00",
         "end_time": "23:59:59",
         "interval_minutes": 1,
-        "is_enabled": True
+        "is_enabled": True,
     }
     response = client.post(
         f"{settings.API_V1_STR}/schedulers/",
@@ -116,6 +123,6 @@ async def test_scheduler_pull_integration(
     # 6. Verify matches are saved
     matches_statement = select(Match).where(Match.season_id == season_id)
     matches = db.exec(matches_statement).all()
-    
+
     print(f"Found {len(matches)} matches saved for season {season_id}")
     assert len(matches) > 0

@@ -95,7 +95,7 @@ This file tracks the features implemented, architectural decisions made, and the
 
 
 
-21 april: 
+21 april:
 I have implemented the Season Detail page and the club management functionality.
 
   Changes Summary

@@ -73,7 +73,9 @@ def add_clubs_to_season(
             detail=f"Clubs not found: {[str(mid) for mid in missing_ids]}",
         )
 
-    added = crud.add_clubs_to_season(session=session, db_season=season, club_ids=club_ids)
+    added = crud.add_clubs_to_season(
+        session=session, db_season=season, club_ids=club_ids
+    )
 
     return Message(
         message=f"{added} club(s) added to season ({len(club_ids) - added} already present)"
@@ -118,10 +120,10 @@ def read_seasons(
     if search:
         search_filter = f"%{search}%"
         statement = statement.where(
-            (col(Season.name).ilike(search_filter)) |
-            (col(Season.description).ilike(search_filter)) |
-            (cast(Season.start_date, String).ilike(search_filter)) |
-            (cast(Season.end_date, String).ilike(search_filter))
+            (col(Season.name).ilike(search_filter))
+            | (col(Season.description).ilike(search_filter))
+            | (cast(Season.start_date, String).ilike(search_filter))
+            | (cast(Season.end_date, String).ilike(search_filter))
         )
 
     count_statement = select(func.count()).select_from(statement.subquery())
@@ -134,7 +136,9 @@ def read_seasons(
 
 
 @router.post(
-    "/", dependencies=[Depends(get_current_active_superuser)], response_model=SeasonPublic
+    "/",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=SeasonPublic,
 )
 def create_season(*, session: SessionDep, season_in: SeasonCreate) -> Any:
     """
@@ -208,7 +212,9 @@ def delete_season(session: SessionDep, id: uuid.UUID) -> Message:
 
 
 @router.post("/bulk-delete", dependencies=[Depends(get_current_active_superuser)])
-def bulk_delete_seasons(session: SessionDep, ids: list[uuid.UUID] = Body(...)) -> Message:
+def bulk_delete_seasons(
+    session: SessionDep, ids: list[uuid.UUID] = Body(...)
+) -> Message:
     """
     Delete multiple seasons.
     """

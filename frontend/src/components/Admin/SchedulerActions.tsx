@@ -1,5 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Edit, MoreVertical, Play, PlayCircle, Square, Trash } from "lucide-react"
+import {
+  Edit,
+  MoreVertical,
+  Play,
+  PlayCircle,
+  Square,
+  Trash,
+} from "lucide-react"
 import { useState } from "react"
 
 import { type SchedulerPublic, SchedulersService } from "@/client"

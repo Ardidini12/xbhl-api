@@ -13,6 +13,7 @@ from app.api.deps import (
     SessionDep,
     get_current_active_superuser,
 )
+from app.core.config import settings
 from app.models import (
     Club,
     ClubCreate,
@@ -21,6 +22,7 @@ from app.models import (
     ClubUpdate,
     Message,
 )
+from app.services.ea_api import get_headers
 
 logger = logging.getLogger(__name__)
 
@@ -29,26 +31,27 @@ router = APIRouter(prefix="/clubs", tags=["clubs"])
 # Shared AsyncClient – initialized once, reused across requests
 _http_client: httpx.AsyncClient | None = None
 
+
 def get_http_client() -> httpx.AsyncClient:
     global _http_client
     if _http_client is None or _http_client.is_closed:
         _http_client = httpx.AsyncClient()
     return _http_client
 
-from app.services.ea_api import get_headers
 
 # Semaphore to cap concurrent EA API requests
-_ea_semaphore = asyncio.Semaphore(5)
+_ea_semaphore = asyncio.Semaphore(settings.EA_API_CONCURRENCY_LIMIT)
 
 # Hard limit on bulk payload size
 BULK_MAX_CLUBS = 100
+
 
 async def fetch_ea_id(club_name: str) -> str | None:
     # Remove extra spaces as requested
     cleaned_name = " ".join(club_name.split())
     encoded_name = quote(cleaned_name)
     url = f"https://proclubs.ea.com/api/nhl/clubs/search?platform=common-gen5&clubName={encoded_name}"
-    
+
     async with _ea_semaphore:
         try:
             client = get_http_client()
@@ -64,6 +67,7 @@ async def fetch_ea_id(club_name: str) -> str | None:
             logger.error("Unexpected error fetching EA ID for %r: %s", club_name, exc)
     return None
 
+
 @router.get("/", response_model=ClubsPublic)
 def read_clubs(
     session: SessionDep, search: str | None = None, skip: int = 0, limit: int = 100
@@ -75,8 +79,8 @@ def read_clubs(
     if search:
         search_filter = f"%{search}%"
         statement = statement.where(
-            (col(Club.name).ilike(search_filter)) |
-            (col(Club.ea_id).ilike(search_filter))
+            (col(Club.name).ilike(search_filter))
+            | (col(Club.ea_id).ilike(search_filter))
         )
 
     count_statement = select(func.count()).select_from(statement.subquery())
@@ -91,6 +95,7 @@ def read_clubs(
 
     return ClubsPublic(data=clubs, count=count)
 
+
 @router.get("/{id}", response_model=ClubPublic)
 def read_club(session: SessionDep, id: uuid.UUID) -> Any:
     """
@@ -100,6 +105,7 @@ def read_club(session: SessionDep, id: uuid.UUID) -> Any:
     if not club:
         raise HTTPException(status_code=404, detail="Club not found")
     return club
+
 
 @router.post(
     "/", dependencies=[Depends(get_current_active_superuser)], response_model=ClubPublic
@@ -127,8 +133,11 @@ async def create_club(*, session: SessionDep, club_in: ClubCreate) -> Any:
     club = crud.create_club(session=session, club_in=club_in)
     return club
 
+
 @router.post(
-    "/bulk", dependencies=[Depends(get_current_active_superuser)], response_model=Message
+    "/bulk",
+    dependencies=[Depends(get_current_active_superuser)],
+    response_model=Message,
 )
 async def bulk_create_clubs(*, session: SessionDep, clubs_in: list[ClubCreate]) -> Any:
     """
@@ -164,12 +173,13 @@ async def bulk_create_clubs(*, session: SessionDep, clubs_in: list[ClubCreate]) 
             duplicates.append(club_in.name)
 
     session.commit()
-    
+
     msg = f"Successfully processed {len(clubs_in)} clubs. {created_count} new clubs created."
     if duplicates:
         msg += f" The following clubs already exist and were skipped: {', '.join(duplicates)}."
-    
+
     return Message(message=msg)
+
 
 @router.patch(
     "/{id}",
@@ -199,6 +209,7 @@ async def update_club(
     club = crud.update_club(session=session, db_club=db_club, club_in=club_in)
     return club
 
+
 @router.delete("/{id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_club(session: SessionDep, id: uuid.UUID) -> Message:
     """
@@ -210,6 +221,7 @@ def delete_club(session: SessionDep, id: uuid.UUID) -> Message:
     session.delete(club)
     session.commit()
     return Message(message="Club deleted successfully")
+
 
 @router.post("/bulk-delete", dependencies=[Depends(get_current_active_superuser)])
 def bulk_delete_clubs(session: SessionDep, ids: list[uuid.UUID] = Body(...)) -> Message:
