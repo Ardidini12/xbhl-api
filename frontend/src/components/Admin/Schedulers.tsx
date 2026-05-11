@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import { AlertCircle, Plus, Search } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
@@ -10,6 +11,7 @@ import CreateScheduler from "./CreateScheduler"
 import SchedulerActions from "./SchedulerActions"
 
 const Schedulers = () => {
+  const navigate = useNavigate()
   const [createOpen, setCreateOpen] = useState(false)
   const [search, setSearch] = useState("")
   const loadMoreRef = useRef<HTMLDivElement>(null)
@@ -150,7 +152,13 @@ const Schedulers = () => {
             return (
               <div
                 key={scheduler.id}
-                className="grid grid-cols-7 gap-4 items-center px-4 py-4 hover:bg-muted/50 transition-colors"
+                className="grid grid-cols-7 gap-4 items-center px-4 py-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                onDoubleClick={() =>
+                  navigate({
+                    to: "/admin/schedulers/$schedulerId",
+                    params: { schedulerId: scheduler.id },
+                  })
+                }
               >
                 <div className="col-span-1 truncate font-medium">
                   {scheduler.league_name} / {scheduler.season_name}

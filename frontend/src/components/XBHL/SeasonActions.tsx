@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { useNavigate } from "@tanstack/react-router"
-import { CalendarX, Edit, LogIn, MoreVertical, Trash } from "lucide-react"
+import { CalendarX, Edit, MoreVertical, Trash } from "lucide-react"
 import { useState } from "react"
 import { type SeasonPublic, SeasonsService } from "@/client"
 import { Button } from "@/components/ui/button"
@@ -20,7 +19,6 @@ interface SeasonActionsProps {
 }
 
 const SeasonActions = ({ season }: SeasonActionsProps) => {
-  const navigate = useNavigate()
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const queryClient = useQueryClient()
@@ -46,20 +44,6 @@ const SeasonActions = ({ season }: SeasonActionsProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() =>
-              navigate({
-                to: "/xbhl/$leagueId/$seasonId",
-                params: {
-                  leagueId: season.league_id,
-                  seasonId: season.id,
-                },
-              })
-            }
-          >
-            <LogIn className="mr-2 size-4" />
-            Enter Season
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
             <Edit className="mr-2 size-4" />
             Edit

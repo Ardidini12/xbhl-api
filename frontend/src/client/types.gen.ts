@@ -98,6 +98,23 @@ export type PrivateUserCreate = {
     is_verified?: boolean;
 };
 
+export type SchedulerActivitiesPublic = {
+    data: Array<SchedulerActivityPublic>;
+    count: number;
+};
+
+export type SchedulerActivityPublic = {
+    id: string;
+    scheduler_id: string;
+    started_at: string;
+    finished_at?: (string | null);
+    status: string;
+    summary?: (string | null);
+    details: {
+        [key: string]: unknown;
+    };
+};
+
 export type SchedulerCreate = {
     league_id: string;
     season_id: string;
@@ -164,6 +181,24 @@ export type SeasonUpdate = {
 export type Token = {
     access_token: string;
     token_type?: string;
+};
+
+export type UnsavedMatchesPublic = {
+    data: Array<UnsavedMatchPublic>;
+    count: number;
+};
+
+export type UnsavedMatchPublic = {
+    match_id: string;
+    league_id: string;
+    season_id: string;
+    raw_data?: {
+        [key: string]: unknown;
+    };
+    created_at?: (string | null);
+    updated_at?: (string | null);
+    scheduler_id: string;
+    reason?: (string | null);
 };
 
 export type UpdatePassword = {
@@ -374,6 +409,12 @@ export type SchedulersCreateSchedulerData = {
 
 export type SchedulersCreateSchedulerResponse = (SchedulerPublic);
 
+export type SchedulersReadSchedulerData = {
+    id: string;
+};
+
+export type SchedulersReadSchedulerResponse = (SchedulerPublic);
+
 export type SchedulersUpdateSchedulerData = {
     id: string;
     requestBody: SchedulerUpdate;
@@ -404,6 +445,34 @@ export type SchedulersRunSchedulerNowData = {
 };
 
 export type SchedulersRunSchedulerNowResponse = (SchedulerPublic);
+
+export type SchedulersReadSchedulerActivitiesData = {
+    id: string;
+    limit?: number;
+    skip?: number;
+};
+
+export type SchedulersReadSchedulerActivitiesResponse = (SchedulerActivitiesPublic);
+
+export type SchedulersReadUnsavedMatchesData = {
+    id: string;
+    limit?: number;
+    skip?: number;
+};
+
+export type SchedulersReadUnsavedMatchesResponse = (UnsavedMatchesPublic);
+
+export type SchedulersPromoteUnsavedMatchData = {
+    matchId: string;
+};
+
+export type SchedulersPromoteUnsavedMatchResponse = (MatchPublic);
+
+export type SchedulersDeleteUnsavedMatchData = {
+    matchId: string;
+};
+
+export type SchedulersDeleteUnsavedMatchResponse = (Message);
 
 export type SeasonsReadSeasonClubsData = {
     id: string;

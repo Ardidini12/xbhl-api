@@ -341,3 +341,60 @@ class MatchPublic(MatchBase):
 class MatchesPublic(SQLModel):
     data: list[MatchPublic]
     count: int
+
+
+# New models for Scheduler visibility and validation
+class UnsavedMatch(MatchBase, table=True):
+    scheduler_id: uuid.UUID = Field(
+        foreign_key="scheduler.id", ondelete="CASCADE", index=True
+    )
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    reason: str | None = Field(default=None, max_length=255)
+    scheduler: "Scheduler" = Relationship()
+
+
+class UnsavedMatchPublic(MatchPublic):
+    scheduler_id: uuid.UUID
+    reason: str | None = None
+
+
+class UnsavedMatchesPublic(SQLModel):
+    data: list[UnsavedMatchPublic]
+    count: int
+
+
+class SchedulerActivity(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    scheduler_id: uuid.UUID = Field(
+        foreign_key="scheduler.id", ondelete="CASCADE", index=True
+    )
+    started_at: datetime = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    finished_at: datetime | None = Field(
+        default=None,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+    status: str = Field(default="running", max_length=50)  # running, success, error
+    summary: str | None = Field(default=None, max_length=1024)
+    details: dict = Field(default_factory=dict, sa_type=JSON)  # type: ignore
+    scheduler: "Scheduler" = Relationship()
+
+
+class SchedulerActivityPublic(SQLModel):
+    id: uuid.UUID
+    scheduler_id: uuid.UUID
+    started_at: datetime
+    finished_at: datetime | None = None
+    status: str
+    summary: str | None = None
+    details: dict
+
+
+class SchedulerActivitiesPublic(SQLModel):
+    data: list[SchedulerActivityPublic]
+    count: int
