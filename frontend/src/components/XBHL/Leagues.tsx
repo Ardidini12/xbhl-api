@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import { AlertCircle, Plus, Search, Trash } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
@@ -11,6 +12,7 @@ import DeleteLeague from "./DeleteLeague"
 import LeagueActions from "./LeagueActions"
 
 const Leagues = () => {
+  const navigate = useNavigate()
   const [createOpen, setCreateOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [deleteOpen, setDeleteOpen] = useState(false)
@@ -138,7 +140,8 @@ const Leagues = () => {
           {allLeagues.map((league: LeaguePublic) => (
             <div
               key={league.id}
-              className="flex items-center gap-4 px-4 py-4 hover:bg-muted/50 transition-colors"
+              className="flex items-center gap-4 px-4 py-4 hover:bg-muted/50 transition-colors cursor-pointer"
+              onDoubleClick={() => navigate({ to: "/xbhl/$leagueId", params: { leagueId: league.id } })}
             >
               <Checkbox
                 checked={selectedIds.includes(league.id)}

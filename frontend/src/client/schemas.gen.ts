@@ -485,6 +485,80 @@ export const PrivateUserCreateSchema = {
     title: 'PrivateUserCreate'
 } as const;
 
+export const SchedulerActivitiesPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/SchedulerActivityPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'SchedulerActivitiesPublic'
+} as const;
+
+export const SchedulerActivityPublicSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        scheduler_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Scheduler Id'
+        },
+        started_at: {
+            type: 'string',
+            format: 'date-time',
+            title: 'Started At'
+        },
+        finished_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Finished At'
+        },
+        status: {
+            type: 'string',
+            title: 'Status'
+        },
+        summary: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Summary'
+        },
+        details: {
+            additionalProperties: true,
+            type: 'object',
+            title: 'Details'
+        }
+    },
+    type: 'object',
+    required: ['id', 'scheduler_id', 'started_at', 'status', 'details'],
+    title: 'SchedulerActivityPublic'
+} as const;
+
 export const SchedulerCreateSchema = {
     properties: {
         league_id: {
@@ -857,6 +931,92 @@ export const TokenSchema = {
     type: 'object',
     required: ['access_token'],
     title: 'Token'
+} as const;
+
+export const UnsavedMatchPublicSchema = {
+    properties: {
+        match_id: {
+            type: 'string',
+            title: 'Match Id'
+        },
+        league_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'League Id'
+        },
+        season_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Season Id'
+        },
+        raw_data: {
+            additionalProperties: true,
+            type: 'object',
+            title: 'Raw Data'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        },
+        updated_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Updated At'
+        },
+        scheduler_id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Scheduler Id'
+        },
+        reason: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Reason'
+        }
+    },
+    type: 'object',
+    required: ['match_id', 'league_id', 'season_id', 'scheduler_id'],
+    title: 'UnsavedMatchPublic'
+} as const;
+
+export const UnsavedMatchesPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/UnsavedMatchPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'UnsavedMatchesPublic'
 } as const;
 
 export const UpdatePasswordSchema = {

@@ -175,7 +175,8 @@ const Seasons = () => {
           {allSeasons.map((season: SeasonPublic) => (
             <div
               key={season.id}
-              className="flex items-center gap-4 px-4 py-4 hover:bg-muted/50 transition-colors"
+              className="flex items-center gap-4 px-4 py-4 hover:bg-muted/50 transition-colors cursor-pointer"
+              onDoubleClick={() => navigate({ to: "/xbhl/$leagueId/$seasonId", params: { leagueId, seasonId: season.id } })}
             >
               <Checkbox
                 checked={selectedIds.includes(season.id)}
@@ -251,3 +252,4 @@ const Seasons = () => {
 }
 
 export default Seasons
+

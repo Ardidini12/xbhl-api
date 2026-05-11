@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
-import Schedulers from "@/components/Admin/Schedulers"
+import { createFileRoute, Outlet } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_layout/admin/schedulers")({
-  component: Schedulers,
+  component: () => <Outlet />,
 })

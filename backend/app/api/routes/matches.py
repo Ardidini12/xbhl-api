@@ -42,7 +42,7 @@ def read_matches(
     # Also add match_id as a secondary sort key to ensure deterministic ordering on ties
     timestamp_expr = func.coalesce(
         func.nullif(
-            func.regexp_replace(Match.raw_data["timestamp"].astext, r"[^0-9]", "", "g"),
+            func.regexp_replace(cast(Match.raw_data["timestamp"], String), r"[^0-9]", "", "g"),
             "",
         ).cast(Integer),
         0,

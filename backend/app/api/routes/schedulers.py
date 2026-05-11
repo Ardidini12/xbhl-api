@@ -9,13 +9,19 @@ from app.api.deps import get_current_active_superuser, get_db
 from app.core.scheduler import add_scheduler_job, remove_scheduler_job
 from app.models import (
     League,
+    Match,
+    MatchPublic,
     Message,
     Scheduler,
+    SchedulerActivitiesPublic,
+    SchedulerActivity,
     SchedulerCreate,
     SchedulerPublic,
     SchedulersPublic,
     SchedulerUpdate,
     Season,
+    UnsavedMatch,
+    UnsavedMatchesPublic,
 )
 
 router = APIRouter(prefix="/schedulers", tags=["schedulers"])
@@ -74,6 +80,22 @@ def read_schedulers(
         data.append(scheduler_public)
 
     return SchedulersPublic(data=data, count=count)
+
+
+@router.get("/{id}", response_model=SchedulerPublic)
+def read_scheduler(
+    *,
+    session: Session = Depends(get_db),
+    id: uuid.UUID,
+    _current_user: Any = Depends(get_current_active_superuser),
+) -> Any:
+    """
+    Get a scheduler by id.
+    """
+    db_scheduler = session.get(Scheduler, id)
+    if not db_scheduler:
+        raise HTTPException(status_code=404, detail="Scheduler not found")
+    return _to_public(session, db_scheduler)
 
 
 @router.post("/", response_model=SchedulerPublic)
@@ -241,3 +263,110 @@ async def run_scheduler_now(
     session.refresh(db_scheduler)
 
     return _to_public(session, db_scheduler)
+
+
+@router.get("/{id}/activities", response_model=SchedulerActivitiesPublic)
+def read_scheduler_activities(
+    *,
+    session: Session = Depends(get_db),
+    id: uuid.UUID,
+    skip: int = 0,
+    limit: int = 50,
+    _current_user: Any = Depends(get_current_active_superuser),
+) -> Any:
+    """
+    Retrieve activity logs for a specific scheduler.
+    """
+    count_statement = select(func.count()).where(SchedulerActivity.scheduler_id == id)
+    count = session.exec(count_statement).one()
+
+    statement = (
+        select(SchedulerActivity)
+        .where(SchedulerActivity.scheduler_id == id)
+        .order_by(SchedulerActivity.started_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    activities = session.exec(statement).all()
+
+    return SchedulerActivitiesPublic(data=activities, count=count)
+
+
+@router.get("/{id}/unsaved-matches", response_model=UnsavedMatchesPublic)
+def read_unsaved_matches(
+    *,
+    session: Session = Depends(get_db),
+    id: uuid.UUID,
+    skip: int = 0,
+    limit: int = 100,
+    _current_user: Any = Depends(get_current_active_superuser),
+) -> Any:
+    """
+    Retrieve unsaved matches for a specific scheduler.
+    """
+    count_statement = select(func.count()).where(UnsavedMatch.scheduler_id == id)
+    count = session.exec(count_statement).one()
+
+    statement = (
+        select(UnsavedMatch)
+        .where(UnsavedMatch.scheduler_id == id)
+        .order_by(UnsavedMatch.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    matches = session.exec(statement).all()
+
+    return UnsavedMatchesPublic(data=matches, count=count)
+
+
+@router.post("/unsaved-matches/{match_id}/promote", response_model=MatchPublic)
+def promote_unsaved_match(
+    *,
+    session: Session = Depends(get_db),
+    match_id: str,
+    _current_user: Any = Depends(get_current_active_superuser),
+) -> Any:
+    """
+    Promote an unsaved match to a regular match.
+    """
+    unsaved_match = session.get(UnsavedMatch, match_id)
+    if not unsaved_match:
+        raise HTTPException(status_code=404, detail="Unsaved match not found")
+
+    # Check if it's already in Match (global deduplication safety)
+    if session.get(Match, match_id):
+        session.delete(unsaved_match)
+        session.commit()
+        raise HTTPException(status_code=409, detail="Match already exists")
+
+    # Move to Match
+    match = Match(
+        match_id=unsaved_match.match_id,
+        league_id=unsaved_match.league_id,
+        season_id=unsaved_match.season_id,
+        raw_data=unsaved_match.raw_data,
+    )
+    session.add(match)
+    session.delete(unsaved_match)
+    session.commit()
+    session.refresh(match)
+
+    return match
+
+
+@router.delete("/unsaved-matches/{match_id}")
+def delete_unsaved_match(
+    *,
+    session: Session = Depends(get_db),
+    match_id: str,
+    _current_user: Any = Depends(get_current_active_superuser),
+) -> Message:
+    """
+    Delete an unsaved match.
+    """
+    unsaved_match = session.get(UnsavedMatch, match_id)
+    if not unsaved_match:
+        raise HTTPException(status_code=404, detail="Unsaved match not found")
+    session.delete(unsaved_match)
+    session.commit()
+    return Message(message="Unsaved match deleted successfully")

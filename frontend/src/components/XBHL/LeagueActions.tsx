@@ -1,5 +1,4 @@
-import { useNavigate } from "@tanstack/react-router"
-import { Edit, LogIn, MoreVertical, Trash } from "lucide-react"
+import { Edit, MoreVertical, Trash } from "lucide-react"
 import { useState } from "react"
 import type { LeaguePublic } from "@/client"
 import { Button } from "@/components/ui/button"
@@ -19,7 +18,6 @@ interface LeagueActionsProps {
 const LeagueActions = ({ league }: LeagueActionsProps) => {
   const [editOpen, setEditOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
-  const navigate = useNavigate()
 
   return (
     <>
@@ -30,17 +28,6 @@ const LeagueActions = ({ league }: LeagueActionsProps) => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() =>
-              navigate({
-                to: "/xbhl/$leagueId",
-                params: { leagueId: league.id },
-              })
-            }
-          >
-            <LogIn className="mr-2 size-4" />
-            Enter League
-          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setEditOpen(true)}>
             <Edit className="mr-2 size-4" />
             Edit
