@@ -108,7 +108,7 @@ async def process_club_matches(
                     # Intersect match clubs with our season clubs
                     matching_clubs = match_club_ids.intersection(season_club_ea_ids)
                     
-                    if len(matching_clubs) >= 2:
+                    if len(matching_clubs) == len(match_club_ids) and len(matching_clubs) >= 2:
                         # Success: Both clubs are in our season
                         new_match = Match(
                             match_id=match_id,

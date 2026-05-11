@@ -178,10 +178,12 @@ const Seasons = () => {
               className="flex items-center gap-4 px-4 py-4 hover:bg-muted/50 transition-colors cursor-pointer"
               onDoubleClick={() => navigate({ to: "/xbhl/$leagueId/$seasonId", params: { leagueId, seasonId: season.id } })}
             >
-              <Checkbox
-                checked={selectedIds.includes(season.id)}
-                onCheckedChange={() => toggleSelect(season.id)}
-              />
+              <div onClick={(e) => e.stopPropagation()}>
+                <Checkbox
+                  checked={selectedIds.includes(season.id)}
+                  onCheckedChange={() => toggleSelect(season.id)}
+                />
+              </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold text-lg truncate">
                   {season.name}
@@ -199,7 +201,9 @@ const Seasons = () => {
                   </p>
                 )}
               </div>
-              <SeasonActions season={season} />
+              <div onClick={(e) => e.stopPropagation()}>
+                <SeasonActions season={season} />
+              </div>
             </div>
           ))}
 
