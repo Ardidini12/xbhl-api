@@ -141,7 +141,12 @@ const Leagues = () => {
             <div
               key={league.id}
               className="flex items-center gap-4 px-4 py-4 hover:bg-muted/50 transition-colors cursor-pointer"
-              onDoubleClick={() => navigate({ to: "/xbhl/$leagueId", params: { leagueId: league.id } })}
+              onClick={() =>
+                navigate({
+                  to: "/xbhl/$leagueId",
+                  params: { leagueId: league.id },
+                })
+              }
             >
               <div onClick={(e) => e.stopPropagation()}>
                 <Checkbox

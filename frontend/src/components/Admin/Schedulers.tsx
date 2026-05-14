@@ -153,7 +153,7 @@ const Schedulers = () => {
               <div
                 key={scheduler.id}
                 className="grid grid-cols-7 gap-4 items-center px-4 py-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                onDoubleClick={() =>
+                onClick={() =>
                   navigate({
                     to: "/admin/schedulers/$schedulerId",
                     params: { schedulerId: scheduler.id },
@@ -179,7 +179,10 @@ const Schedulers = () => {
                 <div className="col-span-1 text-xs text-muted-foreground break-words italic">
                   {scheduler.last_run_status || "Never run"}
                 </div>
-                <div className="col-span-1 text-right">
+                <div
+                  className="col-span-1 text-right"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <SchedulerActions scheduler={scheduler} />
                 </div>
               </div>

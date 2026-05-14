@@ -343,6 +343,24 @@ class MatchesPublic(SQLModel):
     count: int
 
 
+class SeasonStats(SQLModel):
+    id: uuid.UUID
+    name: str
+    count: int
+
+
+class LeagueStats(SQLModel):
+    id: uuid.UUID
+    name: str
+    count: int
+    seasons: list[SeasonStats]
+
+
+class ClubStatsPublic(SQLModel):
+    total_matches: int
+    leagues: list[LeagueStats]
+
+
 # New models for Scheduler visibility and validation
 class UnsavedMatch(MatchBase, table=True):
     scheduler_id: uuid.UUID = Field(

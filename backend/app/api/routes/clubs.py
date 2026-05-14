@@ -19,8 +19,11 @@ from app.models import (
     ClubCreate,
     ClubPublic,
     ClubsPublic,
+    ClubStatsPublic,
     ClubUpdate,
+    LeagueStats,
     Message,
+    SeasonStats,
 )
 from app.services.ea_api import get_headers
 
@@ -105,6 +108,74 @@ def read_club(session: SessionDep, id: uuid.UUID) -> Any:
     if not club:
         raise HTTPException(status_code=404, detail="Club not found")
     return club
+
+
+@router.get("/{id}/stats", response_model=ClubStatsPublic)
+def read_club_stats(session: SessionDep, id: uuid.UUID) -> Any:
+    """
+    Get club statistics grouped by league and season.
+    """
+    club = session.get(Club, id)
+    if not club:
+        raise HTTPException(status_code=404, detail="Club not found")
+
+    # Filter matches where raw_data contains the club name (case-insensitive)
+    # We cast raw_data to string for ilike search
+    search_filter = f"%{club.name}%"
+    statement = (
+        select(Match)
+        .where(cast(Match.raw_data, String).ilike(search_filter))
+    )
+    matches = session.exec(statement).all()
+
+    total_matches = len(matches)
+    
+    # Group by league and season
+    leagues_dict: dict[uuid.UUID, dict[str, Any]] = {}
+    
+    for match in matches:
+        l_id = match.league_id
+        s_id = match.season_id
+        
+        if l_id not in leagues_dict:
+            leagues_dict[l_id] = {
+                "id": l_id,
+                "name": match.league.name if match.league else "Unknown League",
+                "count": 0,
+                "seasons": {}
+            }
+        
+        leagues_dict[l_id]["count"] += 1
+        
+        if s_id not in leagues_dict[l_id]["seasons"]:
+            leagues_dict[l_id]["seasons"][s_id] = {
+                "id": s_id,
+                "name": match.season.name if match.season else "Unknown Season",
+                "count": 0
+            }
+        
+        leagues_dict[l_id]["seasons"][s_id]["count"] += 1
+
+    # Convert to response model
+    league_stats_list = []
+    for l_id, l_data in leagues_dict.items():
+        season_stats_list = [
+            SeasonStats(id=s_id, name=s_data["name"], count=s_data["count"])
+            for s_id, s_data in l_data["seasons"].items()
+        ]
+        league_stats_list.append(
+            LeagueStats(
+                id=l_id,
+                name=l_data["name"],
+                count=l_data["count"],
+                seasons=season_stats_list
+            )
+        )
+
+    return ClubStatsPublic(
+        total_matches=total_matches,
+        leagues=league_stats_list
+    )
 
 
 @router.post(

@@ -150,6 +150,25 @@ export const ClubPublicSchema = {
     title: 'ClubPublic'
 } as const;
 
+export const ClubStatsPublicSchema = {
+    properties: {
+        total_matches: {
+            type: 'integer',
+            title: 'Total Matches'
+        },
+        leagues: {
+            items: {
+                '$ref': '#/components/schemas/LeagueStats'
+            },
+            type: 'array',
+            title: 'Leagues'
+        }
+    },
+    type: 'object',
+    required: ['total_matches', 'leagues'],
+    title: 'ClubStatsPublic'
+} as const;
+
 export const ClubUpdateSchema = {
     properties: {
         name: {
@@ -294,6 +313,34 @@ export const LeaguePublicSchema = {
     type: 'object',
     required: ['name', 'id'],
     title: 'LeaguePublic'
+} as const;
+
+export const LeagueStatsSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        },
+        seasons: {
+            items: {
+                '$ref': '#/components/schemas/SeasonStats'
+            },
+            type: 'array',
+            title: 'Seasons'
+        }
+    },
+    type: 'object',
+    required: ['id', 'name', 'count', 'seasons'],
+    title: 'LeagueStats'
 } as const;
 
 export const LeagueUpdateSchema = {
@@ -863,6 +910,27 @@ export const SeasonPublicSchema = {
     type: 'object',
     required: ['name', 'league_id', 'id'],
     title: 'SeasonPublic'
+} as const;
+
+export const SeasonStatsSchema = {
+    properties: {
+        id: {
+            type: 'string',
+            format: 'uuid',
+            title: 'Id'
+        },
+        name: {
+            type: 'string',
+            title: 'Name'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['id', 'name', 'count'],
+    title: 'SeasonStats'
 } as const;
 
 export const SeasonUpdateSchema = {
