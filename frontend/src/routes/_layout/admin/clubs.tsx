@@ -1,6 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router"
-import Clubs from "@/components/XBHL/Clubs"
+import { createFileRoute, Outlet } from "@tanstack/react-router"
 
 export const Route = createFileRoute("/_layout/admin/clubs")({
-  component: Clubs,
+  component: () => <Outlet />,
 })

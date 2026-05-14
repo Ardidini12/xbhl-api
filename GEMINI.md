@@ -87,7 +87,7 @@ This is a full-stack web application template featuring a FastAPI backend and a 
 - Crucial variables for local dev: `DOMAIN`, `POSTGRES_PASSWORD`, `SECRET_KEY`, `FIRST_SUPERUSER_PASSWORD`.
 
 29 april
-- **Navigation Preference:** Always use double-click events to navigate to detail pages from list views (Leagues, Seasons, Clubs, Schedulers). The "Enter [Resource]" menu option should be phased out in favor of this more intuitive interaction. Ensure a "Back" button is always present on detail pages.
+- **Navigation Preference:** Always use single-click events to navigate to detail pages from list views (Leagues, Seasons, Clubs, Schedulers). This ensures a consistent and intuitive user experience across the application. Ensure that interactions with interactive elements within the row (like checkboxes or action menus) use `e.stopPropagation()` to prevent unwanted navigation. A "Back" button should always be present on detail pages.
 - **EA Match Pulling System:**
   - **API Constraints:** The EA API matches endpoint only returns the last 5 matches for a club. High-frequency polling (minimum 1-minute intervals) is required during active windows to speed up data return so users can be notified as soon as possible.
   - **Validation Rules:**
@@ -152,4 +152,30 @@ These changes satisfy the requirement to display the latest game plays first, us
 
 
 
-      
+14 may: 
+Summary of Changes
+
+  Backend Enhancements
+   - Statistics Endpoint: Added GET /api/v1/clubs/{id}/stats to retrieve match statistics for a specific club, grouped by league and season.
+   - Match Filtering: Updated read_matches in backend/app/api/routes/matches.py to support filtering by league_id and season_id.
+   - Data Models: Introduced ClubStatsPublic, LeagueStats, and SeasonStats in backend/app/models.py to support the new hierarchical statistics view.
+
+  Frontend Enhancements
+   - Club Detail Page: Created a new, visually rich Club Profile page (frontend/src/components/XBHL/ClubDetail.tsx) featuring:
+       - Header: Large club logo and name with EA ID badge.
+       - Overall Stats: Quick-view cards for total matches and leagues played.
+       - Competition History: A hierarchical view using accordions:
+           - Leagues: Displays total games per league.
+           - Seasons: Displays total games per season.
+           - Matches: An infinite scroll list of matches within each season, showing match IDs, dates, and scores.
+       - Global Filter: A search bar to filter match history by opponent name or match ID.
+   - Improved Navigation:
+       - Updated Clubs.tsx to support single-click row navigation to the details page, adhering to the project's UX standards.
+       - Implemented a "Back" button on the detail page for easy navigation.
+   - Route Restructuring: Standardized club routes by creating a nested structure:
+       - admin/clubs/index.tsx: The list view.
+       - admin/clubs/$clubId.tsx: The detail view.
+       - admin/clubs.tsx: A parent layout to manage route nesting.
+  These changes provide a comprehensive and intuitive way to view a club's performance history across various competitions.
+
+  

@@ -28,6 +28,11 @@ export type ClubsPublic = {
     count: number;
 };
 
+export type ClubStatsPublic = {
+    total_matches: number;
+    leagues: Array<LeagueStats>;
+};
+
 export type ClubUpdate = {
     name?: (string | null);
     logo?: (string | null);
@@ -53,6 +58,13 @@ export type LeaguePublic = {
 export type LeaguesPublic = {
     data: Array<LeaguePublic>;
     count: number;
+};
+
+export type LeagueStats = {
+    id: string;
+    name: string;
+    count: number;
+    seasons: Array<SeasonStats>;
 };
 
 export type LeagueUpdate = {
@@ -173,6 +185,12 @@ export type SeasonsPublic = {
     count: number;
 };
 
+export type SeasonStats = {
+    id: string;
+    name: string;
+    count: number;
+};
+
 export type SeasonUpdate = {
     name?: (string | null);
     description?: (string | null);
@@ -286,6 +304,12 @@ export type ClubsDeleteClubData = {
 
 export type ClubsDeleteClubResponse = (Message);
 
+export type ClubsReadClubStatsData = {
+    id: string;
+};
+
+export type ClubsReadClubStatsResponse = (ClubStatsPublic);
+
 export type ClubsBulkCreateClubsData = {
     requestBody: Array<ClubCreate>;
 };
@@ -365,7 +389,9 @@ export type LoginRecoverPasswordHtmlContentResponse = (string);
 
 export type MatchesReadMatchesData = {
     clubName?: (string | null);
+    leagueId?: (string | null);
     limit?: number;
+    seasonId?: (string | null);
     skip?: number;
 };
 

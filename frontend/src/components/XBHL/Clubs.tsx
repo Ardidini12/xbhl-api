@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query"
+import { useNavigate } from "@tanstack/react-router"
 import { AlertCircle, Plus, Search, Trash } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
@@ -16,6 +17,7 @@ const Clubs = () => {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [search, setSearch] = useState("")
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery({
@@ -141,12 +143,20 @@ const Clubs = () => {
           {allClubs.map((club: ClubPublic) => (
             <div
               key={club.id}
-              className="grid grid-cols-[auto_1fr_2fr_1fr_auto] gap-4 px-4 py-3 hover:bg-muted/50 transition-colors items-center"
+              className="grid grid-cols-[auto_1fr_2fr_1fr_auto] gap-4 px-4 py-3 hover:bg-muted/50 transition-colors items-center cursor-pointer"
+              onClick={() =>
+                navigate({
+                  to: "/admin/clubs/$clubId",
+                  params: { clubId: club.id },
+                })
+              }
             >
-              <Checkbox
-                checked={selectedIds.includes(club.id)}
-                onCheckedChange={() => toggleSelect(club.id)}
-              />
+              <div onClick={(e) => e.stopPropagation()}>
+                <Checkbox
+                  checked={selectedIds.includes(club.id)}
+                  onCheckedChange={() => toggleSelect(club.id)}
+                />
+              </div>
               <div className="w-12 h-12 flex items-center justify-center overflow-hidden rounded-md border bg-muted/20">
                 {club.logo ? (
                   <img
@@ -162,7 +172,9 @@ const Clubs = () => {
               <div className="text-sm text-muted-foreground font-mono">
                 {club.ea_id || "N/A"}
               </div>
-              <ClubActions club={club} />
+              <div onClick={(e) => e.stopPropagation()}>
+                <ClubActions club={club} />
+              </div>
             </div>
           ))}
 

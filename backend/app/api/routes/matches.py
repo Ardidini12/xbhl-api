@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timezone
 from typing import Any
 
@@ -23,16 +24,23 @@ def read_matches(
     skip: int = 0,
     limit: int = 100,
     club_name: str | None = None,
+    league_id: uuid.UUID | None = None,
+    season_id: uuid.UUID | None = None,
     _current_user: Any = Depends(get_current_active_superuser),
 ) -> Any:
     """
-    Retrieve matches. Filter by club name (case-insensitive) in raw_data.
+    Retrieve matches. Filter by club name (case-insensitive) in raw_data,
+    or by league_id and season_id.
     """
     statement = select(Match)
     if club_name:
         statement = statement.where(
             cast(Match.raw_data, String).ilike(f"%{club_name}%")
         )
+    if league_id:
+        statement = statement.where(Match.league_id == league_id)
+    if season_id:
+        statement = statement.where(Match.season_id == season_id)
 
     count_statement = select(func.count()).select_from(statement.subquery())
     count = session.exec(count_statement).one()

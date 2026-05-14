@@ -176,7 +176,12 @@ const Seasons = () => {
             <div
               key={season.id}
               className="flex items-center gap-4 px-4 py-4 hover:bg-muted/50 transition-colors cursor-pointer"
-              onDoubleClick={() => navigate({ to: "/xbhl/$leagueId/$seasonId", params: { leagueId, seasonId: season.id } })}
+              onClick={() =>
+                navigate({
+                  to: "/xbhl/$leagueId/$seasonId",
+                  params: { leagueId, seasonId: season.id },
+                })
+              }
             >
               <div onClick={(e) => e.stopPropagation()}>
                 <Checkbox
@@ -256,4 +261,3 @@ const Seasons = () => {
 }
 
 export default Seasons
-

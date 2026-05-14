@@ -25,8 +25,10 @@ import { Route as LayoutAdminMatchesRouteImport } from './routes/_layout/admin/m
 import { Route as LayoutAdminClubsRouteImport } from './routes/_layout/admin/clubs'
 import { Route as LayoutXbhlLeagueIdIndexRouteImport } from './routes/_layout/xbhl/$leagueId.index'
 import { Route as LayoutAdminSchedulersIndexRouteImport } from './routes/_layout/admin/schedulers/index'
+import { Route as LayoutAdminClubsIndexRouteImport } from './routes/_layout/admin/clubs/index'
 import { Route as LayoutXbhlLeagueIdSeasonIdRouteImport } from './routes/_layout/xbhl/$leagueId.$seasonId'
 import { Route as LayoutAdminSchedulersSchedulerIdRouteImport } from './routes/_layout/admin/schedulers/$schedulerId'
+import { Route as LayoutAdminClubsClubIdRouteImport } from './routes/_layout/admin/clubs/$clubId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -108,6 +110,11 @@ const LayoutAdminSchedulersIndexRoute =
     path: '/',
     getParentRoute: () => LayoutAdminSchedulersRoute,
   } as any)
+const LayoutAdminClubsIndexRoute = LayoutAdminClubsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => LayoutAdminClubsRoute,
+} as any)
 const LayoutXbhlLeagueIdSeasonIdRoute =
   LayoutXbhlLeagueIdSeasonIdRouteImport.update({
     id: '/$leagueId/$seasonId',
@@ -120,6 +127,11 @@ const LayoutAdminSchedulersSchedulerIdRoute =
     path: '/$schedulerId',
     getParentRoute: () => LayoutAdminSchedulersRoute,
   } as any)
+const LayoutAdminClubsClubIdRoute = LayoutAdminClubsClubIdRouteImport.update({
+  id: '/$clubId',
+  path: '/$clubId',
+  getParentRoute: () => LayoutAdminClubsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
@@ -130,13 +142,15 @@ export interface FileRoutesByFullPath {
   '/admin': typeof LayoutAdminRouteWithChildren
   '/settings': typeof LayoutSettingsRoute
   '/xbhl': typeof LayoutXbhlRouteWithChildren
-  '/admin/clubs': typeof LayoutAdminClubsRoute
+  '/admin/clubs': typeof LayoutAdminClubsRouteWithChildren
   '/admin/matches': typeof LayoutAdminMatchesRoute
   '/admin/schedulers': typeof LayoutAdminSchedulersRouteWithChildren
   '/admin/': typeof LayoutAdminIndexRoute
   '/xbhl/': typeof LayoutXbhlIndexRoute
+  '/admin/clubs/$clubId': typeof LayoutAdminClubsClubIdRoute
   '/admin/schedulers/$schedulerId': typeof LayoutAdminSchedulersSchedulerIdRoute
   '/xbhl/$leagueId/$seasonId': typeof LayoutXbhlLeagueIdSeasonIdRoute
+  '/admin/clubs/': typeof LayoutAdminClubsIndexRoute
   '/admin/schedulers/': typeof LayoutAdminSchedulersIndexRoute
   '/xbhl/$leagueId/': typeof LayoutXbhlLeagueIdIndexRoute
 }
@@ -147,12 +161,13 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/settings': typeof LayoutSettingsRoute
   '/': typeof LayoutIndexRoute
-  '/admin/clubs': typeof LayoutAdminClubsRoute
   '/admin/matches': typeof LayoutAdminMatchesRoute
   '/admin': typeof LayoutAdminIndexRoute
   '/xbhl': typeof LayoutXbhlIndexRoute
+  '/admin/clubs/$clubId': typeof LayoutAdminClubsClubIdRoute
   '/admin/schedulers/$schedulerId': typeof LayoutAdminSchedulersSchedulerIdRoute
   '/xbhl/$leagueId/$seasonId': typeof LayoutXbhlLeagueIdSeasonIdRoute
+  '/admin/clubs': typeof LayoutAdminClubsIndexRoute
   '/admin/schedulers': typeof LayoutAdminSchedulersIndexRoute
   '/xbhl/$leagueId': typeof LayoutXbhlLeagueIdIndexRoute
 }
@@ -167,13 +182,15 @@ export interface FileRoutesById {
   '/_layout/settings': typeof LayoutSettingsRoute
   '/_layout/xbhl': typeof LayoutXbhlRouteWithChildren
   '/_layout/': typeof LayoutIndexRoute
-  '/_layout/admin/clubs': typeof LayoutAdminClubsRoute
+  '/_layout/admin/clubs': typeof LayoutAdminClubsRouteWithChildren
   '/_layout/admin/matches': typeof LayoutAdminMatchesRoute
   '/_layout/admin/schedulers': typeof LayoutAdminSchedulersRouteWithChildren
   '/_layout/admin/': typeof LayoutAdminIndexRoute
   '/_layout/xbhl/': typeof LayoutXbhlIndexRoute
+  '/_layout/admin/clubs/$clubId': typeof LayoutAdminClubsClubIdRoute
   '/_layout/admin/schedulers/$schedulerId': typeof LayoutAdminSchedulersSchedulerIdRoute
   '/_layout/xbhl/$leagueId/$seasonId': typeof LayoutXbhlLeagueIdSeasonIdRoute
+  '/_layout/admin/clubs/': typeof LayoutAdminClubsIndexRoute
   '/_layout/admin/schedulers/': typeof LayoutAdminSchedulersIndexRoute
   '/_layout/xbhl/$leagueId/': typeof LayoutXbhlLeagueIdIndexRoute
 }
@@ -193,8 +210,10 @@ export interface FileRouteTypes {
     | '/admin/schedulers'
     | '/admin/'
     | '/xbhl/'
+    | '/admin/clubs/$clubId'
     | '/admin/schedulers/$schedulerId'
     | '/xbhl/$leagueId/$seasonId'
+    | '/admin/clubs/'
     | '/admin/schedulers/'
     | '/xbhl/$leagueId/'
   fileRoutesByTo: FileRoutesByTo
@@ -205,12 +224,13 @@ export interface FileRouteTypes {
     | '/signup'
     | '/settings'
     | '/'
-    | '/admin/clubs'
     | '/admin/matches'
     | '/admin'
     | '/xbhl'
+    | '/admin/clubs/$clubId'
     | '/admin/schedulers/$schedulerId'
     | '/xbhl/$leagueId/$seasonId'
+    | '/admin/clubs'
     | '/admin/schedulers'
     | '/xbhl/$leagueId'
   id:
@@ -229,8 +249,10 @@ export interface FileRouteTypes {
     | '/_layout/admin/schedulers'
     | '/_layout/admin/'
     | '/_layout/xbhl/'
+    | '/_layout/admin/clubs/$clubId'
     | '/_layout/admin/schedulers/$schedulerId'
     | '/_layout/xbhl/$leagueId/$seasonId'
+    | '/_layout/admin/clubs/'
     | '/_layout/admin/schedulers/'
     | '/_layout/xbhl/$leagueId/'
   fileRoutesById: FileRoutesById
@@ -357,6 +379,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminSchedulersIndexRouteImport
       parentRoute: typeof LayoutAdminSchedulersRoute
     }
+    '/_layout/admin/clubs/': {
+      id: '/_layout/admin/clubs/'
+      path: '/'
+      fullPath: '/admin/clubs/'
+      preLoaderRoute: typeof LayoutAdminClubsIndexRouteImport
+      parentRoute: typeof LayoutAdminClubsRoute
+    }
     '/_layout/xbhl/$leagueId/$seasonId': {
       id: '/_layout/xbhl/$leagueId/$seasonId'
       path: '/$leagueId/$seasonId'
@@ -371,8 +400,28 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAdminSchedulersSchedulerIdRouteImport
       parentRoute: typeof LayoutAdminSchedulersRoute
     }
+    '/_layout/admin/clubs/$clubId': {
+      id: '/_layout/admin/clubs/$clubId'
+      path: '/$clubId'
+      fullPath: '/admin/clubs/$clubId'
+      preLoaderRoute: typeof LayoutAdminClubsClubIdRouteImport
+      parentRoute: typeof LayoutAdminClubsRoute
+    }
   }
 }
+
+interface LayoutAdminClubsRouteChildren {
+  LayoutAdminClubsClubIdRoute: typeof LayoutAdminClubsClubIdRoute
+  LayoutAdminClubsIndexRoute: typeof LayoutAdminClubsIndexRoute
+}
+
+const LayoutAdminClubsRouteChildren: LayoutAdminClubsRouteChildren = {
+  LayoutAdminClubsClubIdRoute: LayoutAdminClubsClubIdRoute,
+  LayoutAdminClubsIndexRoute: LayoutAdminClubsIndexRoute,
+}
+
+const LayoutAdminClubsRouteWithChildren =
+  LayoutAdminClubsRoute._addFileChildren(LayoutAdminClubsRouteChildren)
 
 interface LayoutAdminSchedulersRouteChildren {
   LayoutAdminSchedulersSchedulerIdRoute: typeof LayoutAdminSchedulersSchedulerIdRoute
@@ -390,14 +439,14 @@ const LayoutAdminSchedulersRouteWithChildren =
   )
 
 interface LayoutAdminRouteChildren {
-  LayoutAdminClubsRoute: typeof LayoutAdminClubsRoute
+  LayoutAdminClubsRoute: typeof LayoutAdminClubsRouteWithChildren
   LayoutAdminMatchesRoute: typeof LayoutAdminMatchesRoute
   LayoutAdminSchedulersRoute: typeof LayoutAdminSchedulersRouteWithChildren
   LayoutAdminIndexRoute: typeof LayoutAdminIndexRoute
 }
 
 const LayoutAdminRouteChildren: LayoutAdminRouteChildren = {
-  LayoutAdminClubsRoute: LayoutAdminClubsRoute,
+  LayoutAdminClubsRoute: LayoutAdminClubsRouteWithChildren,
   LayoutAdminMatchesRoute: LayoutAdminMatchesRoute,
   LayoutAdminSchedulersRoute: LayoutAdminSchedulersRouteWithChildren,
   LayoutAdminIndexRoute: LayoutAdminIndexRoute,
