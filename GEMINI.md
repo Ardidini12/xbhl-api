@@ -86,74 +86,9 @@ This is a full-stack web application template featuring a FastAPI backend and a 
 - Default values are provided in `.env.example`.
 - Crucial variables for local dev: `DOMAIN`, `POSTGRES_PASSWORD`, `SECRET_KEY`, `FIRST_SUPERUSER_PASSWORD`.
 
-29 april
-- **Navigation Preference:** Always use single-click events to navigate to detail pages from list views (Leagues, Seasons, Clubs, Schedulers). This ensures a consistent and intuitive user experience across the application. Ensure that interactions with interactive elements within the row (like checkboxes or action menus) use `e.stopPropagation()` to prevent unwanted navigation. A "Back" button should always be present on detail pages.
-- **EA Match Pulling System:**
-  - **API Constraints:** The EA API matches endpoint only returns the last 5 matches for a club. High-frequency polling (minimum 1-minute intervals) is required during active windows to speed up data return so users can be notified as soon as possible.
-  - **Validation Rules:**
-    - **Two-Club Verification:** A match is only automatically saved if BOTH clubs are participants in the scheduler's assigned season.
-    - **Unsaved Matches:** If only one club matches, the match is saved to an `UnsavedMatch` table for manual review and promotion.
-    - **Global Deduplication:** Every match is unique via the `matchId`. Once saved (either as Match or UnsavedMatch), it will not be duplicated.
-
-
-
-6 may
-I have expanded the USER_AGENTS list, updated the relevant endpoints, and implemented a transactional isolation layer in the tests to prevent data loss and mixing, fulfilling
-  all the user's requirements. These changes ensure that tests can safely access real data without permanently modifying or deleting it.
-
-9 may 
-matches are now displayed by timestamp played, latest match is displayed first in matches tab.
-
-- Backend: Updated backend/app/api/routes/matches.py to sort matches by the timestamp field within the raw_data JSON column using PostgreSQL-compatible SQLAlchemy syntax
-  (Match.raw_data["timestamp"].astext.cast(Integer).desc()). This ensures that pagination (infinite scroll) works correctly by fetching the latest matches first from the
-  database.
-- Frontend: Updated frontend/src/components/Admin/Matches.tsx to sort the combined pages of matches in the allMatches useMemo. This provides a secondary layer of sorting to
-  ensure the display order is strictly correct based on the timestamp, regardless of fetch order.
-
-These changes satisfy the requirement to display the latest game plays first, using the timestamp found in the raw data.
-
-10 may: 
- Summary of Changes
-
-   1. Fixed 500 Internal Server Error: Corrected the sorting logic in backend/app/api/routes/matches.py. The previous use of .astext on a BinaryExpression was causing an
-      AttributeError in SQLAlchemy. It was replaced with cast(Match.raw_data["timestamp"], String), which is more compatible and robust.
-   2. Resolved CORS Issues: The CORS errors reported in the console were a side effect of the backend crashing before the CORSMiddleware could append the necessary headers to
-      the response. Fixing the 500 error restores normal CORS behavior.
-   3. Verified Sorting: Confirmed that matches are correctly sorted by the timestamp field within the raw_data JSON column, descending (latest matches first), as intended.
-   4. Validation: Manually verified the read_matches function using a script that interacts with the live database and confirmed it returns the expected data count.
-
-
-  Accomplishments:
-   1. Backend Enhancements:
-       * Added UnsavedMatch and SchedulerActivity database models.
-       * Generated and applied database migrations.
-       * Updated pull_ea_data with strict two-club verification and detailed activity logging.
-       * Added new API endpoints for scheduler activities, unsaved matches, and match promotion.
-   2. Frontend Enhancements:
-       * Fixed double-click navigation paths in Leagues.tsx and Seasons.tsx.
-       * Created a new SchedulerDetail.tsx dashboard and its corresponding route.
-       * Implemented "Enter [Resource]" in SchedulerActions.tsx and updated other action menus for consistency.
-       * Updated GEMINI.md to reflect the new double-click navigation standard and system rules.
-
-
-  Summary of Changes
-
-   1. Fixed Double-Click Navigation: Updated frontend/src/components/Admin/Schedulers.tsx to use TanStack Router's typed navigation API. Instead of a template string, it now
-      explicitly passes the schedulerId via the params object, which ensures the router correctly identifies and populates the route parameter.
-   2. Removed "Enter Scheduler" Button: Modified frontend/src/components/Admin/SchedulerActions.tsx to remove the manual "Enter Scheduler" option from the dropdown menu, as
-      double-clicking is now the standard way to navigate to details.
-   3. Enhanced Query Robustness: Updated frontend/src/components/Admin/SchedulerDetail.tsx to include enabled: !!schedulerId in all queries. This prevents the application from
-      attempting to fetch data from the backend if the schedulerId is not yet available, which was a secondary cause of the 422 errors.
-
-11 may:
-  Summary of Changes
-   1. Fixed Frontend Build Errors: Resolved TypeScript errors in `frontend/src/components/Admin/SchedulerActions.tsx` by removing unused `LogIn` import and `navigate` variable.
-   2. Verified Build: Successfully ran `bun run build` in the `frontend` directory, confirming that all TypeScript and Vite build processes complete without errors.
-
-
-
 14 may: 
 Summary of Changes
+*Note: The most recent dated entry below supersedes all earlier entries; earlier items are maintained for archival purposes.*
 
   Backend Enhancements
    - Statistics Endpoint: Added GET /api/v1/clubs/{id}/stats to retrieve match statistics for a specific club, grouped by league and season.
@@ -177,5 +112,15 @@ Summary of Changes
        - admin/clubs/$clubId.tsx: The detail view.
        - admin/clubs.tsx: A parent layout to manage route nesting.
   These changes provide a comprehensive and intuitive way to view a club's performance history across various competitions.
+
+### Archive
+29 april
+- **Navigation Preference:** Always use single-click events to navigate to detail pages from list views (Leagues, Seasons, Clubs, Schedulers). This ensures a consistent and intuitive user experience across the application. Ensure that interactions with interactive elements within the row (like checkboxes or action menus) use `e.stopPropagation()` to prevent unwanted navigation. A "Back" button should always be present on detail pages.
+
+10 may:
+- **Navigation Update:**
+    - Fixed double-click navigation paths in Leagues.tsx and Seasons.tsx.
+    - Updated GEMINI.md to reflect the new double-click navigation standard and system rules.
+    - Fixed Double-Click Navigation: Updated frontend/src/components/Admin/Schedulers.tsx to use TanStack Router's typed navigation API.
 
   
