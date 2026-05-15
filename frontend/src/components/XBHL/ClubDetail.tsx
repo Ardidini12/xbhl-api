@@ -33,9 +33,28 @@ const formatEST = (timestamp: number) => {
   })
 }
 
+interface ClubDetails {
+  name: string
+  [key: string]: unknown
+}
+
+interface ClubData {
+  score: number
+  details?: ClubDetails
+  [key: string]: unknown
+}
+
+interface MatchRawData {
+  clubs?: {
+    [key: string]: ClubData
+  }
+  timestamp?: string | number
+  [key: string]: unknown
+}
+
 const getMatchDisplay = (match: MatchPublic) => {
-  const raw_data = match.raw_data as any
-  const clubs = Object.values(raw_data?.clubs || {}) as any[]
+  const raw_data = match.raw_data as unknown as MatchRawData
+  const clubs = Object.values(raw_data?.clubs || {})
   const club1 = clubs[0]
   const club2 = clubs[1]
 
@@ -65,7 +84,7 @@ const SeasonMatches = ({
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery({
-      queryKey: ["club-matches", clubName, leagueId, seasonId, search],
+      queryKey: ["club-matches", clubName, leagueId, seasonId],
       queryFn: ({ pageParam = 0 }) =>
         MatchesService.readMatches({
           skip: pageParam as number,
@@ -129,6 +148,7 @@ const SeasonMatches = ({
       {allMatches.map((match) => {
         const display = getMatchDisplay(match)
         const raw_data = match.raw_data as any
+        const timestamp = Number(raw_data?.timestamp)
         return (
           <div
             key={match.match_id}
@@ -139,7 +159,9 @@ const SeasonMatches = ({
                 {match.match_id}
               </span>
               <span className="text-xs font-medium">
-                {formatEST(Number(raw_data?.timestamp || 0))}
+                {Number.isFinite(timestamp) && timestamp > 0
+                  ? formatEST(timestamp)
+                  : "N/A"}
               </span>
             </div>
             <div className="flex-1 flex items-center justify-center gap-2 font-semibold text-sm">
@@ -264,12 +286,19 @@ const ClubDetail = () => {
                   <span className="text-[10px] text-muted-foreground block uppercase tracking-widest font-black mb-1">Leagues</span>
                   <span className="text-3xl font-black">{stats?.leagues.length || 0}</span>
                 </div>
-                <div className="bg-success/10 rounded-xl p-4 border border-success/20 shadow-sm transition-all hover:bg-success/15">
+                <div className={club.ea_id ? "bg-success/10 rounded-xl p-4 border border-success/20 shadow-sm transition-all hover:bg-success/15" : "bg-muted/20 rounded-xl p-4 border shadow-sm transition-all hover:bg-muted/30"}>
                   <span className="text-[10px] text-muted-foreground block uppercase tracking-widest font-black mb-1">EA Status</span>
-                  <span className="text-sm font-bold text-success-foreground px-0 rounded inline-block mt-1 uppercase tracking-wider flex items-center gap-2">
-                    <div className="size-2 rounded-full bg-success animate-pulse" />
-                    Verified
-                  </span>
+                  {club.ea_id ? (
+                    <span className="text-sm font-bold text-success-foreground px-0 rounded inline-block mt-1 uppercase tracking-wider flex items-center gap-2">
+                      <div className="size-2 rounded-full bg-success animate-pulse" />
+                      Verified
+                    </span>
+                  ) : (
+                    <span className="text-sm font-bold text-muted-foreground px-0 rounded inline-block mt-1 uppercase tracking-wider flex items-center gap-2">
+                      <div className="size-2 rounded-full bg-muted-foreground/30" />
+                      Unverified
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

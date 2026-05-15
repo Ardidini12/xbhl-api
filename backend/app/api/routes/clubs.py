@@ -6,6 +6,8 @@ from urllib.parse import quote
 
 import httpx
 from fastapi import APIRouter, Body, Depends, HTTPException
+from sqlalchemy import String, cast
+from sqlalchemy.orm import selectinload
 from sqlmodel import col, func, select
 
 from app import crud
@@ -22,6 +24,7 @@ from app.models import (
     ClubStatsPublic,
     ClubUpdate,
     LeagueStats,
+    Match,
     Message,
     SeasonStats,
 )
@@ -125,6 +128,7 @@ def read_club_stats(session: SessionDep, id: uuid.UUID) -> Any:
     statement = (
         select(Match)
         .where(cast(Match.raw_data, String).ilike(search_filter))
+        .options(selectinload(Match.league), selectinload(Match.season))
     )
     matches = session.exec(statement).all()
 
