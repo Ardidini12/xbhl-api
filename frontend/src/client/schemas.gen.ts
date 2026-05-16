@@ -1068,6 +1068,19 @@ export const UnsavedMatchPublicSchema = {
     title: 'UnsavedMatchPublic'
 } as const;
 
+export const UnsavedMatchUpdateSchema = {
+    properties: {
+        raw_data: {
+            additionalProperties: true,
+            type: 'object',
+            title: 'Raw Data'
+        }
+    },
+    type: 'object',
+    required: ['raw_data'],
+    title: 'UnsavedMatchUpdate'
+} as const;
+
 export const UnsavedMatchesPublicSchema = {
     properties: {
         data: {

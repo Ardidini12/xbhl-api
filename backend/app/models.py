@@ -318,6 +318,11 @@ class MatchUpdate(SQLModel):
     raw_data: dict
 
 
+# Properties to receive on unsaved match update
+class UnsavedMatchUpdate(SQLModel):
+    raw_data: dict
+
+
 # Database model
 class Match(MatchBase, table=True):
     created_at: datetime | None = Field(

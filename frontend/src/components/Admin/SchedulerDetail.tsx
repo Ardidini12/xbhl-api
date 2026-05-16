@@ -5,7 +5,6 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
-import { format } from "date-fns"
 import {
   AlertCircle,
   ArrowLeft,
@@ -30,7 +29,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { LoadingButton } from "@/components/ui/loading-button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
 
 const route = getRouteApi("/_layout/admin/schedulers/$schedulerId")
@@ -42,6 +52,9 @@ const SchedulerDetail = () => {
   const { showSuccessToast, showErrorToast } = useCustomToast()
   const [selectedActivity, setSelectedActivity] =
     useState<SchedulerActivityPublic | null>(null)
+  const [editingUnsavedMatch, setEditingUnsavedMatch] =
+    useState<UnsavedMatchPublic | null>(null)
+  const [editingData, setEditingData] = useState<string>("")
 
   const activitiesLoadMoreRef = useRef<HTMLDivElement>(null)
   const unsavedLoadMoreRef = useRef<HTMLDivElement>(null)
@@ -160,6 +173,22 @@ const SchedulerDetail = () => {
     onError: (err: any) => showErrorToast("Error deleting match", err),
   })
 
+  const updateUnsavedMutation = useMutation({
+    mutationFn: ({ matchId, rawData }: { matchId: string; rawData: any }) =>
+      SchedulersService.updateUnsavedMatch({
+        matchId,
+        requestBody: { raw_data: rawData },
+      }),
+    onSuccess: () => {
+      showSuccessToast("Unsaved match updated successfully")
+      setEditingUnsavedMatch(null)
+      queryClient.invalidateQueries({
+        queryKey: ["scheduler-unsaved", schedulerId],
+      })
+    },
+    onError: (err: any) => showErrorToast("Error updating match", err),
+  })
+
   const runNowMutation = useMutation({
     mutationFn: () => SchedulersService.runSchedulerNow({ id: schedulerId }),
     onSuccess: () => {
@@ -181,7 +210,6 @@ const SchedulerDetail = () => {
     [unsavedData],
   )
 
-  const totalActivities = activitiesData?.pages[0]?.count ?? 0
   const totalUnsaved = unsavedData?.pages[0]?.count ?? 0
 
   if (isLoadingScheduler)
@@ -197,9 +225,34 @@ const SchedulerDetail = () => {
     try {
       const date = new Date(dateStr)
       if (Number.isNaN(date.getTime())) return "Invalid Date"
-      return format(date, "MMM d, yyyy HH:mm:ss")
+      return (
+        new Intl.DateTimeFormat("en-US", {
+          timeZone: "America/New_York",
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false,
+        }).format(date) + " ET"
+      )
     } catch {
       return "Invalid Date"
+    }
+  }
+
+  const handleEditUnsaved = (match: UnsavedMatchPublic) => {
+    setEditingUnsavedMatch(match)
+    setEditingData(JSON.stringify(match.raw_data, null, 2))
+  }
+
+  const handleSaveUnsavedRaw = (id: string) => {
+    try {
+      const parsed = JSON.parse(editingData)
+      updateUnsavedMutation.mutate({ matchId: id, rawData: parsed })
+    } catch (_e) {
+      showErrorToast("Invalid JSON format")
     }
   }
 
@@ -340,7 +393,7 @@ const SchedulerDetail = () => {
                         ? "Loading more activities..."
                         : hasMoreActivities
                           ? "Scroll for more"
-                          : `Total runs: ${totalActivities}`}
+                          : `Total runs: ${allActivities.length}`}
                     </div>
                   </>
                 )}
@@ -355,7 +408,7 @@ const SchedulerDetail = () => {
               <CardTitle>Unsaved Matches</CardTitle>
               <CardDescription>
                 Matches that were fetched but didn't meet strict validation
-                (e.g. only one club in season).
+                (e.g. only one club in season). Click to view details or edit.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -376,13 +429,18 @@ const SchedulerDetail = () => {
                       return (
                         <div
                           key={match.match_id}
-                          className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+                          className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => handleEditUnsaved(match)}
                         >
                           <div className="flex flex-col gap-1">
                             <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
                               <Clock className="size-3" />
                               {isValidTimestamp
-                                ? format(new Date(timestamp * 1000), "PPp")
+                                ? new Intl.DateTimeFormat("en-US", {
+                                    timeZone: "America/New_York",
+                                    dateStyle: "medium",
+                                    timeStyle: "short",
+                                  }).format(new Date(timestamp * 1000)) + " ET"
                                 : "Unknown Date"}
                               <span className="ml-2 px-1 bg-muted rounded">
                                 ID: {match.match_id}
@@ -407,7 +465,10 @@ const SchedulerDetail = () => {
                               Reason: {match.reason || "Unknown"}
                             </div>
                           </div>
-                          <div className="flex gap-2">
+                          <div
+                            className="flex gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <Button
                               size="sm"
                               variant="outline"
@@ -448,7 +509,7 @@ const SchedulerDetail = () => {
                         ? "Loading more matches..."
                         : hasMoreUnsaved
                           ? "Scroll for more"
-                          : `Total pending: ${totalUnsaved}`}
+                          : `Total pending: ${allUnsaved.length}`}
                     </div>
                   </>
                 )}
@@ -493,6 +554,55 @@ const SchedulerDetail = () => {
           </Card>
         </div>
       )}
+
+      {/* Unsaved Match Edit Modal */}
+      <Dialog
+        open={!!editingUnsavedMatch}
+        onOpenChange={(open) => !open && setEditingUnsavedMatch(null)}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Unsaved Match Raw Data</DialogTitle>
+            <DialogDescription>
+              Update the JSON data for unsaved match{" "}
+              {editingUnsavedMatch?.match_id}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="rawUnsavedMatchData" className="text-sm font-medium">
+                Raw Match Data (JSON){" "}
+                <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="rawUnsavedMatchData"
+                className="h-96 font-mono text-xs"
+                value={editingData}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setEditingData(e.target.value)
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditingUnsavedMatch(null)}
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              onClick={() =>
+                editingUnsavedMatch &&
+                handleSaveUnsavedRaw(editingUnsavedMatch.match_id)
+              }
+              loading={updateUnsavedMutation.isPending}
+            >
+              Save Changes
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
