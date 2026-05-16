@@ -3,7 +3,7 @@
 import type { CancelablePromise } from './core/CancelablePromise';
 import { OpenAPI } from './core/OpenAPI';
 import { request as __request } from './core/request';
-import type { ClubsReadClubsData, ClubsReadClubsResponse, ClubsCreateClubData, ClubsCreateClubResponse, ClubsReadClubData, ClubsReadClubResponse, ClubsUpdateClubData, ClubsUpdateClubResponse, ClubsDeleteClubData, ClubsDeleteClubResponse, ClubsReadClubStatsData, ClubsReadClubStatsResponse, ClubsBulkCreateClubsData, ClubsBulkCreateClubsResponse, ClubsBulkDeleteClubsData, ClubsBulkDeleteClubsResponse, LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueData, LeaguesReadLeagueResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse, LeaguesBulkDeleteLeaguesData, LeaguesBulkDeleteLeaguesResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, MatchesReadMatchesData, MatchesReadMatchesResponse, MatchesUpdateMatchData, MatchesUpdateMatchResponse, MatchesDeleteMatchData, MatchesDeleteMatchResponse, MatchesBulkDeleteMatchesData, MatchesBulkDeleteMatchesResponse, PrivateCreateUserData, PrivateCreateUserResponse, SchedulersReadSchedulersData, SchedulersReadSchedulersResponse, SchedulersCreateSchedulerData, SchedulersCreateSchedulerResponse, SchedulersReadSchedulerData, SchedulersReadSchedulerResponse, SchedulersUpdateSchedulerData, SchedulersUpdateSchedulerResponse, SchedulersDeleteSchedulerData, SchedulersDeleteSchedulerResponse, SchedulersStartSchedulerData, SchedulersStartSchedulerResponse, SchedulersStopSchedulerData, SchedulersStopSchedulerResponse, SchedulersRunSchedulerNowData, SchedulersRunSchedulerNowResponse, SchedulersReadSchedulerActivitiesData, SchedulersReadSchedulerActivitiesResponse, SchedulersReadUnsavedMatchesData, SchedulersReadUnsavedMatchesResponse, SchedulersPromoteUnsavedMatchData, SchedulersPromoteUnsavedMatchResponse, SchedulersDeleteUnsavedMatchData, SchedulersDeleteUnsavedMatchResponse, SeasonsReadSeasonClubsData, SeasonsReadSeasonClubsResponse, SeasonsAddClubsToSeasonData, SeasonsAddClubsToSeasonResponse, SeasonsRemoveClubsFromSeasonData, SeasonsRemoveClubsFromSeasonResponse, SeasonsReadSeasonsData, SeasonsReadSeasonsResponse, SeasonsCreateSeasonData, SeasonsCreateSeasonResponse, SeasonsReadSeasonData, SeasonsReadSeasonResponse, SeasonsUpdateSeasonData, SeasonsUpdateSeasonResponse, SeasonsDeleteSeasonData, SeasonsDeleteSeasonResponse, SeasonsEndSeasonData, SeasonsEndSeasonResponse, SeasonsBulkDeleteSeasonsData, SeasonsBulkDeleteSeasonsResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
+import type { ClubsReadClubsData, ClubsReadClubsResponse, ClubsCreateClubData, ClubsCreateClubResponse, ClubsReadClubData, ClubsReadClubResponse, ClubsUpdateClubData, ClubsUpdateClubResponse, ClubsDeleteClubData, ClubsDeleteClubResponse, ClubsReadClubStatsData, ClubsReadClubStatsResponse, ClubsBulkCreateClubsData, ClubsBulkCreateClubsResponse, ClubsBulkDeleteClubsData, ClubsBulkDeleteClubsResponse, LeaguesReadLeaguesData, LeaguesReadLeaguesResponse, LeaguesCreateLeagueData, LeaguesCreateLeagueResponse, LeaguesReadLeagueData, LeaguesReadLeagueResponse, LeaguesUpdateLeagueData, LeaguesUpdateLeagueResponse, LeaguesDeleteLeagueData, LeaguesDeleteLeagueResponse, LeaguesBulkDeleteLeaguesData, LeaguesBulkDeleteLeaguesResponse, LoginLoginAccessTokenData, LoginLoginAccessTokenResponse, LoginTestTokenResponse, LoginRecoverPasswordData, LoginRecoverPasswordResponse, LoginResetPasswordData, LoginResetPasswordResponse, LoginRecoverPasswordHtmlContentData, LoginRecoverPasswordHtmlContentResponse, MatchesReadMatchesData, MatchesReadMatchesResponse, MatchesUpdateMatchData, MatchesUpdateMatchResponse, MatchesDeleteMatchData, MatchesDeleteMatchResponse, MatchesBulkDeleteMatchesData, MatchesBulkDeleteMatchesResponse, PrivateCreateUserData, PrivateCreateUserResponse, SchedulersReadSchedulersData, SchedulersReadSchedulersResponse, SchedulersCreateSchedulerData, SchedulersCreateSchedulerResponse, SchedulersReadSchedulerData, SchedulersReadSchedulerResponse, SchedulersUpdateSchedulerData, SchedulersUpdateSchedulerResponse, SchedulersDeleteSchedulerData, SchedulersDeleteSchedulerResponse, SchedulersStartSchedulerData, SchedulersStartSchedulerResponse, SchedulersStopSchedulerData, SchedulersStopSchedulerResponse, SchedulersRunSchedulerNowData, SchedulersRunSchedulerNowResponse, SchedulersReadSchedulerActivitiesData, SchedulersReadSchedulerActivitiesResponse, SchedulersReadUnsavedMatchesData, SchedulersReadUnsavedMatchesResponse, SchedulersPromoteUnsavedMatchData, SchedulersPromoteUnsavedMatchResponse, SchedulersUpdateUnsavedMatchData, SchedulersUpdateUnsavedMatchResponse, SchedulersDeleteUnsavedMatchData, SchedulersDeleteUnsavedMatchResponse, SeasonsReadSeasonClubsData, SeasonsReadSeasonClubsResponse, SeasonsAddClubsToSeasonData, SeasonsAddClubsToSeasonResponse, SeasonsRemoveClubsFromSeasonData, SeasonsRemoveClubsFromSeasonResponse, SeasonsReadSeasonsData, SeasonsReadSeasonsResponse, SeasonsCreateSeasonData, SeasonsCreateSeasonResponse, SeasonsReadSeasonData, SeasonsReadSeasonResponse, SeasonsUpdateSeasonData, SeasonsUpdateSeasonResponse, SeasonsDeleteSeasonData, SeasonsDeleteSeasonResponse, SeasonsEndSeasonData, SeasonsEndSeasonResponse, SeasonsBulkDeleteSeasonsData, SeasonsBulkDeleteSeasonsResponse, UsersReadUsersData, UsersReadUsersResponse, UsersCreateUserData, UsersCreateUserResponse, UsersReadUserMeResponse, UsersDeleteUserMeResponse, UsersUpdateUserMeData, UsersUpdateUserMeResponse, UsersUpdatePasswordMeData, UsersUpdatePasswordMeResponse, UsersRegisterUserData, UsersRegisterUserResponse, UsersReadUserByIdData, UsersReadUserByIdResponse, UsersUpdateUserData, UsersUpdateUserResponse, UsersDeleteUserData, UsersDeleteUserResponse, UtilsTestEmailData, UtilsTestEmailResponse, UtilsHealthCheckResponse } from './types.gen';
 
 export class ClubsService {
     /**
@@ -770,6 +770,30 @@ export class SchedulersService {
             path: {
                 match_id: data.matchId
             },
+            errors: {
+                422: 'Validation Error'
+            }
+        });
+    }
+    
+    /**
+     * Update Unsaved Match
+     * Update an unsaved match's raw data.
+     * @param data The data for the request.
+     * @param data.matchId
+     * @param data.requestBody
+     * @returns UnsavedMatchPublic Successful Response
+     * @throws ApiError
+     */
+    public static updateUnsavedMatch(data: SchedulersUpdateUnsavedMatchData): CancelablePromise<SchedulersUpdateUnsavedMatchResponse> {
+        return __request(OpenAPI, {
+            method: 'PATCH',
+            url: '/api/v1/schedulers/unsaved-matches/{match_id}',
+            path: {
+                match_id: data.matchId
+            },
+            body: data.requestBody,
+            mediaType: 'application/json',
             errors: {
                 422: 'Validation Error'
             }

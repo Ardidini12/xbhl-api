@@ -74,17 +74,21 @@ const Schedulers = () => {
     if (!scheduler.is_enabled)
       return { label: "Stopped", variant: "destructive" as const }
 
+    // Get current date/time in America/New_York
     const now = new Date()
-    const days = [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ]
-    const currentDay = days[now.getDay()]
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/New_York",
+      weekday: "long",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
+
+    const parts = formatter.formatToParts(now)
+    const currentDay = parts.find((p) => p.type === "weekday")?.value || ""
+    const currentHour = parts.find((p) => p.type === "hour")?.value || ""
+    const currentMinute = parts.find((p) => p.type === "minute")?.value || ""
+    const currentTimeStr = `${currentHour}:${currentMinute}`
 
     // Check day
     const schedulerDays = (scheduler.days as string[]) || []
@@ -92,7 +96,6 @@ const Schedulers = () => {
       return { label: "Active - Idle", variant: "secondary" as const }
 
     // Check time
-    const currentTimeStr = now.toTimeString().slice(0, 5) // HH:mm
     if (
       currentTimeStr >= scheduler.start_time.slice(0, 5) &&
       currentTimeStr <= scheduler.end_time.slice(0, 5)

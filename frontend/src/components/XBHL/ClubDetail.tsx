@@ -11,9 +11,9 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 import {
   ClubsService,
+  type LeagueStats,
   MatchesService,
   type MatchPublic,
-  type LeagueStats,
   type SeasonStats,
 } from "@/client"
 import { Badge } from "@/components/ui/badge"
@@ -135,7 +135,11 @@ const SeasonMatches = ({
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   if (status === "pending")
-    return <div className="p-4 text-center text-sm text-muted-foreground">Loading matches...</div>
+    return (
+      <div className="p-4 text-center text-sm text-muted-foreground">
+        Loading matches...
+      </div>
+    )
   if (status === "error")
     return (
       <div className="p-4 text-center text-destructive text-sm font-medium">
@@ -228,15 +232,24 @@ const ClubDetail = () => {
   }
 
   if (clubStatus === "pending" || statsStatus === "pending") {
-    return <div className="p-12 text-center text-muted-foreground animate-pulse font-medium">Loading club details...</div>
+    return (
+      <div className="p-12 text-center text-muted-foreground animate-pulse font-medium">
+        Loading club details...
+      </div>
+    )
   }
 
   if (clubStatus === "error" || !club) {
     return (
       <div className="p-12 text-center">
         <AlertCircle className="mx-auto size-12 text-destructive mb-4" />
-        <p className="text-lg font-semibold mb-4">Error loading club details. Club might not exist.</p>
-        <Button variant="default" onClick={() => navigate({ to: "/admin/clubs" })}>
+        <p className="text-lg font-semibold mb-4">
+          Error loading club details. Club might not exist.
+        </p>
+        <Button
+          variant="default"
+          onClick={() => navigate({ to: "/admin/clubs" })}
+        >
           Back to Clubs
         </Button>
       </div>
@@ -267,27 +280,52 @@ const ClubDetail = () => {
                   className="max-w-full max-h-full object-contain p-3 drop-shadow-md"
                 />
               ) : (
-                <span className="text-muted-foreground font-medium">No logo</span>
+                <span className="text-muted-foreground font-medium">
+                  No logo
+                </span>
               )}
             </div>
             <div className="flex-1 flex flex-col gap-6">
               <div>
-                <h2 className="text-5xl font-black tracking-tighter mb-2">{club.name}</h2>
+                <h2 className="text-5xl font-black tracking-tighter mb-2">
+                  {club.name}
+                </h2>
                 <div className="flex items-center gap-3">
-                  <Badge variant="secondary" className="font-mono px-3 py-1 text-sm">EA ID: {club.ea_id || "N/A"}</Badge>
+                  <Badge
+                    variant="secondary"
+                    className="font-mono px-3 py-1 text-sm"
+                  >
+                    EA ID: {club.ea_id || "N/A"}
+                  </Badge>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div className="bg-primary/10 rounded-xl p-4 border border-primary/20 shadow-sm transition-all hover:bg-primary/15">
-                  <span className="text-[10px] text-muted-foreground block uppercase tracking-widest font-black mb-1">Total Matches</span>
-                  <span className="text-3xl font-black">{stats?.total_matches || 0}</span>
+                  <span className="text-[10px] text-muted-foreground block uppercase tracking-widest font-black mb-1">
+                    Total Matches
+                  </span>
+                  <span className="text-3xl font-black">
+                    {stats?.total_matches || 0}
+                  </span>
                 </div>
                 <div className="bg-muted/30 rounded-xl p-4 border shadow-sm transition-all hover:bg-muted/40">
-                  <span className="text-[10px] text-muted-foreground block uppercase tracking-widest font-black mb-1">Leagues</span>
-                  <span className="text-3xl font-black">{stats?.leagues.length || 0}</span>
+                  <span className="text-[10px] text-muted-foreground block uppercase tracking-widest font-black mb-1">
+                    Leagues
+                  </span>
+                  <span className="text-3xl font-black">
+                    {stats?.leagues.length || 0}
+                  </span>
                 </div>
-                <div className={club.ea_id ? "bg-success/10 rounded-xl p-4 border border-success/20 shadow-sm transition-all hover:bg-success/15" : "bg-muted/20 rounded-xl p-4 border shadow-sm transition-all hover:bg-muted/30"}>
-                  <span className="text-[10px] text-muted-foreground block uppercase tracking-widest font-black mb-1">EA Status</span>
+                <div
+                  className={
+                    club.ea_id
+                      ? "bg-success/10 rounded-xl p-4 border border-success/20 shadow-sm transition-all hover:bg-success/15"
+                      : "bg-muted/20 rounded-xl p-4 border shadow-sm transition-all hover:bg-muted/30"
+                  }
+                >
+                  <span className="text-[10px] text-muted-foreground block uppercase tracking-widest font-black mb-1">
+                    EA Status
+                  </span>
                   {club.ea_id ? (
                     <span className="text-sm font-bold text-success-foreground px-0 rounded inline-block mt-1 uppercase tracking-wider flex items-center gap-2">
                       <div className="size-2 rounded-full bg-success animate-pulse" />
@@ -308,7 +346,9 @@ const ClubDetail = () => {
 
       <div className="flex flex-col gap-6 mt-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <h3 className="text-2xl font-black tracking-tight">Competition History</h3>
+          <h3 className="text-2xl font-black tracking-tight">
+            Competition History
+          </h3>
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -323,8 +363,12 @@ const ClubDetail = () => {
         {!stats?.leagues || stats.leagues.length === 0 ? (
           <div className="p-20 text-center border-4 border-dashed rounded-3xl bg-muted/5 text-muted-foreground">
             <Search className="size-12 mx-auto mb-4 opacity-20" />
-            <p className="text-xl font-bold opacity-60">No competition history found.</p>
-            <p className="text-sm opacity-40 mt-1">This club hasn't played any tracked league matches yet.</p>
+            <p className="text-xl font-bold opacity-60">
+              No competition history found.
+            </p>
+            <p className="text-sm opacity-40 mt-1">
+              This club hasn't played any tracked league matches yet.
+            </p>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -339,7 +383,13 @@ const ClubDetail = () => {
                   onClick={() => toggleLeague(league.id)}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={expandedLeagues.includes(league.id) ? "text-primary" : "text-muted-foreground"}>
+                    <div
+                      className={
+                        expandedLeagues.includes(league.id)
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                      }
+                    >
                       {expandedLeagues.includes(league.id) ? (
                         <ChevronDown className="size-6" />
                       ) : (
@@ -347,13 +397,20 @@ const ClubDetail = () => {
                       )}
                     </div>
                     <div>
-                      <span className="font-black text-xl tracking-tight uppercase">{league.name}</span>
+                      <span className="font-black text-xl tracking-tight uppercase">
+                        {league.name}
+                      </span>
                       <div className="text-xs text-muted-foreground font-bold tracking-widest mt-0.5 uppercase opacity-60">
                         {league.count} Games in total
                       </div>
                     </div>
                   </div>
-                  <Badge variant="outline" className="h-8 px-4 font-black border-2">{league.seasons.length} Seasons</Badge>
+                  <Badge
+                    variant="outline"
+                    className="h-8 px-4 font-black border-2"
+                  >
+                    {league.seasons.length} Seasons
+                  </Badge>
                 </button>
 
                 {expandedLeagues.includes(league.id) && (
@@ -368,7 +425,13 @@ const ClubDetail = () => {
                             onClick={() => toggleSeason(season.id)}
                           >
                             <div className="flex items-center gap-3">
-                              <div className={expandedSeasons.includes(season.id) ? "text-primary" : "text-muted-foreground"}>
+                              <div
+                                className={
+                                  expandedSeasons.includes(season.id)
+                                    ? "text-primary"
+                                    : "text-muted-foreground"
+                                }
+                              >
                                 {expandedSeasons.includes(season.id) ? (
                                   <ChevronDown className="size-5" />
                                 ) : (
@@ -379,7 +442,12 @@ const ClubDetail = () => {
                                 {season.name}
                               </span>
                             </div>
-                            <Badge variant="secondary" className="px-3 py-1 font-bold">{season.count} GAMES</Badge>
+                            <Badge
+                              variant="secondary"
+                              className="px-3 py-1 font-bold"
+                            >
+                              {season.count} GAMES
+                            </Badge>
                           </button>
 
                           {expandedSeasons.includes(season.id) && (

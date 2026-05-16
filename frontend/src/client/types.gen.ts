@@ -219,6 +219,12 @@ export type UnsavedMatchPublic = {
     reason?: (string | null);
 };
 
+export type UnsavedMatchUpdate = {
+    raw_data: {
+        [key: string]: unknown;
+    };
+};
+
 export type UpdatePassword = {
     current_password: string;
     new_password: string;
@@ -493,6 +499,13 @@ export type SchedulersPromoteUnsavedMatchData = {
 };
 
 export type SchedulersPromoteUnsavedMatchResponse = (MatchPublic);
+
+export type SchedulersUpdateUnsavedMatchData = {
+    matchId: string;
+    requestBody: UnsavedMatchUpdate;
+};
+
+export type SchedulersUpdateUnsavedMatchResponse = (UnsavedMatchPublic);
 
 export type SchedulersDeleteUnsavedMatchData = {
     matchId: string;

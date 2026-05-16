@@ -123,4 +123,18 @@ Summary of Changes
     - Updated GEMINI.md to reflect the new double-click navigation standard and system rules.
     - Fixed Double-Click Navigation: Updated frontend/src/components/Admin/Schedulers.tsx to use TanStack Router's typed navigation API.
 
-  
+15 may: 
+Scheduler Details Page: Fixed the infinite scroll labels for both activity logs and pending matches. When the end of the list is reached, it now displays the total number
+      of actual items fetched (e.g., Total runs: 25) instead of continuing to show "Scroll for more".
+   2. Unsaved Matches: 
+       * Backend: Added a new PATCH /api/v1/schedulers/unsaved-matches/{match_id} endpoint and a corresponding UnsavedMatchUpdate model to allow updating the raw JSON data of
+         unsaved matches.
+       * Frontend: 
+           * Updated the SchedulerDetail component to allow clicking on any unsaved match in the list.
+           * Implemented a modal (Dialog) that displays the full raw JSON data of the unsaved match.
+           * Added the ability to edit and save the JSON data directly within the modal, similar to how it works in the main matches table.
+           * Regenerated the API client to include the new endpoint and models.
+
+I've updated the requested components to use US Eastern Time (America/New_York) with an "ET" suffix. In frontend/src/components/Admin/SchedulerDetail.tsx, I
+  updated formatDateTime and the inline date formatting for pending matches, and removed the unused date-fns import. In frontend/src/components/Admin/Schedulers.tsx, I
+  corrected the getStatus function to ensure scheduler activity is accurately determined using the EST timeframe.

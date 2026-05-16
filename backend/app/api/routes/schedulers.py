@@ -22,6 +22,8 @@ from app.models import (
     Season,
     UnsavedMatch,
     UnsavedMatchesPublic,
+    UnsavedMatchPublic,
+    UnsavedMatchUpdate,
 )
 
 router = APIRouter(prefix="/schedulers", tags=["schedulers"])
@@ -352,6 +354,29 @@ def promote_unsaved_match(
     session.refresh(match)
 
     return match
+
+
+@router.patch("/unsaved-matches/{match_id}", response_model=UnsavedMatchPublic)
+def update_unsaved_match(
+    *,
+    session: Session = Depends(get_db),
+    match_id: str,
+    match_in: UnsavedMatchUpdate,
+    _current_user: Any = Depends(get_current_active_superuser),
+) -> Any:
+    """
+    Update an unsaved match's raw data.
+    """
+    unsaved_match = session.get(UnsavedMatch, match_id)
+    if not unsaved_match:
+        raise HTTPException(status_code=404, detail="Unsaved match not found")
+
+    update_dict = match_in.model_dump(exclude_unset=True)
+    unsaved_match.sqlmodel_update(update_dict)
+    session.add(unsaved_match)
+    session.commit()
+    session.refresh(unsaved_match)
+    return unsaved_match
 
 
 @router.delete("/unsaved-matches/{match_id}")
