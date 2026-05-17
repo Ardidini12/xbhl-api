@@ -66,6 +66,31 @@ def read_matches(
     return MatchesPublic(data=matches, count=count)
 
 
+@router.get("/ids", response_model=list[str])
+def read_match_ids(
+    session: Session = Depends(get_db),
+    club_name: str | None = None,
+    league_id: uuid.UUID | None = None,
+    season_id: uuid.UUID | None = None,
+    _current_user: Any = Depends(get_current_active_superuser),
+) -> Any:
+    """
+    Retrieve only match IDs. Filter by club name (case-insensitive) in raw_data,
+    or by league_id and season_id.
+    """
+    statement = select(Match.match_id)
+    if club_name:
+        statement = statement.where(
+            cast(Match.raw_data, String).ilike(f"%{club_name}%")
+        )
+    if league_id:
+        statement = statement.where(Match.league_id == league_id)
+    if season_id:
+        statement = statement.where(Match.season_id == season_id)
+
+    return session.exec(statement).all()
+
+
 @router.patch("/{match_id}", response_model=MatchPublic)
 def update_match(
     *,

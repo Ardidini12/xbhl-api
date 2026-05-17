@@ -29,6 +29,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
+import { handleError } from "@/utils"
 
 const route = getRouteApi("/_layout/admin/schedulers/$schedulerId")
 
@@ -55,6 +57,7 @@ const SchedulerDetail = () => {
   const [editingUnsavedMatch, setEditingUnsavedMatch] =
     useState<UnsavedMatchPublic | null>(null)
   const [editingData, setEditingData] = useState<string>("")
+  const [selectedMatchIds, setSelectedMatchIds] = useState<string[]>([])
 
   const activitiesLoadMoreRef = useRef<HTMLDivElement>(null)
   const unsavedLoadMoreRef = useRef<HTMLDivElement>(null)
@@ -173,6 +176,33 @@ const SchedulerDetail = () => {
     onError: (err: any) => showErrorToast("Error deleting match", err),
   })
 
+  const bulkDeleteUnsavedMutation = useMutation({
+    mutationFn: () =>
+      SchedulersService.bulkDeleteUnsavedMatches({
+        requestBody: selectedMatchIds,
+      }),
+    onSuccess: () => {
+      showSuccessToast("Pending matches deleted successfully")
+      setSelectedMatchIds([])
+      queryClient.invalidateQueries({
+        queryKey: ["scheduler-unsaved", schedulerId],
+      })
+    },
+    onError: (err: any) => handleError.call(showErrorToast, err),
+  })
+
+  const clearActivitiesMutation = useMutation({
+    mutationFn: () =>
+      SchedulersService.deleteSchedulerActivities({ id: schedulerId }),
+    onSuccess: () => {
+      showSuccessToast("Activity logs cleared")
+      queryClient.invalidateQueries({
+        queryKey: ["scheduler-activities", schedulerId],
+      })
+    },
+    onError: (err: any) => handleError.call(showErrorToast, err),
+  })
+
   const updateUnsavedMutation = useMutation({
     mutationFn: ({ matchId, rawData }: { matchId: string; rawData: any }) =>
       SchedulersService.updateUnsavedMatch({
@@ -212,6 +242,34 @@ const SchedulerDetail = () => {
 
   const totalUnsaved = unsavedData?.pages[0]?.count ?? 0
 
+  const toggleSelectMatch = (id: string) => {
+    setSelectedMatchIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
+    )
+  }
+
+  const toggleSelectAllMatches = async () => {
+    const allVisibleIds = allUnsaved.map((m) => m.match_id)
+    const allSelected =
+      allVisibleIds.length > 0 &&
+      allVisibleIds.every((id) => selectedMatchIds.includes(id))
+
+    if (allSelected) {
+      setSelectedMatchIds((prev) =>
+        prev.filter((id) => !allVisibleIds.includes(id)),
+      )
+    } else {
+      try {
+        const allIds = await SchedulersService.readUnsavedMatchIds({
+          id: schedulerId,
+        })
+        setSelectedMatchIds(allIds)
+      } catch (err: any) {
+        handleError.call(showErrorToast, err)
+      }
+    }
+  }
+
   if (isLoadingScheduler)
     return <div className="p-8 text-center">Loading scheduler details...</div>
   if (!scheduler)
@@ -225,18 +283,16 @@ const SchedulerDetail = () => {
     try {
       const date = new Date(dateStr)
       if (Number.isNaN(date.getTime())) return "Invalid Date"
-      return (
-        new Intl.DateTimeFormat("en-US", {
-          timeZone: "America/New_York",
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        }).format(date) + " ET"
-      )
+      return `${new Intl.DateTimeFormat("en-US", {
+        timeZone: "America/New_York",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).format(date)} ET`
     } catch {
       return "Invalid Date"
     }
@@ -275,6 +331,16 @@ const SchedulerDetail = () => {
           </p>
         </div>
         <div className="flex gap-2">
+          {selectedMatchIds.length > 0 && (
+            <Button
+              variant="destructive"
+              onClick={() => bulkDeleteUnsavedMutation.mutate()}
+              disabled={bulkDeleteUnsavedMutation.isPending}
+            >
+              <Trash className="mr-2 size-4" />
+              Delete {selectedMatchIds.length} selected
+            </Button>
+          )}
           <Button
             variant="outline"
             onClick={() => runNowMutation.mutate()}
@@ -341,11 +407,24 @@ const SchedulerDetail = () => {
 
         <TabsContent value="activities" className="mt-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Recent Runs</CardTitle>
-              <CardDescription>
-                History of scheduler executions and their outcomes.
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Recent Runs</CardTitle>
+                <CardDescription>
+                  History of scheduler executions and their outcomes.
+                </CardDescription>
+              </div>
+              {allActivities.length > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => clearActivitiesMutation.mutate()}
+                  disabled={clearActivitiesMutation.isPending}
+                >
+                  <Trash className="mr-2 size-4" />
+                  Clear Logs
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               <div className="divide-y border rounded-md">
@@ -412,107 +491,131 @@ const SchedulerDetail = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="divide-y border rounded-md">
-                {allUnsaved.length === 0 ? (
-                  <div className="p-8 text-center text-muted-foreground">
-                    No pending matches.
-                  </div>
-                ) : (
-                  <>
-                    {allUnsaved.map((match: UnsavedMatchPublic) => {
-                      const raw = (match.raw_data || {}) as any
-                      const clubs = Object.values(raw.clubs || {}) as any[]
-                      const timestamp = Number(raw.timestamp)
-                      const isValidTimestamp =
-                        !Number.isNaN(timestamp) && timestamp > 0
-
-                      return (
-                        <div
-                          key={match.match_id}
-                          className="p-4 flex items-center justify-between hover:bg-muted/50 transition-colors cursor-pointer"
-                          onClick={() => handleEditUnsaved(match)}
-                        >
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
-                              <Clock className="size-3" />
-                              {isValidTimestamp
-                                ? new Intl.DateTimeFormat("en-US", {
-                                    timeZone: "America/New_York",
-                                    dateStyle: "medium",
-                                    timeStyle: "short",
-                                  }).format(new Date(timestamp * 1000)) + " ET"
-                                : "Unknown Date"}
-                              <span className="ml-2 px-1 bg-muted rounded">
-                                ID: {match.match_id}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-3 font-semibold mt-1">
-                              <span>
-                                {clubs[0]?.details?.name || "Unknown Club"}
-                              </span>
-                              <Badge variant="outline">
-                                {clubs.length >= 2
-                                  ? `${clubs[0]?.score ?? "-"} - ${clubs[1]?.score ?? "-"}`
-                                  : "N/A"}
-                              </Badge>
-                              <span>
-                                {clubs[1]?.details?.name ||
-                                  (clubs.length >= 2 ? "Unknown Club" : "-")}
-                              </span>
-                            </div>
-                            <div className="text-xs text-destructive mt-1 flex items-center gap-1">
-                              <AlertCircle className="size-3" />
-                              Reason: {match.reason || "Unknown"}
-                            </div>
-                          </div>
-                          <div
-                            className="flex gap-2"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                match.match_id &&
-                                promoteMutation.mutate(match.match_id)
-                              }
-                              disabled={
-                                promoteMutation.isPending || !match.match_id
-                              }
-                            >
-                              <Check className="mr-1 size-3" /> Promote
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() =>
-                                match.match_id &&
-                                deleteUnsavedMutation.mutate(match.match_id)
-                              }
-                              disabled={
-                                deleteUnsavedMutation.isPending ||
-                                !match.match_id
-                              }
-                            >
-                              <Trash className="size-3" />
-                            </Button>
-                          </div>
-                        </div>
+              <div className="border rounded-md overflow-hidden">
+                <div className="border-b px-4 py-3 flex items-center gap-4 bg-muted/50">
+                  <Checkbox
+                    checked={
+                      allUnsaved.length > 0 &&
+                      allUnsaved.every((m) =>
+                        selectedMatchIds.includes(m.match_id),
                       )
-                    })}
-                    <div
-                      ref={unsavedLoadMoreRef}
-                      className="p-4 text-center text-sm text-muted-foreground border-t"
-                    >
-                      {isFetchingMoreUnsaved
-                        ? "Loading more matches..."
-                        : hasMoreUnsaved
-                          ? "Scroll for more"
-                          : `Total pending: ${allUnsaved.length}`}
+                    }
+                    onCheckedChange={toggleSelectAllMatches}
+                  />
+                  <span className="text-sm font-medium">Select All</span>
+                </div>
+                <div className="divide-y">
+                  {allUnsaved.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground">
+                      No pending matches.
                     </div>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      {allUnsaved.map((match: UnsavedMatchPublic) => {
+                        const raw = (match.raw_data || {}) as any
+                        const clubs = Object.values(raw.clubs || {}) as any[]
+                        const timestamp = Number(raw.timestamp)
+                        const isValidTimestamp =
+                          !Number.isNaN(timestamp) && timestamp > 0
+
+                        return (
+                          <div
+                            key={match.match_id}
+                            className="p-4 flex items-center gap-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                            onClick={() => handleEditUnsaved(match)}
+                          >
+                            <div onClick={(e) => e.stopPropagation()}>
+                              <Checkbox
+                                checked={selectedMatchIds.includes(
+                                  match.match_id,
+                                )}
+                                onCheckedChange={() =>
+                                  toggleSelectMatch(match.match_id)
+                                }
+                              />
+                            </div>
+                            <div className="flex-1 flex flex-col gap-1">
+                              <div className="flex items-center gap-2 font-mono text-xs text-muted-foreground">
+                                <Clock className="size-3" />
+                                {isValidTimestamp
+                                  ? `${new Intl.DateTimeFormat("en-US", {
+                                      timeZone: "America/New_York",
+                                      dateStyle: "medium",
+                                      timeStyle: "short",
+                                    }).format(new Date(timestamp * 1000))} ET`
+                                  : "Unknown Date"}
+                                <span className="ml-2 px-1 bg-muted rounded">
+                                  ID: {match.match_id}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-3 font-semibold mt-1">
+                                <span>
+                                  {clubs[0]?.details?.name || "Unknown Club"}
+                                </span>
+                                <Badge variant="outline">
+                                  {clubs.length >= 2
+                                    ? `${clubs[0]?.score ?? "-"} - ${clubs[1]?.score ?? "-"}`
+                                    : "N/A"}
+                                </Badge>
+                                <span>
+                                  {clubs[1]?.details?.name ||
+                                    (clubs.length >= 2 ? "Unknown Club" : "-")}
+                                </span>
+                              </div>
+                              <div className="text-xs text-destructive mt-1 flex items-center gap-1">
+                                <AlertCircle className="size-3" />
+                                Reason: {match.reason || "Unknown"}
+                              </div>
+                            </div>
+                            <div
+                              className="flex gap-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  match.match_id &&
+                                  promoteMutation.mutate(match.match_id)
+                                }
+                                disabled={
+                                  promoteMutation.isPending || !match.match_id
+                                }
+                              >
+                                <Check className="mr-1 size-3" /> Promote
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() =>
+                                  match.match_id &&
+                                  deleteUnsavedMutation.mutate(match.match_id)
+                                }
+                                disabled={
+                                  deleteUnsavedMutation.isPending ||
+                                  !match.match_id
+                                }
+                              >
+                                <Trash className="size-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                      <div
+                        ref={unsavedLoadMoreRef}
+                        className="p-4 text-center text-sm text-muted-foreground border-t"
+                      >
+                        {isFetchingMoreUnsaved
+                          ? "Loading more matches..."
+                          : hasMoreUnsaved
+                            ? "Scroll for more"
+                            : `Total pending: ${totalUnsaved}`}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -570,7 +673,10 @@ const SchedulerDetail = () => {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="rawUnsavedMatchData" className="text-sm font-medium">
+              <Label
+                htmlFor="rawUnsavedMatchData"
+                className="text-sm font-medium"
+              >
                 Raw Match Data (JSON){" "}
                 <span className="text-destructive">*</span>
               </Label>

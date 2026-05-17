@@ -5,6 +5,7 @@ from app.api.routes import (
     leagues,
     login,
     matches,
+    players,
     private,
     schedulers,
     seasons,
@@ -22,6 +23,7 @@ api_router.include_router(seasons.router)
 api_router.include_router(clubs.router)
 api_router.include_router(schedulers.router)
 api_router.include_router(matches.router)
+api_router.include_router(players.router)
 
 
 if settings.ENVIRONMENT == "local":

@@ -507,6 +507,54 @@ export const NewPasswordSchema = {
     title: 'NewPassword'
 } as const;
 
+export const PlayerPublicSchema = {
+    properties: {
+        ea_id: {
+            type: 'string',
+            title: 'Ea Id'
+        },
+        gamertag: {
+            type: 'string',
+            maxLength: 255,
+            title: 'Gamertag'
+        },
+        created_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Created At'
+        }
+    },
+    type: 'object',
+    required: ['ea_id', 'gamertag'],
+    title: 'PlayerPublic'
+} as const;
+
+export const PlayersPublicSchema = {
+    properties: {
+        data: {
+            items: {
+                '$ref': '#/components/schemas/PlayerPublic'
+            },
+            type: 'array',
+            title: 'Data'
+        },
+        count: {
+            type: 'integer',
+            title: 'Count'
+        }
+    },
+    type: 'object',
+    required: ['data', 'count'],
+    title: 'PlayersPublic'
+} as const;
+
 export const PrivateUserCreateSchema = {
     properties: {
         email: {

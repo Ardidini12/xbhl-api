@@ -89,7 +89,7 @@ const Matches = () => {
     )
   }
 
-  const toggleSelectAll = () => {
+  const toggleSelectAll = async () => {
     const allVisibleIds = allMatches.map((m) => m.match_id)
     const allSelected =
       allVisibleIds.length > 0 &&
@@ -98,7 +98,14 @@ const Matches = () => {
     if (allSelected) {
       setSelectedIds((prev) => prev.filter((id) => !allVisibleIds.includes(id)))
     } else {
-      setSelectedIds((prev) => Array.from(new Set([...prev, ...allVisibleIds])))
+      try {
+        const allIds = await MatchesService.readMatchIds({
+          clubName: search || undefined,
+        })
+        setSelectedIds(allIds)
+      } catch (err: any) {
+        handleError.call(showErrorToast, err)
+      }
     }
   }
 

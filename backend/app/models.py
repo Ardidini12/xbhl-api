@@ -348,6 +348,28 @@ class MatchesPublic(SQLModel):
     count: int
 
 
+# Player models
+class PlayerBase(SQLModel):
+    ea_id: str = Field(primary_key=True)
+    gamertag: str = Field(index=True, max_length=255)
+
+
+class Player(PlayerBase, table=True):
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc,
+        sa_type=DateTime(timezone=True),  # type: ignore
+    )
+
+
+class PlayerPublic(PlayerBase):
+    created_at: datetime | None = None
+
+
+class PlayersPublic(SQLModel):
+    data: list[PlayerPublic]
+    count: int
+
+
 class SeasonStats(SQLModel):
     id: uuid.UUID
     name: str
