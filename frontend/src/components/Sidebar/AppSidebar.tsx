@@ -1,4 +1,12 @@
-import { Activity, Home, Settings, Shield, Trophy, Users } from "lucide-react"
+import {
+  Activity,
+  Home,
+  Settings,
+  Shield,
+  Trophy,
+  User as UserIcon,
+  Users,
+} from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -21,6 +29,7 @@ export function AppSidebar() {
     ? [
         ...baseItems,
         { icon: Users, title: "Admin", path: "/admin" },
+        { icon: UserIcon, title: "Players", path: "/admin/players" },
         { icon: Shield, title: "Clubs", path: "/admin/clubs" },
         { icon: Settings, title: "Schedulers", path: "/admin/schedulers" },
         { icon: Activity, title: "Matches", path: "/admin/matches" },

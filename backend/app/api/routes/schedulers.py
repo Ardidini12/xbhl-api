@@ -294,6 +294,24 @@ def read_scheduler_activities(
     return SchedulerActivitiesPublic(data=activities, count=count)
 
 
+@router.delete("/{id}/activities")
+def delete_scheduler_activities(
+    *,
+    session: Session = Depends(get_db),
+    id: uuid.UUID,
+    _current_user: Any = Depends(get_current_active_superuser),
+) -> Message:
+    """
+    Clear all activity logs for a specific scheduler.
+    """
+    statement = select(SchedulerActivity).where(SchedulerActivity.scheduler_id == id)
+    activities = session.exec(statement).all()
+    for activity in activities:
+        session.delete(activity)
+    session.commit()
+    return Message(message="Activity logs cleared successfully")
+
+
 @router.get("/{id}/unsaved-matches", response_model=UnsavedMatchesPublic)
 def read_unsaved_matches(
     *,
@@ -304,21 +322,65 @@ def read_unsaved_matches(
     _current_user: Any = Depends(get_current_active_superuser),
 ) -> Any:
     """
-    Retrieve unsaved matches for a specific scheduler.
+    Retrieve unsaved matches for a specific scheduler. Sorted by timestamp.
     """
     count_statement = select(func.count()).where(UnsavedMatch.scheduler_id == id)
     count = session.exec(count_statement).one()
 
+    # Sort by timestamp in raw_data (JSON)
+    from sqlalchemy import Integer, String, cast
+    timestamp_expr = func.coalesce(
+        func.nullif(
+            func.regexp_replace(cast(UnsavedMatch.raw_data["timestamp"], String), r"[^0-9]", "", "g"),
+            "",
+        ).cast(Integer),
+        0,
+    )
+
     statement = (
         select(UnsavedMatch)
         .where(UnsavedMatch.scheduler_id == id)
-        .order_by(UnsavedMatch.created_at.desc())
+        .order_by(timestamp_expr.desc(), UnsavedMatch.match_id.desc())
         .offset(skip)
         .limit(limit)
     )
     matches = session.exec(statement).all()
 
     return UnsavedMatchesPublic(data=matches, count=count)
+
+
+@router.get("/{id}/unsaved-matches/ids", response_model=list[str])
+def read_unsaved_match_ids(
+    *,
+    session: Session = Depends(get_db),
+    id: uuid.UUID,
+    _current_user: Any = Depends(get_current_active_superuser),
+) -> Any:
+    """
+    Retrieve only unsaved match IDs for a specific scheduler.
+    """
+    statement = select(UnsavedMatch.match_id).where(UnsavedMatch.scheduler_id == id)
+    return session.exec(statement).all()
+
+
+@router.post("/unsaved-matches/bulk-delete")
+def bulk_delete_unsaved_matches(
+    *,
+    session: Session = Depends(get_db),
+    match_ids: list[str],
+    _current_user: Any = Depends(get_current_active_superuser),
+) -> Message:
+    """
+    Bulk delete unsaved matches.
+    """
+    deleted_count = 0
+    for match_id in match_ids:
+        db_match = session.get(UnsavedMatch, match_id)
+        if db_match:
+            session.delete(db_match)
+            deleted_count += 1
+    session.commit()
+    return Message(message=f"{deleted_count} pending matches deleted successfully")
 
 
 @router.post("/unsaved-matches/{match_id}/promote", response_model=MatchPublic)

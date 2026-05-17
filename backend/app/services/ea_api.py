@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.db import SessionLocal, engine
 from app.models import (
     Match,
+    Player,
     Scheduler,
     SchedulerActivity,
     Season,
@@ -50,12 +51,45 @@ def get_headers():
     }
 
 
+async def save_players(session: Session, match_data: dict, processed_players: set[str]):
+    """
+    Extract players from match data and save to DB if they don't exist.
+    """
+    players_data = match_data.get("players", {})
+    if not isinstance(players_data, dict):
+        return
+
+    for _club_id, club_players in players_data.items():
+        if not isinstance(club_players, dict):
+            continue
+        for p_ea_id, p_info in club_players.items():
+            if not isinstance(p_info, dict):
+                continue
+            
+            # Key verification
+            if not p_ea_id or p_ea_id in processed_players:
+                continue
+            
+            gamertag = p_info.get("playername")
+            if not gamertag:
+                continue
+
+            # Check DB
+            if not session.get(Player, p_ea_id):
+                new_player = Player(ea_id=p_ea_id, gamertag=gamertag)
+                session.add(new_player)
+            
+            # Add to cache for this run
+            processed_players.add(p_ea_id)
+
+
 async def process_club_matches(
     client: httpx.AsyncClient,
     ea_id: str,
     scheduler: Scheduler,
     season_club_ea_ids: set[str],
     semaphore: asyncio.Semaphore,
+    processed_players: set[str],  # Shared cache for this run
 ) -> dict:
     # Jitter to avoid bot detection (500ms - 1500ms) - outside semaphore to avoid throttling
     await asyncio.sleep(random.uniform(0.5, 1.5))
@@ -117,6 +151,7 @@ async def process_club_matches(
                             raw_data=match_data,
                         )
                         session.add(new_match)
+                        await save_players(session, match_data, processed_players)
                         new_count += 1
                         details.append({"match_id": match_id, "status": "saved"})
                     elif len(matching_clubs) == 1:
@@ -130,6 +165,7 @@ async def process_club_matches(
                             reason=f"Only one club in season: {list(matching_clubs)[0]}",
                         )
                         session.add(unsaved_match)
+                        await save_players(session, match_data, processed_players)
                         unsaved_count += 1
                         details.append({"match_id": match_id, "status": "unsaved", "reason": "single_club"})
                     else:
@@ -193,12 +229,15 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> str:
         all_errors = []
         all_details = {}
 
+        # Shared player cache for this run
+        processed_players = set()
+
         # Parallel workers with configurable concurrency limit
         semaphore = asyncio.Semaphore(settings.EA_API_CONCURRENCY_LIMIT)
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             tasks = [
-                process_club_matches(client, ea_id, scheduler, season_club_ea_ids, semaphore)
+                process_club_matches(client, ea_id, scheduler, season_club_ea_ids, semaphore, processed_players)
                 for ea_id in season_club_ea_ids
             ]
             results = await asyncio.gather(*tasks)

@@ -103,6 +103,17 @@ export type NewPassword = {
     new_password: string;
 };
 
+export type PlayerPublic = {
+    ea_id: string;
+    gamertag: string;
+    created_at?: (string | null);
+};
+
+export type PlayersPublic = {
+    data: Array<PlayerPublic>;
+    count: number;
+};
+
 export type PrivateUserCreate = {
     email: string;
     password: string;
@@ -403,6 +414,14 @@ export type MatchesReadMatchesData = {
 
 export type MatchesReadMatchesResponse = (MatchesPublic);
 
+export type MatchesReadMatchIdsData = {
+    clubName?: (string | null);
+    leagueId?: (string | null);
+    seasonId?: (string | null);
+};
+
+export type MatchesReadMatchIdsResponse = (Array<(string)>);
+
 export type MatchesUpdateMatchData = {
     matchId: string;
     requestBody: MatchUpdate;
@@ -421,6 +440,20 @@ export type MatchesBulkDeleteMatchesData = {
 };
 
 export type MatchesBulkDeleteMatchesResponse = (Message);
+
+export type PlayersReadPlayersData = {
+    limit?: number;
+    search?: (string | null);
+    skip?: number;
+};
+
+export type PlayersReadPlayersResponse = (PlayersPublic);
+
+export type PlayersReadPlayerData = {
+    eaId: string;
+};
+
+export type PlayersReadPlayerResponse = (PlayerPublic);
 
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;
@@ -486,6 +519,12 @@ export type SchedulersReadSchedulerActivitiesData = {
 
 export type SchedulersReadSchedulerActivitiesResponse = (SchedulerActivitiesPublic);
 
+export type SchedulersDeleteSchedulerActivitiesData = {
+    id: string;
+};
+
+export type SchedulersDeleteSchedulerActivitiesResponse = (Message);
+
 export type SchedulersReadUnsavedMatchesData = {
     id: string;
     limit?: number;
@@ -493,6 +532,18 @@ export type SchedulersReadUnsavedMatchesData = {
 };
 
 export type SchedulersReadUnsavedMatchesResponse = (UnsavedMatchesPublic);
+
+export type SchedulersReadUnsavedMatchIdsData = {
+    id: string;
+};
+
+export type SchedulersReadUnsavedMatchIdsResponse = (Array<(string)>);
+
+export type SchedulersBulkDeleteUnsavedMatchesData = {
+    requestBody: Array<(string)>;
+};
+
+export type SchedulersBulkDeleteUnsavedMatchesResponse = (Message);
 
 export type SchedulersPromoteUnsavedMatchData = {
     matchId: string;
