@@ -19,24 +19,30 @@ const Players = () => {
   const [search, setSearch] = useState("")
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, error } =
-    useInfiniteQuery({
-      queryKey: ["players", search],
-      queryFn: ({ pageParam = 0 }) =>
-        PlayersService.readPlayers({
-          skip: pageParam as number,
-          limit: 20,
-          search: search || undefined,
-        }),
-      getNextPageParam: (lastPage, allPages) => {
-        const currentCount = allPages.reduce(
-          (acc, page) => acc + page.data.length,
-          0,
-        )
-        return currentCount < lastPage.count ? currentCount : undefined
-      },
-      initialPageParam: 0,
-    })
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status,
+    error,
+  } = useInfiniteQuery({
+    queryKey: ["players", search],
+    queryFn: ({ pageParam = 0 }) =>
+      PlayersService.readPlayers({
+        skip: pageParam as number,
+        limit: 20,
+        search: search || undefined,
+      }),
+    getNextPageParam: (lastPage, allPages) => {
+      const currentCount = allPages.reduce(
+        (acc, page) => acc + page.data.length,
+        0,
+      )
+      return currentCount < lastPage.count ? currentCount : undefined
+    },
+    initialPageParam: 0,
+  })
 
   useEffect(() => {
     const observer = new IntersectionObserver(

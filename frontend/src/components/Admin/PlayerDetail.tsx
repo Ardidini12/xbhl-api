@@ -3,8 +3,9 @@ import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import { ArrowLeft, User } from "lucide-react"
 
 import { PlayersService } from "@/client"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 
 const route = getRouteApi("/_layout/admin/players/$eaId")
 
@@ -45,16 +46,19 @@ const PlayerDetail = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="size-5" />
-            {player.gamertag}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {/* Player details can be added here in the future */}
+          <div className="flex flex-col gap-2">
+            <CardTitle className="flex items-center gap-2">
+              <User className="size-5" />
+              {player.gamertag}
+            </CardTitle>
+            <Badge
+              variant="outline"
+              className="w-fit bg-white text-black font-bold border-none"
+            >
+              {player.most_frequent_position || "N/A"}
+            </Badge>
           </div>
-        </CardContent>
+        </CardHeader>
       </Card>
     </div>
   )

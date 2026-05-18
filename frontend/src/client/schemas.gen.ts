@@ -529,6 +529,17 @@ export const PlayerPublicSchema = {
                 }
             ],
             title: 'Created At'
+        },
+        most_frequent_position: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Most Frequent Position'
         }
     },
     type: 'object',

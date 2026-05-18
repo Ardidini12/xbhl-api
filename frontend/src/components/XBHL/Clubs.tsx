@@ -125,7 +125,7 @@ const Clubs = () => {
       )}
 
       <div className="rounded-md border bg-card overflow-hidden">
-        <div className="grid grid-cols-[auto_1fr_2fr_1fr_auto] gap-4 px-4 py-3 bg-muted/50 border-b items-center font-medium text-sm">
+        <div className="grid grid-cols-[auto_auto_1fr_auto] gap-4 px-4 py-3 bg-muted/50 border-b items-center font-medium text-sm">
           <Checkbox
             checked={
               allClubs.length > 0 &&
@@ -135,7 +135,6 @@ const Clubs = () => {
           />
           <div className="w-12 h-12 flex items-center justify-center">Logo</div>
           <div>Name</div>
-          <div>EA ID</div>
           <div className="w-8" />
         </div>
 
@@ -143,7 +142,7 @@ const Clubs = () => {
           {allClubs.map((club: ClubPublic) => (
             <div
               key={club.id}
-              className="grid grid-cols-[auto_1fr_2fr_1fr_auto] gap-4 px-4 py-3 hover:bg-muted/50 transition-colors items-center cursor-pointer"
+              className="grid grid-cols-[auto_auto_1fr_auto] gap-4 px-4 py-3 hover:bg-muted/50 transition-colors items-center cursor-pointer"
               onClick={() =>
                 navigate({
                   to: "/admin/clubs/$clubId",
@@ -169,9 +168,6 @@ const Clubs = () => {
                 )}
               </div>
               <div className="font-semibold truncate">{club.name}</div>
-              <div className="text-sm text-muted-foreground font-mono">
-                {club.ea_id || "N/A"}
-              </div>
               <div onClick={(e) => e.stopPropagation()}>
                 <ClubActions club={club} />
               </div>

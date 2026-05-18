@@ -107,6 +107,7 @@ export type PlayerPublic = {
     ea_id: string;
     gamertag: string;
     created_at?: (string | null);
+    most_frequent_position?: (string | null);
 };
 
 export type PlayersPublic = {

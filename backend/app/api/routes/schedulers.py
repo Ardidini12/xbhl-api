@@ -408,6 +408,11 @@ def promote_unsaved_match(
         raw_data=unsaved_match.raw_data,
     )
     session.add(match)
+    
+    # Create player links for the newly promoted match
+    from app.services.ea_api import save_match_links
+    save_match_links(session, match.raw_data, match.match_id)
+    
     session.delete(unsaved_match)
     session.commit()
     session.refresh(match)

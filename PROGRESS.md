@@ -172,7 +172,6 @@ Scheduler Details Page: Fixed the infinite scroll labels for both activity logs 
 I've updated the requested components to use US Eastern Time (America/New_York) with an "ET" suffix. In frontend/src/components/Admin/SchedulerDetail.tsx, I
   updated formatDateTime and the inline date formatting for pending matches, and removed the unused date-fns import. In frontend/src/components/Admin/Schedulers.tsx, I
   corrected the getStatus function to ensure scheduler activity is accurately determined using the EST timeframe.
-  
 ### [Feature] Club Statistics & Detail View - 2026-05-14
 - **Backend Enhancements:**
     - Added `GET /api/v1/clubs/{id}/stats` to retrieve match statistics grouped by league and season.
@@ -184,13 +183,17 @@ I've updated the requested components to use US Eastern Time (America/New_York) 
     - Standardized club routes with nested structure: `admin/clubs/index.tsx`, `admin/clubs/$clubId.tsx`, and `admin/clubs.tsx`.
     - Adhered to single-click navigation standards for club detail access.
 
-### [Feature] Scheduler Improvements & Unsaved Match Editing - 2026-05-15
-- **Backend Updates:**
-    - Added `PATCH /api/v1/schedulers/unsaved-matches/{match_id}` and `UnsavedMatchUpdate` model for editing raw JSON data.
-- **Frontend Updates:**
-    - Updated `SchedulerDetail` to display actual items fetched (e.g., "Total runs: 25") instead of "Scroll for more" at the end of infinite scroll.
-    - Implemented modal dialog in `SchedulerDetail` for viewing and editing raw JSON of unsaved matches.
-    - Standardized all time displays to US Eastern Time (ET) with appropriate suffix.
+### [Feature] Player Statistics & Position Tracking - 2026-05-18
+- **Database & Relationships:**
+    - Implemented `MatchPlayerLink` many-to-many relationship to connect players directly to matches for efficient querying.
+    - Updated `Match` and `Player` relationship logic to automatically populate links during the EA API pull process.
+    - Applied Alembic migration `5cf3f39e8bab` to add the link table.
+- **Backend Analytics:**
+    - Updated `read_player` endpoint to calculate a player's **Most Frequent Position** on-the-fly from all linked match raw JSON data.
+    - Implemented `POSITION_MAPPING` to translate internal EA position codes (e.g., `defenseMen`) to readable formats (e.g., `Defense`).
+- **Frontend Enhancements:**
+    - Updated `PlayerDetail.tsx` to display the calculated most frequent position in a prominent dashboard card.
+    - Ensured privacy standards by keeping EA IDs hidden from the player profile view.
 
 ### [Fix/Optimization] Player Data Integrity & UI Robustness - 2026-05-17
 - **Database & Migrations:**

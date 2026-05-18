@@ -363,11 +363,21 @@ class Player(PlayerBase, table=True):
 
 class PlayerPublic(PlayerBase):
     created_at: datetime | None = None
+    most_frequent_position: str | None = None
 
 
 class PlayersPublic(SQLModel):
     data: list[PlayerPublic]
     count: int
+
+
+class MatchPlayerLink(SQLModel, table=True):
+    match_id: str = Field(
+        foreign_key="match.match_id", primary_key=True, ondelete="CASCADE"
+    )
+    player_ea_id: str = Field(
+        foreign_key="player.ea_id", primary_key=True, ondelete="CASCADE"
+    )
 
 
 class SeasonStats(SQLModel):
