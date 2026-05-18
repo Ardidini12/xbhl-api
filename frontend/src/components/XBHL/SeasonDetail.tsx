@@ -244,7 +244,6 @@ const SeasonDetail = () => {
           </div>
           <div className="w-10 h-10 flex items-center justify-center">Logo</div>
           <div className="flex-1">Club Name</div>
-          <div>EA ID</div>
           <div className="w-8" />
         </div>
 
@@ -273,9 +272,6 @@ const SeasonDetail = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold truncate">{club.name}</h3>
-              </div>
-              <div className="text-sm text-muted-foreground font-mono">
-                {club.ea_id || "N/A"}
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

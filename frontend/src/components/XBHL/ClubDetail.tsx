@@ -290,16 +290,8 @@ const ClubDetail = () => {
                 <h2 className="text-5xl font-black tracking-tighter mb-2">
                   {club.name}
                 </h2>
-                <div className="flex items-center gap-3">
-                  <Badge
-                    variant="secondary"
-                    className="font-mono px-3 py-1 text-sm"
-                  >
-                    EA ID: {club.ea_id || "N/A"}
-                  </Badge>
-                </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="bg-primary/10 rounded-xl p-4 border border-primary/20 shadow-sm transition-all hover:bg-primary/15">
                   <span className="text-[10px] text-muted-foreground block uppercase tracking-widest font-black mb-1">
                     Total Matches
@@ -315,28 +307,6 @@ const ClubDetail = () => {
                   <span className="text-3xl font-black">
                     {stats?.leagues.length || 0}
                   </span>
-                </div>
-                <div
-                  className={
-                    club.ea_id
-                      ? "bg-success/10 rounded-xl p-4 border border-success/20 shadow-sm transition-all hover:bg-success/15"
-                      : "bg-muted/20 rounded-xl p-4 border shadow-sm transition-all hover:bg-muted/30"
-                  }
-                >
-                  <span className="text-[10px] text-muted-foreground block uppercase tracking-widest font-black mb-1">
-                    EA Status
-                  </span>
-                  {club.ea_id ? (
-                    <span className="text-sm font-bold text-success-foreground px-0 rounded inline-block mt-1 uppercase tracking-wider flex items-center gap-2">
-                      <div className="size-2 rounded-full bg-success animate-pulse" />
-                      Verified
-                    </span>
-                  ) : (
-                    <span className="text-sm font-bold text-muted-foreground px-0 rounded inline-block mt-1 uppercase tracking-wider flex items-center gap-2">
-                      <div className="size-2 rounded-full bg-muted-foreground/30" />
-                      Unverified
-                    </span>
-                  )}
                 </div>
               </div>
             </div>

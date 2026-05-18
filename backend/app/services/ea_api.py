@@ -71,25 +71,40 @@ async def save_players(
             if not isinstance(p_info, dict):
                 continue
 
-            # Key verification
             if not p_ea_id:
                 continue
 
             async with player_lock:
-                if p_ea_id in processed_players:
-                    continue
-
                 gamertag = p_info.get("playername")
                 if not gamertag:
                     continue
 
-                # Check DB
                 if not session.get(Player, p_ea_id):
                     new_player = Player(ea_id=p_ea_id, gamertag=gamertag)
                     session.add(new_player)
+                    session.flush()
 
-                # Add to cache for this run
                 processed_players.add(p_ea_id)
+
+
+def save_match_links(session: Session, match_data: dict, match_id: str):
+    """
+    Create MatchPlayerLink for every player in a valid Match.
+    """
+    from app.models import MatchPlayerLink
+    players_data = match_data.get("players", {})
+    if not isinstance(players_data, dict):
+        return
+
+    for _club_id, club_players in players_data.items():
+        if not isinstance(club_players, dict):
+            continue
+        for p_ea_id in club_players.keys():
+            if not p_ea_id:
+                continue
+            if not session.get(MatchPlayerLink, (match_id, p_ea_id)):
+                new_link = MatchPlayerLink(match_id=match_id, player_ea_id=p_ea_id)
+                session.add(new_link)
 
 
 async def process_club_matches(
@@ -176,6 +191,10 @@ async def process_club_matches(
                                 raw_data=match_data,
                             )
                             session.add(new_match)
+                            
+                            # Create links only for confirmed Match
+                            save_match_links(session, match_data, match_id)
+                            
                             session.commit()
                             new_count += 1
                             details.append({"match_id": match_id, "status": "saved"})
