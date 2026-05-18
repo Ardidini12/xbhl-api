@@ -172,6 +172,8 @@ Scheduler Details Page: Fixed the infinite scroll labels for both activity logs 
 I've updated the requested components to use US Eastern Time (America/New_York) with an "ET" suffix. In frontend/src/components/Admin/SchedulerDetail.tsx, I
   updated formatDateTime and the inline date formatting for pending matches, and removed the unused date-fns import. In frontend/src/components/Admin/Schedulers.tsx, I
   corrected the getStatus function to ensure scheduler activity is accurately determined using the EST timeframe.
+
+  
 ### [Feature] Club Statistics & Detail View - 2026-05-14
 - **Backend Enhancements:**
     - Added `GET /api/v1/clubs/{id}/stats` to retrieve match statistics grouped by league and season.
@@ -192,7 +194,7 @@ I've updated the requested components to use US Eastern Time (America/New_York) 
     - Updated `read_player` endpoint to calculate a player's **Most Frequent Position** on-the-fly from all linked match raw JSON data.
     - Implemented `POSITION_MAPPING` to translate internal EA position codes (e.g., `defenseMen`) to readable formats (e.g., `Defense`).
 - **Frontend Enhancements:**
-    - Updated `PlayerDetail.tsx` to display the calculated most frequent position in a prominent dashboard card.
+    - Updated `PlayerDetail.tsx` to display the calculated most frequent position in a Badge in the PlayerDetail header.
     - Ensured privacy standards by keeping EA IDs hidden from the player profile view.
 
 ### [Fix/Optimization] Player Data Integrity & UI Robustness - 2026-05-17

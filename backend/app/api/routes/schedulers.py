@@ -410,7 +410,8 @@ def promote_unsaved_match(
     session.add(match)
     
     # Create player links for the newly promoted match
-    from app.services.ea_api import save_match_links
+    from app.services.ea_api import save_match_links, save_players_sync
+    save_players_sync(session, match.raw_data)
     save_match_links(session, match.raw_data, match.match_id)
     
     session.delete(unsaved_match)

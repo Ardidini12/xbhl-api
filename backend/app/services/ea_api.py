@@ -87,11 +87,40 @@ async def save_players(
                 processed_players.add(p_ea_id)
 
 
+def save_players_sync(session: Session, match_data: dict):
+    """
+    Synchronous version of save_players to extract players from match data
+    and save to DB if they don't exist.
+    """
+    players_data = match_data.get("players", {})
+    if not isinstance(players_data, dict):
+        return
+
+    for _club_id, club_players in players_data.items():
+        if not isinstance(club_players, dict):
+            continue
+        for p_ea_id, p_info in club_players.items():
+            if not isinstance(p_info, dict):
+                continue
+
+            if not p_ea_id:
+                continue
+
+            gamertag = p_info.get("playername")
+            if not gamertag:
+                continue
+
+            if not session.get(Player, p_ea_id):
+                new_player = Player(ea_id=p_ea_id, gamertag=gamertag)
+                session.add(new_player)
+                session.flush()
+
+
 def save_match_links(session: Session, match_data: dict, match_id: str):
     """
     Create MatchPlayerLink for every player in a valid Match.
     """
-    from app.models import MatchPlayerLink
+    from app.models import MatchPlayerLink, Player
     players_data = match_data.get("players", {})
     if not isinstance(players_data, dict):
         return
@@ -102,6 +131,12 @@ def save_match_links(session: Session, match_data: dict, match_id: str):
         for p_ea_id in club_players.keys():
             if not p_ea_id:
                 continue
+            
+            # Ensure player exists before linking to avoid FK violation
+            if not session.get(Player, p_ea_id):
+                logger.warning(f"Skipping link for player {p_ea_id}: Player not found in DB")
+                continue
+
             if not session.get(MatchPlayerLink, (match_id, p_ea_id)):
                 new_link = MatchPlayerLink(match_id=match_id, player_ea_id=p_ea_id)
                 session.add(new_link)
