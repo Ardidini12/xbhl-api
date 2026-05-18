@@ -255,9 +255,7 @@ const SchedulerDetail = () => {
       allVisibleIds.every((id) => selectedMatchIds.includes(id))
 
     if (allSelected) {
-      setSelectedMatchIds((prev) =>
-        prev.filter((id) => !allVisibleIds.includes(id)),
-      )
+      setSelectedMatchIds([])
     } else {
       try {
         const allIds = await SchedulersService.readUnsavedMatchIds({

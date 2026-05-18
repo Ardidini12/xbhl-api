@@ -2,6 +2,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, func, select
 
@@ -304,10 +305,8 @@ def delete_scheduler_activities(
     """
     Clear all activity logs for a specific scheduler.
     """
-    statement = select(SchedulerActivity).where(SchedulerActivity.scheduler_id == id)
-    activities = session.exec(statement).all()
-    for activity in activities:
-        session.delete(activity)
+    statement = delete(SchedulerActivity).where(SchedulerActivity.scheduler_id == id)
+    session.execute(statement)
     session.commit()
     return Message(message="Activity logs cleared successfully")
 
@@ -373,12 +372,10 @@ def bulk_delete_unsaved_matches(
     """
     Bulk delete unsaved matches.
     """
-    deleted_count = 0
-    for match_id in match_ids:
-        db_match = session.get(UnsavedMatch, match_id)
-        if db_match:
-            session.delete(db_match)
-            deleted_count += 1
+    unique_ids = list(set(match_ids))
+    statement = delete(UnsavedMatch).where(UnsavedMatch.match_id.in_(unique_ids))
+    result = session.execute(statement)
+    deleted_count = result.rowcount
     session.commit()
     return Message(message=f"{deleted_count} pending matches deleted successfully")
 

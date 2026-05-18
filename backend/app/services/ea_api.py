@@ -51,7 +51,12 @@ def get_headers():
     }
 
 
-async def save_players(session: Session, match_data: dict, processed_players: set[str]):
+async def save_players(
+    session: Session,
+    match_data: dict,
+    processed_players: set[str],
+    player_lock: asyncio.Lock,
+):
     """
     Extract players from match data and save to DB if they don't exist.
     """
@@ -65,22 +70,26 @@ async def save_players(session: Session, match_data: dict, processed_players: se
         for p_ea_id, p_info in club_players.items():
             if not isinstance(p_info, dict):
                 continue
-            
+
             # Key verification
-            if not p_ea_id or p_ea_id in processed_players:
-                continue
-            
-            gamertag = p_info.get("playername")
-            if not gamertag:
+            if not p_ea_id:
                 continue
 
-            # Check DB
-            if not session.get(Player, p_ea_id):
-                new_player = Player(ea_id=p_ea_id, gamertag=gamertag)
-                session.add(new_player)
-            
-            # Add to cache for this run
-            processed_players.add(p_ea_id)
+            async with player_lock:
+                if p_ea_id in processed_players:
+                    continue
+
+                gamertag = p_info.get("playername")
+                if not gamertag:
+                    continue
+
+                # Check DB
+                if not session.get(Player, p_ea_id):
+                    new_player = Player(ea_id=p_ea_id, gamertag=gamertag)
+                    session.add(new_player)
+
+                # Add to cache for this run
+                processed_players.add(p_ea_id)
 
 
 async def process_club_matches(
@@ -90,6 +99,7 @@ async def process_club_matches(
     season_club_ea_ids: set[str],
     semaphore: asyncio.Semaphore,
     processed_players: set[str],  # Shared cache for this run
+    player_lock: asyncio.Lock,
 ) -> dict:
     # Jitter to avoid bot detection (500ms - 1500ms) - outside semaphore to avoid throttling
     await asyncio.sleep(random.uniform(0.5, 1.5))
@@ -114,17 +124,26 @@ async def process_club_matches(
                 )
                 response.raise_for_status()
                 matches_data = response.json()
+            except Exception as e:
+                return {
+                    "new": 0,
+                    "unsaved": 0,
+                    "processed": 0,
+                    "errors": [f"Club {ea_id}: Request error: {str(e)[:100]}"],
+                    "details": [],
+                }
 
-                if not isinstance(matches_data, list):
-                    return {
-                        "new": 0,
-                        "unsaved": 0,
-                        "processed": 0,
-                        "errors": [f"Club {ea_id}: Unexpected format"],
-                        "details": [],
-                    }
+            if not isinstance(matches_data, list):
+                return {
+                    "new": 0,
+                    "unsaved": 0,
+                    "processed": 0,
+                    "errors": [f"Club {ea_id}: Unexpected format"],
+                    "details": [],
+                }
 
-                for match_data in matches_data:
+            for match_data in matches_data:
+                try:
                     raw_id = match_data.get("matchId")
                     if not raw_id:
                         continue
@@ -142,40 +161,45 @@ async def process_club_matches(
                     # Intersect match clubs with our season clubs
                     matching_clubs = match_club_ids.intersection(season_club_ea_ids)
                     
-                    if len(matching_clubs) == len(match_club_ids) and len(matching_clubs) >= 2:
-                        # Success: Both clubs are in our season
-                        new_match = Match(
-                            match_id=match_id,
-                            league_id=scheduler.league_id,
-                            season_id=scheduler.season_id,
-                            raw_data=match_data,
-                        )
-                        session.add(new_match)
-                        await save_players(session, match_data, processed_players)
-                        new_count += 1
-                        details.append({"match_id": match_id, "status": "saved"})
-                    elif len(matching_clubs) == 1:
-                        # Partial: Only one club matches
-                        unsaved_match = UnsavedMatch(
-                            match_id=match_id,
-                            league_id=scheduler.league_id,
-                            season_id=scheduler.season_id,
-                            scheduler_id=scheduler.id,
-                            raw_data=match_data,
-                            reason=f"Only one club in season: {list(matching_clubs)[0]}",
-                        )
-                        session.add(unsaved_match)
-                        await save_players(session, match_data, processed_players)
-                        unsaved_count += 1
-                        details.append({"match_id": match_id, "status": "unsaved", "reason": "single_club"})
+                    if len(matching_clubs) >= 1:
+                        # A. Persistent Player Save: Commit players first
+                        await save_players(session, match_data, processed_players, player_lock)
+                        session.commit()
+
+                        # B. Persistent Match Save: Commit match independently
+                        if len(matching_clubs) == len(match_club_ids) and len(matching_clubs) >= 2:
+                            # Success: Both clubs are in our season
+                            new_match = Match(
+                                match_id=match_id,
+                                league_id=scheduler.league_id,
+                                season_id=scheduler.season_id,
+                                raw_data=match_data,
+                            )
+                            session.add(new_match)
+                            session.commit()
+                            new_count += 1
+                            details.append({"match_id": match_id, "status": "saved"})
+                        elif len(matching_clubs) == 1:
+                            # Partial: Only one club matches
+                            unsaved_match = UnsavedMatch(
+                                match_id=match_id,
+                                league_id=scheduler.league_id,
+                                season_id=scheduler.season_id,
+                                scheduler_id=scheduler.id,
+                                raw_data=match_data,
+                                reason=f"Only one club in season: {list(matching_clubs)[0]}",
+                            )
+                            session.add(unsaved_match)
+                            session.commit()
+                            unsaved_count += 1
+                            details.append({"match_id": match_id, "status": "unsaved", "reason": "single_club"})
                     else:
                         # None: Should rarely happen as we fetch by clubId, but for safety
                         details.append({"match_id": match_id, "status": "ignored", "reason": "no_clubs_match"})
 
-                session.commit()
-            except Exception as e:
-                session.rollback()
-                errors.append(f"Club {ea_id}: {str(e)[:100]}")
+                except Exception as e:
+                    session.rollback()
+                    errors.append(f"Club {ea_id}: Match {match_data.get('matchId', 'unknown')} error: {str(e)[:100]}")
 
         return {
             "new": new_count,
@@ -231,13 +255,22 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> str:
 
         # Shared player cache for this run
         processed_players = set()
+        player_lock = asyncio.Lock()
 
         # Parallel workers with configurable concurrency limit
         semaphore = asyncio.Semaphore(settings.EA_API_CONCURRENCY_LIMIT)
 
         async with httpx.AsyncClient(timeout=30.0) as client:
             tasks = [
-                process_club_matches(client, ea_id, scheduler, season_club_ea_ids, semaphore, processed_players)
+                process_club_matches(
+                    client,
+                    ea_id,
+                    scheduler,
+                    season_club_ea_ids,
+                    semaphore,
+                    processed_players,
+                    player_lock,
+                )
                 for ea_id in season_club_ea_ids
             ]
             results = await asyncio.gather(*tasks)

@@ -36,6 +36,7 @@ const PlayerDetail = () => {
           variant="ghost"
           size="icon"
           onClick={() => navigate({ to: "/admin/players" })}
+          aria-label="Back to players"
         >
           <ArrowLeft className="size-5" />
         </Button>

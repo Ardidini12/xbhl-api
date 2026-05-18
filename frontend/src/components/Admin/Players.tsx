@@ -19,7 +19,7 @@ const Players = () => {
   const [search, setSearch] = useState("")
   const loadMoreRef = useRef<HTMLDivElement>(null)
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status, error } =
     useInfiniteQuery({
       queryKey: ["players", search],
       queryFn: ({ pageParam = 0 }) =>
@@ -58,6 +58,13 @@ const Players = () => {
   const allPlayers = data?.pages.flatMap((page) => page.data) ?? []
   const totalCount = data?.pages[0]?.count ?? 0
 
+  const handleNavigate = (eaId: string) => {
+    navigate({
+      to: "/admin/players/$eaId",
+      params: { eaId },
+    })
+  }
+
   return (
     <div className="flex flex-col gap-4 p-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -87,17 +94,28 @@ const Players = () => {
                   Loading players...
                 </TableCell>
               </TableRow>
+            ) : status === "error" ? (
+              <TableRow>
+                <TableCell className="text-center py-10 text-destructive">
+                  Error: {(error as any)?.message || "Failed to load players"}
+                </TableCell>
+              </TableRow>
             ) : allPlayers.length > 0 ? (
               allPlayers.map((player) => (
                 <TableRow
                   key={player.ea_id}
                   className="cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() =>
-                    navigate({
-                      to: "/admin/players/$eaId",
-                      params: { eaId: player.ea_id },
-                    })
-                  }
+                  onClick={() => handleNavigate(player.ea_id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleNavigate(player.ea_id)
+                    } else if (e.key === " ") {
+                      e.preventDefault()
+                      handleNavigate(player.ea_id)
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
                 >
                   <TableCell className="font-medium flex items-center gap-2">
                     <User className="size-4 text-muted-foreground" />

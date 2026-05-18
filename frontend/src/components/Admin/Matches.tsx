@@ -96,7 +96,7 @@ const Matches = () => {
       allVisibleIds.every((id) => selectedIds.includes(id))
 
     if (allSelected) {
-      setSelectedIds((prev) => prev.filter((id) => !allVisibleIds.includes(id)))
+      setSelectedIds([])
     } else {
       try {
         const allIds = await MatchesService.readMatchIds({
