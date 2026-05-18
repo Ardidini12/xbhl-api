@@ -93,34 +93,17 @@ This file tracks the features implemented, architectural decisions made, and the
 - Regenerated frontend API client to support new scheduler and match services.
 - Changed League/Season on the Scheduler page to show actual League and Season names, not IDs.
 
-
-
-21 april:
-I have implemented the Season Detail page and the club management functionality.
-
-  Changes Summary
-
-  Backend Updates
-   - Added GET /seasons/{id} to retrieve season details.
-   - Added GET /seasons/{id}/clubs to list clubs assigned to a season with search and pagination support.
-   - Added POST /seasons/{id}/clubs for bulk assigning clubs to a season.
-   - Added DELETE /seasons/{id}/clubs for bulk removing clubs from a season.
-
-  Frontend Updates
-   - New Components:
-       - SeasonDetail.tsx: Main page for managing a specific season, featuring a list of clubs, search filtering, and bulk remove operations.
-       - AddClubsToSeason.tsx: A dialog that allows administrators to search and select clubs to add to the season.
-   - Routing:
-       - Added a new route /_layout/xbhl/$leagueId/$seasonId which renders the SeasonDetail component.
-   - Navigation:
-       - Enabled the "Enter Season" button in the seasons list actions menu.
-   - UX/UI Improvements:
-       - Implemented infinite scroll for the season's club list.
-       - Added dynamic search filtering for clubs within a season.
-       - Provided bulk operations to remove multiple clubs at once.
-       - Included a back button for easy navigation to the seasons list.
-
-  You can now navigate to a league, then "Enter Season" from any season's action menu to manage its clubs.
+### [Feature] Season Detail & Club Management - 2026-04-21
+- **Backend Updates:**
+    - Added `GET /seasons/{id}` to retrieve season details.
+    - Added `GET /seasons/{id}/clubs` to list clubs assigned to a season with search and pagination support.
+    - Added `POST /seasons/{id}/clubs` for bulk assigning clubs to a season.
+    - Added `DELETE /seasons/{id}/clubs` for bulk removing clubs from a season.
+- **Frontend Updates:**
+    - Created `SeasonDetail.tsx` for managing a specific season's clubs with search filtering and bulk remove operations.
+    - Created `AddClubsToSeason.tsx` dialog for searching and selecting clubs to add.
+    - Implemented nested route `/_layout/xbhl/$leagueId/$seasonId` for the Season Detail page.
+    - Enabled "Enter Season" navigation from the seasons list actions menu.
 
 ### [Fix/Optimization] Club Name Uniqueness & Deduplication - 2026-04-27
 - **Database Integrity:**
@@ -136,3 +119,87 @@ I have implemented the Season Detail page and the club management functionality.
     - Added `test_bulk_create_duplicate_clubs` to verify graceful handling of duplicate names within a single bulk request.
     - Fixed `test_update_club` to avoid accidental unique constraint violations during test runs.
     - Verified all 9 club-related tests pass successfully.
+
+14 may: 
+Summary of Changes
+*Note: The most recent dated entry below supersedes all earlier entries; earlier items are maintained for archival purposes.*
+
+  Backend Enhancements
+   - Statistics Endpoint: Added GET /api/v1/clubs/{id}/stats to retrieve match statistics for a specific club, grouped by league and season.
+   - Match Filtering: Updated read_matches in backend/app/api/routes/matches.py to support filtering by league_id and season_id.
+   - Data Models: Introduced ClubStatsPublic, LeagueStats, and SeasonStats in backend/app/models.py to support the new hierarchical statistics view.
+
+  Frontend Enhancements
+   - Club Detail Page: Created a new, visually rich Club Profile page (frontend/src/components/XBHL/ClubDetail.tsx) featuring:
+       - Header: Large club logo and name with EA ID badge.
+       - Overall Stats: Quick-view cards for total matches and leagues played.
+       - Competition History: A hierarchical view using accordions:
+           - Leagues: Displays total games per league.
+           - Seasons: Displays total games per season.
+           - Matches: An infinite scroll list of matches within each season, showing match IDs, dates, and scores.
+       - Global Filter: A search bar to filter match history by opponent name or match ID.
+   - Improved Navigation:
+       - Updated Clubs.tsx to support single-click row navigation to the details page, adhering to the project's UX standards.
+       - Implemented a "Back" button on the detail page for easy navigation.
+   - Route Restructuring: Standardized club routes by creating a nested structure:
+       - admin/clubs/index.tsx: The list view.
+       - admin/clubs/$clubId.tsx: The detail view.
+       - admin/clubs.tsx: A parent layout to manage route nesting.
+  These changes provide a comprehensive and intuitive way to view a club's performance history across various competitions.
+
+### Archive
+29 april
+- **Navigation Preference:** Always use single-click events to navigate to detail pages from list views (Leagues, Seasons, Clubs, Schedulers). This ensures a consistent and intuitive user experience across the application. Ensure that interactions with interactive elements within the row (like checkboxes or action menus) use `e.stopPropagation()` to prevent unwanted navigation. A "Back" button should always be present on detail pages.
+
+10 may:
+- **Navigation Update:**
+    - Fixed double-click navigation paths in Leagues.tsx and Seasons.tsx.
+    - Updated GEMINI.md to reflect the new double-click navigation standard and system rules.
+    - Fixed Double-Click Navigation: Updated frontend/src/components/Admin/Schedulers.tsx to use TanStack Router's typed navigation API.
+
+15 may: 
+Scheduler Details Page: Fixed the infinite scroll labels for both activity logs and pending matches. When the end of the list is reached, it now displays the total number
+      of actual items fetched (e.g., Total runs: 25) instead of continuing to show "Scroll for more".
+   2. Unsaved Matches: 
+       * Backend: Added a new PATCH /api/v1/schedulers/unsaved-matches/{match_id} endpoint and a corresponding UnsavedMatchUpdate model to allow updating the raw JSON data of
+         unsaved matches.
+       * Frontend: 
+           * Updated the SchedulerDetail component to allow clicking on any unsaved match in the list.
+           * Implemented a modal (Dialog) that displays the full raw JSON data of the unsaved match.
+           * Added the ability to edit and save the JSON data directly within the modal, similar to how it works in the main matches table.
+           * Regenerated the API client to include the new endpoint and models.
+
+I've updated the requested components to use US Eastern Time (America/New_York) with an "ET" suffix. In frontend/src/components/Admin/SchedulerDetail.tsx, I
+  updated formatDateTime and the inline date formatting for pending matches, and removed the unused date-fns import. In frontend/src/components/Admin/Schedulers.tsx, I
+  corrected the getStatus function to ensure scheduler activity is accurately determined using the EST timeframe.
+  
+### [Feature] Club Statistics & Detail View - 2026-05-14
+- **Backend Enhancements:**
+    - Added `GET /api/v1/clubs/{id}/stats` to retrieve match statistics grouped by league and season.
+    - Updated `read_matches` to support filtering by `league_id` and `season_id`.
+    - Introduced `ClubStatsPublic`, `LeagueStats`, and `SeasonStats` models for hierarchical statistics.
+- **Frontend Enhancements:**
+    - Created `ClubDetail.tsx` with logo, EA ID badge, and competition history using accordions.
+    - Implemented infinite scroll for matches within each season accordion.
+    - Standardized club routes with nested structure: `admin/clubs/index.tsx`, `admin/clubs/$clubId.tsx`, and `admin/clubs.tsx`.
+    - Adhered to single-click navigation standards for club detail access.
+
+### [Feature] Scheduler Improvements & Unsaved Match Editing - 2026-05-15
+- **Backend Updates:**
+    - Added `PATCH /api/v1/schedulers/unsaved-matches/{match_id}` and `UnsavedMatchUpdate` model for editing raw JSON data.
+- **Frontend Updates:**
+    - Updated `SchedulerDetail` to display actual items fetched (e.g., "Total runs: 25") instead of "Scroll for more" at the end of infinite scroll.
+    - Implemented modal dialog in `SchedulerDetail` for viewing and editing raw JSON of unsaved matches.
+    - Standardized all time displays to US Eastern Time (ET) with appropriate suffix.
+
+### [Fix/Optimization] Player Data Integrity & UI Robustness - 2026-05-17
+- **Database & Migrations:**
+    - Fixed `Add player model` migration (`231146874916`): Corrected primary key handling on `ea_id` and ensured safe `downgrade` with UUID backfilling.
+- **Backend Performance & Concurrency:**
+    - Optimized Scheduler routes: Replaced row-by-row deletion with efficient set-based `DELETE` operations for both activities and unsaved matches.
+    - Fixed race condition in `save_players` service using `asyncio.Lock` to ensure atomic player creation during concurrent club processing.
+    - Refactored `process_club_matches` to use granular commits, ensuring player data is persisted independently of match processing success.
+- **Frontend Admin UI Enhancements:**
+    - **Matches & Schedulers:** Fixed "Select All" toggle logic in both Matches and Scheduler Detail pages to correctly clear entire selections (including hidden items).
+    - **Accessibility:** Added `aria-label` to the Player Detail back button and enhanced the Players list table with keyboard navigation (`Enter`/`Space`) and `role="button"`.
+    - **Robustness:** Implemented explicit error state handling in the Players list to display backend failure messages instead of an empty state.
