@@ -32,10 +32,17 @@ def get_most_frequent_position(session: SessionDep, ea_id: str) -> str | None:
     positions = []
     for match in matches:
         # 2. Extract position from raw_data
-        players_data = match.raw_data.get("players", {})
+        players_data = match.raw_data.get("players")
+        if not isinstance(players_data, dict):
+            continue
+            
         for club_id, club_players in players_data.items():
-            if ea_id in club_players:
-                raw_pos = club_players[ea_id].get("position")
+            if not isinstance(club_players, dict):
+                continue
+                
+            player_info = club_players.get(ea_id)
+            if isinstance(player_info, dict):
+                raw_pos = player_info.get("position")
                 if raw_pos:
                     # Map to readable name if possible
                     positions.append(POSITION_MAPPING.get(raw_pos, raw_pos))
