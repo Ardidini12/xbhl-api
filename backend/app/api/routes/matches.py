@@ -24,6 +24,7 @@ def read_matches(
     skip: int = 0,
     limit: int = 100,
     club_name: str | None = None,
+    player_ea_id: str | None = None,
     league_id: uuid.UUID | None = None,
     season_id: uuid.UUID | None = None,
     _current_user: Any = Depends(get_current_active_superuser),
@@ -37,6 +38,9 @@ def read_matches(
         statement = statement.where(
             cast(Match.raw_data, String).ilike(f"%{club_name}%")
         )
+    if player_ea_id:
+        from app.models import MatchPlayerLink
+        statement = statement.join(MatchPlayerLink, Match.match_id == MatchPlayerLink.match_id).where(MatchPlayerLink.player_ea_id == player_ea_id)
     if league_id:
         statement = statement.where(Match.league_id == league_id)
     if season_id:
@@ -70,6 +74,7 @@ def read_matches(
 def read_match_ids(
     session: Session = Depends(get_db),
     club_name: str | None = None,
+    player_ea_id: str | None = None,
     league_id: uuid.UUID | None = None,
     season_id: uuid.UUID | None = None,
     _current_user: Any = Depends(get_current_active_superuser),
@@ -83,6 +88,9 @@ def read_match_ids(
         statement = statement.where(
             cast(Match.raw_data, String).ilike(f"%{club_name}%")
         )
+    if player_ea_id:
+        from app.models import MatchPlayerLink
+        statement = statement.join(MatchPlayerLink, Match.match_id == MatchPlayerLink.match_id).where(MatchPlayerLink.player_ea_id == player_ea_id)
     if league_id:
         statement = statement.where(Match.league_id == league_id)
     if season_id:

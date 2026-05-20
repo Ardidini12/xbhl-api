@@ -173,7 +173,7 @@ I've updated the requested components to use US Eastern Time (America/New_York) 
   updated formatDateTime and the inline date formatting for pending matches, and removed the unused date-fns import. In frontend/src/components/Admin/Schedulers.tsx, I
   corrected the getStatus function to ensure scheduler activity is accurately determined using the EST timeframe.
 
-  
+
 ### [Feature] Club Statistics & Detail View - 2026-05-14
 - **Backend Enhancements:**
     - Added `GET /api/v1/clubs/{id}/stats` to retrieve match statistics grouped by league and season.
@@ -197,6 +197,23 @@ I've updated the requested components to use US Eastern Time (America/New_York) 
     - Updated `PlayerDetail.tsx` to display the calculated most frequent position in a Badge in the PlayerDetail header.
     - Ensured privacy standards by keeping EA IDs hidden from the player profile view.
 
+### [Feature] Games Played Statistics (Link Tables) - 2026-05-20
+- **Database & Performance Optimization:**
+    - Implemented `MatchClubLink` table to explicitly track club participation in matches, enabling highly efficient statistics queries.
+    - Updated EA API ingestion logic (`ea_api.py`) to automatically populate both `MatchClubLink` and `MatchPlayerLink` upon match persistence.
+    - Applied Alembic migration `93d6413690c0` to create the link table.
+    - Executed a backfill script (`backfill_links.py`) to populate participation links for all 54 existing matches.
+- **Backend API Expansion:**
+    - Refactored `GET /clubs/{id}/stats` to use indexed JOINs on `MatchClubLink`, significantly improving response times over JSON parsing.
+    - Added `GET /players/{ea_id}/stats` to provide hierarchical games-played statistics for players, grouped by league and season.
+- **Frontend Enhancements:**
+    - Upgraded `PlayerDetail.tsx` to a full Profile view mirroring the Club Profile:
+        - Header with Gamertag, Position, and Total Games summary cards.
+        - Hierarchical Competition History with nested League/Season accordions.
+        - Infinite scroll match list for players, allowing deep-dive into every game played.
+        - Dynamic search/filter within match history by opponent or match ID.
+    - Regenerated frontend API client to support the new player statistics service.
+
 ### [Fix/Optimization] Player Data Integrity & UI Robustness - 2026-05-17
 - **Database & Migrations:**
     - Fixed `Add player model` migration (`231146874916`): Corrected primary key handling on `ea_id` and ensured safe `downgrade` with UUID backfilling.
@@ -208,3 +225,8 @@ I've updated the requested components to use US Eastern Time (America/New_York) 
     - **Matches & Schedulers:** Fixed "Select All" toggle logic in both Matches and Scheduler Detail pages to correctly clear entire selections (including hidden items).
     - **Accessibility:** Added `aria-label` to the Player Detail back button and enhanced the Players list table with keyboard navigation (`Enter`/`Space`) and `role="button"`.
     - **Robustness:** Implemented explicit error state handling in the Players list to display backend failure messages instead of an empty state.
+
+
+player name 
+player position
+player and club game played

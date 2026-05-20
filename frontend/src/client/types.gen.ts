@@ -115,6 +115,11 @@ export type PlayersPublic = {
     count: number;
 };
 
+export type PlayerStatsPublic = {
+    total_matches: number;
+    leagues: Array<LeagueStats>;
+};
+
 export type PrivateUserCreate = {
     email: string;
     password: string;
@@ -409,6 +414,7 @@ export type MatchesReadMatchesData = {
     clubName?: (string | null);
     leagueId?: (string | null);
     limit?: number;
+    playerEaId?: (string | null);
     seasonId?: (string | null);
     skip?: number;
 };
@@ -418,6 +424,7 @@ export type MatchesReadMatchesResponse = (MatchesPublic);
 export type MatchesReadMatchIdsData = {
     clubName?: (string | null);
     leagueId?: (string | null);
+    playerEaId?: (string | null);
     seasonId?: (string | null);
 };
 
@@ -455,6 +462,12 @@ export type PlayersReadPlayerData = {
 };
 
 export type PlayersReadPlayerResponse = (PlayerPublic);
+
+export type PlayersReadPlayerStatsData = {
+    eaId: string;
+};
+
+export type PlayersReadPlayerStatsResponse = (PlayerStatsPublic);
 
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;

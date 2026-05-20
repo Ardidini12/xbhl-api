@@ -118,9 +118,28 @@ def save_players_sync(session: Session, match_data: dict):
 
 def save_match_links(session: Session, match_data: dict, match_id: str):
     """
-    Create MatchPlayerLink for every player in a valid Match.
+    Create MatchPlayerLink for every player and MatchClubLink for clubs in a valid Match.
     """
-    from app.models import MatchPlayerLink, Player
+    from app.models import MatchClubLink, MatchPlayerLink, Player, Club
+    
+    # 1. Handle Clubs
+    clubs_data = match_data.get("clubs", {})
+    if isinstance(clubs_data, dict):
+        for c_ea_id in clubs_data.keys():
+            if not c_ea_id:
+                continue
+            
+            # Find the club in our DB
+            club = session.exec(select(Club).where(Club.ea_id == c_ea_id)).first()
+            if not club:
+                logger.warning(f"Skipping link for club {c_ea_id}: Club not found in DB")
+                continue
+            
+            if not session.get(MatchClubLink, (match_id, club.id)):
+                new_link = MatchClubLink(match_id=match_id, club_id=club.id)
+                session.add(new_link)
+
+    # 2. Handle Players
     players_data = match_data.get("players", {})
     if not isinstance(players_data, dict):
         return
