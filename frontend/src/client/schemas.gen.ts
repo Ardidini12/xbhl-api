@@ -547,6 +547,25 @@ export const PlayerPublicSchema = {
     title: 'PlayerPublic'
 } as const;
 
+export const PlayerStatsPublicSchema = {
+    properties: {
+        total_matches: {
+            type: 'integer',
+            title: 'Total Matches'
+        },
+        leagues: {
+            items: {
+                '$ref': '#/components/schemas/LeagueStats'
+            },
+            type: 'array',
+            title: 'Leagues'
+        }
+    },
+    type: 'object',
+    required: ['total_matches', 'leagues'],
+    title: 'PlayerStatsPublic'
+} as const;
+
 export const PlayersPublicSchema = {
     properties: {
         data: {

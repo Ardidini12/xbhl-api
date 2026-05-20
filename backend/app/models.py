@@ -380,6 +380,15 @@ class MatchPlayerLink(SQLModel, table=True):
     )
 
 
+class MatchClubLink(SQLModel, table=True):
+    match_id: str = Field(
+        foreign_key="match.match_id", primary_key=True, ondelete="CASCADE"
+    )
+    club_id: uuid.UUID = Field(
+        foreign_key="club.id", primary_key=True, ondelete="CASCADE"
+    )
+
+
 class SeasonStats(SQLModel):
     id: uuid.UUID
     name: str
@@ -394,6 +403,11 @@ class LeagueStats(SQLModel):
 
 
 class ClubStatsPublic(SQLModel):
+    total_matches: int
+    leagues: list[LeagueStats]
+
+
+class PlayerStatsPublic(SQLModel):
     total_matches: int
     leagues: list[LeagueStats]
 

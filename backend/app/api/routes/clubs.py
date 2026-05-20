@@ -118,16 +118,16 @@ def read_club_stats(session: SessionDep, id: uuid.UUID) -> Any:
     """
     Get club statistics grouped by league and season.
     """
+    from app.models import MatchClubLink
     club = session.get(Club, id)
     if not club:
         raise HTTPException(status_code=404, detail="Club not found")
 
-    # Filter matches where raw_data contains the club name (case-insensitive)
-    # We cast raw_data to string for ilike search
-    search_filter = f"%{club.name}%"
+    # Efficiently query matches using the link table
     statement = (
         select(Match)
-        .where(cast(Match.raw_data, String).ilike(search_filter))
+        .join(MatchClubLink, Match.match_id == MatchClubLink.match_id)
+        .where(MatchClubLink.club_id == id)
         .options(selectinload(Match.league), selectinload(Match.season))
     )
     matches = session.exec(statement).all()
