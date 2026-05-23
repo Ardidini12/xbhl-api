@@ -181,7 +181,7 @@ class SeasonsPublic(SQLModel):
 class ClubBase(SQLModel):
     name: str = Field(min_length=1, max_length=255, unique=True, index=True)
     logo: str | None = Field(default=None, max_length=255)
-    ea_id: str | None = Field(default=None, max_length=255)
+    ea_id: str | None = Field(default=None, max_length=255, unique=True)
 
 
 # Properties to receive on club creation

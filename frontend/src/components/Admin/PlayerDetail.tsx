@@ -1,11 +1,20 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 import { getRouteApi, useNavigate } from "@tanstack/react-router"
 import {
   AlertCircle,
   ArrowLeft,
   ChevronDown,
   ChevronRight,
+  Edit,
+  ExternalLink,
+  MoreVertical,
   Search,
+  Trash2,
   User,
 } from "lucide-react"
 import { useEffect, useMemo, useRef, useState } from "react"
@@ -20,8 +29,29 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { LoadingButton } from "@/components/ui/loading-button"
 import { Separator } from "@/components/ui/separator"
+import { Textarea } from "@/components/ui/textarea"
+import useCustomToast from "@/hooks/useCustomToast"
+import { handleError } from "@/utils"
+import DeleteMatch from "./DeleteMatch"
 
 const route = getRouteApi("/_layout/admin/players/$eaId")
 
@@ -81,7 +111,17 @@ const SeasonMatches = ({
   seasonId,
   search,
 }: SeasonMatchesProps) => {
+  const [selectedMatchIds, setSelectedMatchIds] = useState<Set<string>>(
+    new Set(),
+  )
+  const [editingMatch, setEditingMatch] = useState<MatchPublic | null>(null)
+  const [editingData, setEditingData] = useState<string>("")
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const { showSuccessToast, showErrorToast } = useCustomToast()
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery({
@@ -118,6 +158,12 @@ const SeasonMatches = ({
     })
   }, [data, search])
 
+  const totalMatchesCount = data?.pages[0]?.count ?? 0
+  const loadedCount = useMemo(
+    () => data?.pages.reduce((acc, p) => acc + (p.data?.length || 0), 0) || 0,
+    [data],
+  )
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -135,70 +181,268 @@ const SeasonMatches = ({
     return () => observer.disconnect()
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
+  const toggleSelect = (id: string) => {
+    setSelectedMatchIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedMatchIds.size === allMatches.length && allMatches.length > 0) {
+      setSelectedMatchIds(new Set())
+    } else {
+      setSelectedMatchIds(new Set(allMatches.map((m) => m.match_id)))
+    }
+  }
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: string[]) =>
+      MatchesService.bulkDeleteMatches({ requestBody: ids }),
+    onSuccess: () => {
+      showSuccessToast("Matches deleted successfully")
+      setSelectedMatchIds(new Set())
+    },
+    onError: (err: any) => {
+      handleError.call(showErrorToast, err)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["player-matches"] })
+      queryClient.invalidateQueries({ queryKey: ["player-stats"] })
+    },
+  })
+
+  const updateMatchMutation = useMutation({
+    mutationFn: ({ id, raw_data }: { id: string; raw_data: any }) =>
+      MatchesService.updateMatch({ matchId: id, requestBody: { raw_data } }),
+    onSuccess: () => {
+      showSuccessToast("Match updated successfully")
+      setEditingMatch(null)
+    },
+    onError: (err: any) => {
+      handleError.call(showErrorToast, err)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["player-matches"] })
+    },
+  })
+
+  const handleEdit = (match: MatchPublic) => {
+    setEditingMatch(match)
+    setEditingData(JSON.stringify(match.raw_data, null, 2))
+  }
+
+  const handleSaveRaw = (id: string) => {
+    try {
+      const parsed = JSON.parse(editingData)
+      updateMatchMutation.mutate({ id, raw_data: parsed })
+    } catch (_e) {
+      showErrorToast("Invalid JSON format")
+    }
+  }
+
   if (status === "pending")
     return (
-      <div className="p-4 text-center text-sm text-muted-foreground">
+      <div className="p-4 text-center text-sm text-muted-foreground font-medium">
         Loading matches...
       </div>
     )
   if (status === "error")
     return (
-      <div className="p-4 text-center text-destructive text-sm font-medium">
+      <div className="p-4 text-center text-destructive text-sm font-bold">
         Error loading matches
       </div>
     )
 
   return (
-    <div className="flex flex-col divide-y bg-muted/20 rounded-md border mt-2">
-      {allMatches.map((match) => {
-        const display = getMatchDisplay(match)
-        const raw_data = match.raw_data as any
-        const timestamp = Number(raw_data?.timestamp)
-        return (
-          <div
-            key={match.match_id}
-            className="p-3 flex items-center gap-4 hover:bg-muted/50 transition-colors"
+    <div className="flex flex-col gap-2 mt-2">
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={
+              allMatches.length > 0 &&
+              selectedMatchIds.size === allMatches.length
+            }
+            onCheckedChange={toggleSelectAll}
+            aria-label="Select all matches"
+          />
+          <span className="text-[10px] font-black uppercase tracking-tighter opacity-70">
+            Select All
+          </span>
+        </div>
+        {selectedMatchIds.size > 0 && (
+          <Button
+            variant="destructive"
+            size="sm"
+            className="h-7 px-3 text-[10px] font-black uppercase tracking-widest"
+            onClick={() =>
+              bulkDeleteMutation.mutate(Array.from(selectedMatchIds))
+            }
+            disabled={bulkDeleteMutation.isPending}
           >
-            <div className="flex flex-col min-w-[140px]">
-              <span className="text-[10px] text-muted-foreground font-mono truncate">
-                {match.match_id}
-              </span>
-              <span className="text-xs font-medium">
-                {Number.isFinite(timestamp) && timestamp > 0
-                  ? formatEST(timestamp)
-                  : "N/A"}
-              </span>
+            <Trash2 className="mr-1.5 size-3" />
+            Delete {selectedMatchIds.size}
+          </Button>
+        )}
+      </div>
+
+      <div className="flex flex-col divide-y bg-muted/20 rounded-xl border-2 overflow-hidden">
+        {allMatches.map((match) => {
+          const display = getMatchDisplay(match)
+          const raw_data = match.raw_data as any
+          const timestamp = Number(raw_data?.timestamp)
+          return (
+            <div
+              key={match.match_id}
+              className="p-3 flex items-center gap-4 hover:bg-muted/50 transition-all group"
+            >
+              <Checkbox
+                checked={selectedMatchIds.has(match.match_id)}
+                onCheckedChange={() => toggleSelect(match.match_id)}
+                aria-label={`Select match ${match.match_id}`}
+              />
+              <div className="flex flex-col min-w-[140px]">
+                <span className="text-[10px] text-muted-foreground font-mono truncate opacity-60">
+                  {match.match_id}
+                </span>
+                <span className="text-xs font-bold tracking-tight">
+                  {Number.isFinite(timestamp) && timestamp > 0
+                    ? formatEST(timestamp)
+                    : "N/A"}
+                </span>
+              </div>
+              <div className="flex-1 flex items-center justify-center gap-2 font-black text-xs uppercase tracking-tighter">
+                <span className="flex-1 text-right truncate">
+                  {display.club1}
+                </span>
+                <Badge
+                  variant="outline"
+                  className="px-2 py-0.5 text-[10px] font-black border-2 bg-background whitespace-nowrap"
+                >
+                  {display.score}
+                </Badge>
+                <span className="flex-1 text-left truncate">
+                  {display.club2}
+                </span>
+              </div>
+              <div className="flex items-center">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 rounded-full hover:bg-primary/10 hover:text-primary transition-all"
+                    >
+                      <MoreVertical className="size-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40 font-bold">
+                    <DropdownMenuItem
+                      onClick={() =>
+                        navigate({
+                          to: "/admin/matches",
+                          search: { clubName: display.club1 },
+                        })
+                      }
+                    >
+                      <ExternalLink className="mr-2 size-4" />
+                      Enter
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleEdit(match)}>
+                      <Edit className="mr-2 size-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => setDeleteId(match.match_id)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="mr-2 size-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
-            <div className="flex-1 flex items-center justify-center gap-2 font-semibold text-sm">
-              <span className="flex-1 text-right truncate">
-                {display.club1}
-              </span>
-              <Badge
-                variant="outline"
-                className="px-2 py-0.5 text-xs font-bold whitespace-nowrap"
-              >
-                {display.score}
-              </Badge>
-              <span className="flex-1 text-left truncate">{display.club2}</span>
+          )
+        })}
+        {allMatches.length === 0 && (
+          <div className="p-8 text-center text-sm text-muted-foreground font-bold italic opacity-60">
+            No matches found.
+          </div>
+        )}
+        <div
+          ref={loadMoreRef}
+          className="p-3 text-center text-[10px] text-muted-foreground font-black uppercase tracking-widest bg-muted/10 border-t-2"
+        >
+          {isFetchingNextPage ? (
+            <span className="animate-pulse">Loading more matches...</span>
+          ) : hasNextPage ? (
+            "Scroll for more matches"
+          ) : (
+            `Total: ${loadedCount} / ${totalMatchesCount} matches`
+          )}
+        </div>
+      </div>
+
+      <DeleteMatch
+        id={deleteId || ""}
+        open={!!deleteId}
+        onOpenChange={(open) => !open && setDeleteId(null)}
+      />
+
+      <Dialog
+        open={!!editingMatch}
+        onOpenChange={(open) => !open && setEditingMatch(null)}
+      >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-black text-2xl uppercase tracking-tighter">
+              Edit Raw Data
+            </DialogTitle>
+            <DialogDescription className="font-bold">
+              Update the JSON data for match {editingMatch?.match_id}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="rawMatchData" className="text-xs font-black uppercase tracking-widest">
+                Raw JSON <span className="text-destructive">*</span>
+              </Label>
+              <Textarea
+                id="rawMatchData"
+                className="h-96 font-mono text-xs border-2 focus:ring-primary transition-all"
+                value={editingData}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  setEditingData(e.target.value)
+                }
+              />
             </div>
           </div>
-        )
-      })}
-      {allMatches.length === 0 && (
-        <div className="p-4 text-center text-sm text-muted-foreground font-medium">
-          No matches found matching your search.
-        </div>
-      )}
-      <div
-        ref={loadMoreRef}
-        className="p-2 text-center text-[10px] text-muted-foreground italic"
-      >
-        {isFetchingNextPage
-          ? "Loading more..."
-          : hasNextPage
-            ? "Scroll for more"
-            : ""}
-      </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setEditingMatch(null)}
+              className="font-bold uppercase tracking-widest text-xs h-10 px-6 border-2"
+            >
+              Cancel
+            </Button>
+            <LoadingButton
+              onClick={() =>
+                editingMatch && handleSaveRaw(editingMatch.match_id)
+              }
+              loading={updateMatchMutation.isPending}
+              className="font-black uppercase tracking-widest text-xs h-10 px-6"
+            >
+              Save Changes
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
@@ -240,16 +484,17 @@ const PlayerDetail = () => {
     )
   }
 
-  if (playerStatus === "error" || !player) {
+  if (playerStatus === "error" || statsStatus === "error" || !player) {
     return (
       <div className="p-12 text-center">
         <AlertCircle className="mx-auto size-12 text-destructive mb-4" />
         <p className="text-lg font-semibold mb-4">
-          Error loading player details. Player might not exist.
+          Error loading player details. Player might not exist or data fetch failed.
         </p>
         <Button
           variant="default"
           onClick={() => navigate({ to: "/admin/players" })}
+          className="font-black uppercase tracking-widest"
         >
           Back to Players
         </Button>
