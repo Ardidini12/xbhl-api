@@ -130,11 +130,19 @@ def save_match_links(session: Session, match_data: dict, match_id: str):
                 continue
             
             # Find the club in our DB
-            club = session.exec(select(Club).where(Club.ea_id == c_ea_id)).first()
-            if not club:
+            clubs = session.exec(select(Club).where(Club.ea_id == c_ea_id)).all()
+            if not clubs:
                 logger.warning(f"Skipping link for club {c_ea_id}: Club not found in DB")
                 continue
-            
+
+            if len(clubs) > 1:
+                logger.error(
+                    f"Duplicate Club.ea_id found for {c_ea_id}. "
+                    f"IDs: {[c.id for c in clubs]}. Skipping link."
+                )
+                continue
+
+            club = clubs[0]
             if not session.get(MatchClubLink, (match_id, club.id)):
                 new_link = MatchClubLink(match_id=match_id, club_id=club.id)
                 session.add(new_link)
