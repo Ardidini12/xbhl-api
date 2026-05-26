@@ -121,12 +121,12 @@ def update_match(
     db_match.raw_data = match_in.raw_data
     db_match.updated_at = datetime.now(timezone.utc)
     session.add(db_match)
-    session.commit()
-    session.refresh(db_match)
+    session.flush()
     
     # Add new stats
     process_match_stats(session, match_id, action="add")
     session.commit()
+    session.refresh(db_match)
     
     return db_match
 

@@ -202,19 +202,20 @@ def read_player_detailed_stats(
     
     # Find team name (most recent club for this player in this level)
     team_name = "N/A"
-    recent_match_stmt = (
-        select(Club.name)
-        .join(MatchPlayerLink, Club.id == MatchPlayerLink.match_id) # This is wrong, should join Match
+    
+    # Get last match from MatchPlayerStats respecting scope
+    last_stats_stmt = (
+        select(MatchPlayerStats.match_id)
+        .join(Match, Match.match_id == MatchPlayerStats.match_id)
+        .where(MatchPlayerStats.player_ea_id == ea_id)
     )
-    # Correcting join logic for team name
-    recent_match_stmt = (
-        select(Club.name)
-        .join(MatchPlayerLink, Player.ea_id == MatchPlayerLink.player_ea_id)
-        .join(Match, Match.match_id == MatchPlayerLink.match_id)
-        .join(Match.raw_data, Club.ea_id == func.json_each(Match.raw_data['clubs']).key) # Too complex for SQLModel/SQA easily
-    )
-    # Simpler approach for team name: get last match from MatchPlayerStats
-    last_stats_stmt = select(MatchPlayerStats.match_id).where(MatchPlayerStats.player_ea_id == ea_id).order_by(MatchPlayerStats.match_id.desc()).limit(1)
+    if league_id:
+        last_stats_stmt = last_stats_stmt.where(Match.league_id == league_id)
+    if season_id:
+        last_stats_stmt = last_stats_stmt.where(Match.season_id == season_id)
+        
+    last_stats_stmt = last_stats_stmt.order_by(Match.created_at.desc(), Match.match_id.desc()).limit(1)
+    
     last_match_id = session.exec(last_stats_stmt).first()
     if last_match_id:
         last_match = session.get(Match, last_match_id)

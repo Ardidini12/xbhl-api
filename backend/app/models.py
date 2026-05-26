@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime, time, timezone
 
 from pydantic import EmailStr
-from sqlalchemy import JSON, DateTime, UniqueConstraint
+from sqlalchemy import JSON, DateTime, Index, UniqueConstraint, text
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -385,7 +385,7 @@ class MatchPlayerStats(SQLModel, table=True):
         foreign_key="match.match_id", primary_key=True, ondelete="CASCADE"
     )
     player_ea_id: str = Field(
-        foreign_key="player.ea_id", primary_key=True, ondelete="CASCADE"
+        foreign_key="player.ea_id", primary_key=True, ondelete="CASCADE", index=True
     )
 
     # Position in this match
@@ -426,8 +426,26 @@ class MatchPlayerStats(SQLModel, table=True):
 
 class PlayerAggregateStats(SQLModel, table=True):
     __table_args__ = (
-        UniqueConstraint(
-            "player_ea_id", "league_id", "season_id", name="uq_player_stats_level"
+        Index(
+            "uq_player_stats_career",
+            "player_ea_id",
+            unique=True,
+            postgresql_where=text("league_id IS NULL AND season_id IS NULL"),
+        ),
+        Index(
+            "uq_player_stats_league",
+            "player_ea_id",
+            "league_id",
+            unique=True,
+            postgresql_where=text("season_id IS NULL"),
+        ),
+        Index(
+            "uq_player_stats_season",
+            "player_ea_id",
+            "league_id",
+            "season_id",
+            unique=True,
+            postgresql_where=text("season_id IS NOT NULL"),
         ),
     )
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
