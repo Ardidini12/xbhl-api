@@ -380,6 +380,146 @@ class MatchPlayerLink(SQLModel, table=True):
     )
 
 
+class MatchPlayerStats(SQLModel, table=True):
+    match_id: str = Field(
+        foreign_key="match.match_id", primary_key=True, ondelete="CASCADE"
+    )
+    player_ea_id: str = Field(
+        foreign_key="player.ea_id", primary_key=True, ondelete="CASCADE"
+    )
+
+    # Position in this match
+    position: str
+
+    # Record
+    win: int = 0
+    loss: int = 0
+    otl: int = 0
+
+    # Stats from API (sk... keys)
+    skgoals: int = 0
+    skgwg: int = 0
+    skassists: int = 0
+    skpossession: int = 0
+    skplusmin: int = 0
+    skshots: int = 0
+    skshotattempts: int = 0
+    skshotpct: float = 0.0
+    skshotonnetpct: float = 0.0
+    skdeflections: int = 0
+    skpasses: int = 0
+    skpassattempts: int = 0
+    skpasspct: float = 0.0
+    sksaucerpasses: int = 0
+    skhits: int = 0
+    skgiveaways: int = 0
+    sktakeaways: int = 0
+    skinterceptions: int = 0
+    skbs: int = 0
+    skpim: int = 0
+    skpenaltiesdrawn: int = 0
+    skpkclearzone: int = 0
+    skfow: int = 0
+    skfol: int = 0
+    skfopct: float = 0.0
+
+
+class PlayerAggregateStats(SQLModel, table=True):
+    __table_args__ = (
+        UniqueConstraint(
+            "player_ea_id", "league_id", "season_id", name="uq_player_stats_level"
+        ),
+    )
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    player_ea_id: str = Field(foreign_key="player.ea_id", ondelete="CASCADE", index=True)
+    league_id: uuid.UUID | None = Field(
+        default=None, foreign_key="league.id", ondelete="CASCADE", index=True
+    )
+    season_id: uuid.UUID | None = Field(
+        default=None, foreign_key="season.id", ondelete="CASCADE", index=True
+    )
+
+    games_played: int = 0
+    wins: int = 0
+    losses: int = 0
+    otl: int = 0
+
+    goals: int = 0
+    game_winning_goals: int = 0
+    assists: int = 0
+    possession_seconds: int = 0
+    plus_minus: int = 0
+    shots: int = 0
+    shot_attempts: int = 0
+    deflections: int = 0
+    passes: int = 0
+    pass_attempts: int = 0
+    saucer_passes: int = 0
+    hits: int = 0
+    giveaways: int = 0
+    takeaways: int = 0
+    interceptions: int = 0
+    blocked_shots: int = 0
+    penalty_minutes: int = 0
+    penalties_drawn: int = 0
+    penalty_clears: int = 0
+    faceoffs_won: int = 0
+    faceoffs_lost: int = 0
+
+    # Sums for averaging percentages
+    sum_shot_pct: float = 0.0
+    sum_shot_on_net_pct: float = 0.0
+    sum_pass_pct: float = 0.0
+    sum_fo_pct: float = 0.0
+
+
+class PlayerDetailedStats(SQLModel):
+    # This model follows the CSV order for the frontend
+    player_name: str
+    team_name: str | None = None
+    position: str
+    record: str  # e.g. "10-2-0"
+    games_played: int
+    goals: int
+    goals_per_gp: float
+    game_winning_goals: int
+    assists: int
+    assists_per_gp: float
+    points: int
+    points_per_gp: float
+    possession_min_per_gp: float
+    plus_minus: int
+    shots: int
+    shot_attempts: int
+    scoring_pct: float
+    missed_shots: int
+    shots_on_net_pct: float
+    deflections: int
+    passes: int
+    passes_per_gp: float
+    pass_attempts: int
+    pa_per_gp: float
+    passing_pct: float
+    saucer_passes: int
+    sp_per_gp: float
+    hits: int
+    hits_per_gp: float
+    giveaways: int
+    giveaways_per_gp: float
+    takeaways: int
+    takeaways_per_gp: float
+    interceptions: int
+    interceptions_per_gp: float
+    blocked_shots: int
+    blocks_per_gp: float
+    penalty_minutes: int
+    penalties_drawn: int
+    penalty_clears: int
+    faceoffs_won: int
+    faceoffs_lost: int
+    faceoff_win_pct: float
+
+
 class MatchClubLink(SQLModel, table=True):
     match_id: str = Field(
         foreign_key="match.match_id", primary_key=True, ondelete="CASCADE"
@@ -407,7 +547,7 @@ class ClubStatsPublic(SQLModel):
     leagues: list[LeagueStats]
 
 
-class PlayerStatsPublic(SQLModel):
+class PlayerStatsOverview(SQLModel):
     total_matches: int
     leagues: list[LeagueStats]
 

@@ -14,6 +14,7 @@ from app.models import (
     MatchUpdate,
     Message,
 )
+from app.services.stats_service import process_match_stats
 
 router = APIRouter(prefix="/matches", tags=["matches"])
 
@@ -113,11 +114,20 @@ def update_match(
     db_match = session.get(Match, match_id)
     if not db_match:
         raise HTTPException(status_code=404, detail="Match not found")
+    
+    # Subtract old stats
+    process_match_stats(session, match_id, action="subtract")
+    
     db_match.raw_data = match_in.raw_data
     db_match.updated_at = datetime.now(timezone.utc)
     session.add(db_match)
     session.commit()
     session.refresh(db_match)
+    
+    # Add new stats
+    process_match_stats(session, match_id, action="add")
+    session.commit()
+    
     return db_match
 
 
@@ -134,6 +144,10 @@ def delete_match(
     db_match = session.get(Match, match_id)
     if not db_match:
         raise HTTPException(status_code=404, detail="Match not found")
+    
+    # Subtract stats before deleting match record
+    process_match_stats(session, match_id, action="subtract")
+    
     session.delete(db_match)
     session.commit()
     return Message(message="Match deleted successfully")
@@ -153,6 +167,8 @@ def bulk_delete_matches(
     for match_id in match_ids:
         db_match = session.get(Match, match_id)
         if db_match:
+            # Subtract stats before deleting match record
+            process_match_stats(session, match_id, action="subtract")
             session.delete(db_match)
             deleted_count += 1
     session.commit()

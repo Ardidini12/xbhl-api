@@ -227,6 +227,74 @@ I've updated the requested components to use US Eastern Time (America/New_York) 
     - **Robustness:** Implemented explicit error state handling in the Players list to display backend failure messages instead of an empty state.
 
 
-player name 
-player position
-player and club game played
+Implementation Summary
+
+│ CSV Header         │ API Key (Source)         │ Logic for Aggregates │ Formula / Notes                      │
+  ├────────────────────┼──────────────────────────┼──────────────────────┼──────────────────────────────────────┤
+  │ POSITION           │ position                 │ Most Frequent        │ Pulled per match                     │
+  │ RECORD (W/L/OTL)   │ Derived                  │ ADD                  │ Based on result (16385=W, etc.)      │
+  │ GAMES PLAYED       │ N/A                      │ ADD                  │ +1 for every match processed         │
+  │ GOALS              │ skgoals                  │ ADD                  │                                      │
+  │ GOALS/GP           │ Calculated               │ / GP                 │ Total Goals / Games Played           │
+  │ GAME WINNING GOALS │ skgwg                    │ ADD                  │                                      │
+  │ ASSISTS            │ skassists                │ ADD                  │                                      │
+  │ ASSISTS/GP         │ Calculated               │ / GP                 │ Total Assists / Games Played         │
+  │ POINTS             │ skgoals + skassists      │ ADD                  │ Sum of goals and assists             │
+  │ POINTS/GP          │ Calculated               │ / GP                 │ Total Points / Games Played          │
+  │ POSSESSION         │ skpossession             │ ADD                  │ (Sum / 60) / GP (Min per Game)       │
+  │ +/-                │ skplusmin                │ ADD                  │ Supports negative values             │
+  │ SHOTS              │ skshots                  │ ADD                  │                                      │
+  │ SHOT ATTEMPTS      │ skshotattempts           │ ADD                  │                                      │
+  │ SCORING %          │ skshotpct                │ AVERAGE              │ Or (Total Goals / Total Shots) * 100 │
+  │ MISSED SHOTS       │ skshotattempts - skshots │ ADD                  │ Derived from the two keys            │
+  │ SHOTS ON NET %     │ skshotonnetpct           │ AVERAGE              │                                      │
+  │ DEFELCTIONS        │ skdeflections            │ ADD                  │ (Note: CSV spelling "DEFELCTIONS")   │
+  │ PASSES             │ skpasses                 │ ADD                  │                                      │
+  │ PASSES/GP          │ Calculated               │ / GP                 │ Total Passes / Games Played          │
+  │ PASS ATTEMPTS      │ skpassattempts           │ ADD                  │                                      │
+  │ PA/GP              │ Calculated               │ / GP                 │ Total Pass Attempts / Games Played   │
+  │ PASSING %          │ skpasspct                │ AVERAGE              │                                      │
+  │ SAUCER PASSES      │ sksaucerpasses           │ ADD                  │                                      │
+  │ SP/GP              │ Calculated               │ / GP                 │ Total Saucer Passes / Games Played   │
+  │ HITS               │ skhits                   │ ADD                  │                                      │
+  │ HITS/GP            │ Calculated               │ / GP                 │ Total Hits / Games Played            │
+  │ GIVEAWAYS          │ skgiveaways              │ ADD                  │                                      │
+  │ GIVEAWAYS/GP       │ Calculated               │ / GP                 │ Total Giveaways / Games Played       │
+  │ TAKEAWAYS          │ sktakeaways              │ ADD                  │                                      │
+  │ TAKEAWAYS/GP       │ Calculated               │ / GP                 │ Total Takeaways / Games Played       │
+  │ INTERCEPTIONS      │ skinterceptions          │ ADD                  │                                      │
+  │ INTERCEPTIONS/GP   │ Calculated               │ / GP                 │ Total Interceptions / Games Played   │
+  │ BLOCKED SHOTS      │ skbs                     │ ADD                  │                                      │
+  │ BLOCKS/GP          │ Calculated               │ / GP                 │ Total Blocks / Games Played          │
+  │ PENALTY MINUTES    │ skpim                    │ ADD                  │                                      │
+  │ PENALTIES DRAWN    │ skpenaltiesdrawn         │ ADD                  │                                      │
+  │ PENALTY CLEARS     │ skpkclearzone            │ ADD                  │                                      │
+  │ FACEOFFS WON       │ skfow                    │ ADD                  │                                      │
+  │ FACEOFFS LOST      │ skfol                    │ ADD                  │                                      │
+  │ FACEOFF WIN %      │ skfopct                  │ AVERAGE              │ Or Wins / (Wins + Losses) 
+
+   1. Database Models (backend/app/models.py):
+       * MatchPlayerStats: Stores the raw data for every player in every match. This serves as the "history log" you requested, allowing you to track exactly which match
+         contributed what.
+       * PlayerAggregateStats: Stores running totals for Overall Career, League Career, and Season levels.
+       * PlayerDetailedStats: A specialized public schema that matches your CSV header order perfectly for frontend display.
+
+   2. Statistics Service (backend/app/services/stats_service.py):
+       * process_match_stats: An atomic function that handles the "Add" and "Subtract" logic.
+       * Add Logic: When a match is saved, it creates history entries and increments the aggregate sums for all three levels (Season, League, Career).
+       * Subtract Logic: When a match is deleted or edited, it subtracts those exact values from the aggregates and removes the history entries.
+
+   3. Real-Time Integration:
+       * backend/app/services/ea_api.py: Now triggers process_match_stats immediately after a match is successfully saved from the EA API.
+       * backend/app/api/routes/matches.py: Triggers subtraction of stats before any match deletion or update, ensuring data integrity is never compromised.
+
+   4. New API Endpoints (backend/app/api/routes/players.py):
+       * GET /players/{ea_id}/detailed-stats: Returns the fully calculated statistics (averages, percentages, totals) in the exact order of your CSV. Supports filtering by
+         league_id and season_id.
+       * GET /players/{ea_id}/match-history: Returns the list of match history entries for a player, allowing the frontend to show the "Match History" view you requested.
+
+  How Statistics are Calculated
+   * Records: Wins and Losses are extracted from the match result (16385 for Win). OTL defaults to 0 as requested.
+   * Averages: Derived on-the-fly from total sums (e.g., Total Goals / Games Played).
+   * Percentages: Calculated as the average of the percentages reported by the API per match (e.g., Sum of skpasspct / Games Played).
+   * Transparency: Every stat is linked to a match_id. If a match is changed or removed, the stats update instantly.

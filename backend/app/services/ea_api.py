@@ -258,6 +258,12 @@ async def process_club_matches(
                             save_match_links(session, match_data, match_id)
                             
                             session.commit()
+                            
+                            # Calculate and save real-time stats
+                            from app.services.stats_service import process_match_stats
+                            process_match_stats(session, match_id, action="add")
+                            session.commit()
+                            
                             new_count += 1
                             details.append({"match_id": match_id, "status": "saved"})
                         elif len(matching_clubs) == 1:
