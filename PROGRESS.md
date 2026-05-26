@@ -298,3 +298,18 @@ Implementation Summary
    * Averages: Derived on-the-fly from total sums (e.g., Total Goals / Games Played).
    * Percentages: Calculated as the average of the percentages reported by the API per match (e.g., Sum of skpasspct / Games Played).
    * Transparency: Every stat is linked to a match_id. If a match is changed or removed, the stats update instantly.
+
+
+   @to do 
+   Verify each finding against current code. Fix only still-valid issues, skip the
+rest with a brief reason, keep changes minimal, and validate.
+
+In `@backend/app/services/stats_service.py`:
+- Around line 95-98: The otl field is never set and all non-wins are treated as
+losses; update the record creation in stats_service.py where position, win,
+loss, otl are assigned so otl reflects overtime/shootout losses (e.g., use an
+is_otl or similar flag derived from the game result) and set loss to 1 only for
+regulation losses (loss = 1 if not is_win and not is_otl; otl = 1 if is_otl).
+Locate the block that builds the per-player dict (references: p_info, is_win,
+win, loss, otl) and adjust the conditional logic to use the overtime-loss
+indicator when incrementing loss vs otl.

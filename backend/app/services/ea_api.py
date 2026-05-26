@@ -257,7 +257,7 @@ async def process_club_matches(
                             # Create links only for confirmed Match
                             save_match_links(session, match_data, match_id)
                             
-                            session.commit()
+                            session.flush()
                             
                             # Calculate and save real-time stats
                             from app.services.stats_service import process_match_stats
