@@ -73,7 +73,7 @@ const Matches = () => {
           fetchNextPage()
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0 },
     )
 
     if (loadMoreRef.current) {

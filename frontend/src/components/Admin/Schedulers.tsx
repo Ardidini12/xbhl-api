@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import CreateScheduler from "./CreateScheduler"
 import SchedulerActions from "./SchedulerActions"
+import { SchedulerCountdown } from "./SchedulerCountdown"
 
 const Schedulers = () => {
   const navigate = useNavigate()
@@ -32,6 +33,12 @@ const Schedulers = () => {
         return currentCount < lastPage.count ? currentCount : undefined
       },
       initialPageParam: 0,
+      refetchInterval: (query) => {
+        const anyRunning = (query.state.data as any)?.pages?.some((p: any) =>
+          p.data.some((s: any) => s.is_running),
+        )
+        return anyRunning ? 2000 : 10000
+      },
     })
 
   const allSchedulers = useMemo(() => {
@@ -60,7 +67,7 @@ const Schedulers = () => {
           fetchNextPage()
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0 },
     )
 
     if (loadMoreRef.current) {
@@ -71,6 +78,8 @@ const Schedulers = () => {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   const getStatus = (scheduler: SchedulerPublic) => {
+    if (scheduler.is_running)
+      return { label: "Processing...", variant: "secondary" as const }
     if (!scheduler.is_enabled)
       return { label: "Stopped", variant: "destructive" as const }
 
@@ -140,12 +149,13 @@ const Schedulers = () => {
 
       <div className="rounded-md border bg-card">
         <div className="divide-y">
-          <div className="grid grid-cols-7 gap-4 px-4 py-3 bg-muted/50 text-sm font-medium">
+          <div className="grid grid-cols-8 gap-4 px-4 py-3 bg-muted/50 text-sm font-medium">
             <div className="col-span-1">League/Season</div>
             <div className="col-span-1">Days</div>
             <div className="col-span-1">Timeframe (EST)</div>
             <div className="col-span-1 text-center">Interval</div>
             <div className="col-span-1 text-center">Status</div>
+            <div className="col-span-1">Next Run</div>
             <div className="col-span-1">Last Run Result</div>
             <div className="col-span-1 text-right">Actions</div>
           </div>
@@ -155,7 +165,7 @@ const Schedulers = () => {
             return (
               <div
                 key={scheduler.id}
-                className="grid grid-cols-7 gap-4 items-center px-4 py-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                className="grid grid-cols-8 gap-4 items-center px-4 py-4 hover:bg-muted/50 transition-colors cursor-pointer"
                 onClick={() =>
                   navigate({
                     to: "/admin/schedulers/$schedulerId",
@@ -177,7 +187,18 @@ const Schedulers = () => {
                   {scheduler.interval_minutes} min
                 </div>
                 <div className="col-span-1 text-center">
-                  <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                  <Badge
+                    variant={statusInfo.variant}
+                    className={scheduler.is_running ? "animate-pulse" : ""}
+                  >
+                    {statusInfo.label}
+                  </Badge>
+                </div>
+                <div className="col-span-1">
+                  <SchedulerCountdown
+                    nextRunAt={scheduler.next_run_at}
+                    isRunning={scheduler.is_running}
+                  />
                 </div>
                 <div className="col-span-1 text-xs text-muted-foreground break-words italic">
                   {scheduler.last_run_status || "Never run"}

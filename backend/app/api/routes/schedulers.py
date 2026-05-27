@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, func, select
 
 from app.api.deps import get_current_active_superuser, get_db
-from app.core.scheduler import add_scheduler_job, remove_scheduler_job
+from app.core.scheduler import add_scheduler_job, async_scheduler, remove_scheduler_job
 from app.models import (
     League,
     Match,
@@ -40,10 +40,28 @@ def _to_public(session: Session, db_scheduler: Scheduler) -> SchedulerPublic:
     if not league or not season:
         raise HTTPException(status_code=404, detail="League or Season not found")
 
+    next_run_at = None
+    if db_scheduler.is_enabled:
+        job = async_scheduler.get_job(str(db_scheduler.id))
+        if job:
+            next_run_at = job.next_run_time
+
+    # Check if currently running by looking at most recent activity
+    activity_statement = (
+        select(SchedulerActivity)
+        .where(SchedulerActivity.scheduler_id == db_scheduler.id)
+        .order_by(SchedulerActivity.started_at.desc())
+        .limit(1)
+    )
+    last_activity = session.exec(activity_statement).first()
+    is_running = last_activity.status == "running" if last_activity else False
+
     return SchedulerPublic(
         **db_scheduler.model_dump(),
         league_name=league.name,
         season_name=season.name,
+        next_run_at=next_run_at,
+        is_running=is_running,
     )
 
 
@@ -75,10 +93,28 @@ def read_schedulers(
 
     data = []
     for db_scheduler, league_name, season_name in results:
+        next_run_at = None
+        if db_scheduler.is_enabled:
+            job = async_scheduler.get_job(str(db_scheduler.id))
+            if job:
+                next_run_at = job.next_run_time
+
+        # Check if currently running
+        activity_statement = (
+            select(SchedulerActivity)
+            .where(SchedulerActivity.scheduler_id == db_scheduler.id)
+            .order_by(SchedulerActivity.started_at.desc())
+            .limit(1)
+        )
+        last_activity = session.exec(activity_statement).first()
+        is_running = last_activity.status == "running" if last_activity else False
+
         scheduler_public = SchedulerPublic(
             **db_scheduler.model_dump(),
             league_name=league_name,
             season_name=season_name,
+            next_run_at=next_run_at,
+            is_running=is_running,
         )
         data.append(scheduler_public)
 

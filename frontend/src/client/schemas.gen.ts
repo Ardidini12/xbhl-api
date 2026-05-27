@@ -394,6 +394,166 @@ export const LeaguesPublicSchema = {
     title: 'LeaguesPublic'
 } as const;
 
+export const MatchPlayerStatsSchema = {
+    properties: {
+        match_id: {
+            type: 'string',
+            title: 'Match Id'
+        },
+        player_ea_id: {
+            type: 'string',
+            title: 'Player Ea Id'
+        },
+        position: {
+            type: 'string',
+            title: 'Position'
+        },
+        win: {
+            type: 'integer',
+            title: 'Win',
+            default: 0
+        },
+        loss: {
+            type: 'integer',
+            title: 'Loss',
+            default: 0
+        },
+        otl: {
+            type: 'integer',
+            title: 'Otl',
+            default: 0
+        },
+        skgoals: {
+            type: 'integer',
+            title: 'Skgoals',
+            default: 0
+        },
+        skgwg: {
+            type: 'integer',
+            title: 'Skgwg',
+            default: 0
+        },
+        skassists: {
+            type: 'integer',
+            title: 'Skassists',
+            default: 0
+        },
+        skpossession: {
+            type: 'integer',
+            title: 'Skpossession',
+            default: 0
+        },
+        skplusmin: {
+            type: 'integer',
+            title: 'Skplusmin',
+            default: 0
+        },
+        skshots: {
+            type: 'integer',
+            title: 'Skshots',
+            default: 0
+        },
+        skshotattempts: {
+            type: 'integer',
+            title: 'Skshotattempts',
+            default: 0
+        },
+        skshotpct: {
+            type: 'number',
+            title: 'Skshotpct',
+            default: 0
+        },
+        skshotonnetpct: {
+            type: 'number',
+            title: 'Skshotonnetpct',
+            default: 0
+        },
+        skdeflections: {
+            type: 'integer',
+            title: 'Skdeflections',
+            default: 0
+        },
+        skpasses: {
+            type: 'integer',
+            title: 'Skpasses',
+            default: 0
+        },
+        skpassattempts: {
+            type: 'integer',
+            title: 'Skpassattempts',
+            default: 0
+        },
+        skpasspct: {
+            type: 'number',
+            title: 'Skpasspct',
+            default: 0
+        },
+        sksaucerpasses: {
+            type: 'integer',
+            title: 'Sksaucerpasses',
+            default: 0
+        },
+        skhits: {
+            type: 'integer',
+            title: 'Skhits',
+            default: 0
+        },
+        skgiveaways: {
+            type: 'integer',
+            title: 'Skgiveaways',
+            default: 0
+        },
+        sktakeaways: {
+            type: 'integer',
+            title: 'Sktakeaways',
+            default: 0
+        },
+        skinterceptions: {
+            type: 'integer',
+            title: 'Skinterceptions',
+            default: 0
+        },
+        skbs: {
+            type: 'integer',
+            title: 'Skbs',
+            default: 0
+        },
+        skpim: {
+            type: 'integer',
+            title: 'Skpim',
+            default: 0
+        },
+        skpenaltiesdrawn: {
+            type: 'integer',
+            title: 'Skpenaltiesdrawn',
+            default: 0
+        },
+        skpkclearzone: {
+            type: 'integer',
+            title: 'Skpkclearzone',
+            default: 0
+        },
+        skfow: {
+            type: 'integer',
+            title: 'Skfow',
+            default: 0
+        },
+        skfol: {
+            type: 'integer',
+            title: 'Skfol',
+            default: 0
+        },
+        skfopct: {
+            type: 'number',
+            title: 'Skfopct',
+            default: 0
+        }
+    },
+    type: 'object',
+    required: ['match_id', 'player_ea_id', 'position'],
+    title: 'MatchPlayerStats'
+} as const;
+
 export const MatchPublicSchema = {
     properties: {
         match_id: {
@@ -507,6 +667,193 @@ export const NewPasswordSchema = {
     title: 'NewPassword'
 } as const;
 
+export const PlayerDetailedStatsSchema = {
+    properties: {
+        player_name: {
+            type: 'string',
+            title: 'Player Name'
+        },
+        team_name: {
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Team Name'
+        },
+        position: {
+            type: 'string',
+            title: 'Position'
+        },
+        record: {
+            type: 'string',
+            title: 'Record'
+        },
+        games_played: {
+            type: 'integer',
+            title: 'Games Played'
+        },
+        goals: {
+            type: 'integer',
+            title: 'Goals'
+        },
+        goals_per_gp: {
+            type: 'number',
+            title: 'Goals Per Gp'
+        },
+        game_winning_goals: {
+            type: 'integer',
+            title: 'Game Winning Goals'
+        },
+        assists: {
+            type: 'integer',
+            title: 'Assists'
+        },
+        assists_per_gp: {
+            type: 'number',
+            title: 'Assists Per Gp'
+        },
+        points: {
+            type: 'integer',
+            title: 'Points'
+        },
+        points_per_gp: {
+            type: 'number',
+            title: 'Points Per Gp'
+        },
+        possession_min_per_gp: {
+            type: 'number',
+            title: 'Possession Min Per Gp'
+        },
+        plus_minus: {
+            type: 'integer',
+            title: 'Plus Minus'
+        },
+        shots: {
+            type: 'integer',
+            title: 'Shots'
+        },
+        shot_attempts: {
+            type: 'integer',
+            title: 'Shot Attempts'
+        },
+        scoring_pct: {
+            type: 'number',
+            title: 'Scoring Pct'
+        },
+        missed_shots: {
+            type: 'integer',
+            title: 'Missed Shots'
+        },
+        shots_on_net_pct: {
+            type: 'number',
+            title: 'Shots On Net Pct'
+        },
+        deflections: {
+            type: 'integer',
+            title: 'Deflections'
+        },
+        passes: {
+            type: 'integer',
+            title: 'Passes'
+        },
+        passes_per_gp: {
+            type: 'number',
+            title: 'Passes Per Gp'
+        },
+        pass_attempts: {
+            type: 'integer',
+            title: 'Pass Attempts'
+        },
+        pa_per_gp: {
+            type: 'number',
+            title: 'Pa Per Gp'
+        },
+        passing_pct: {
+            type: 'number',
+            title: 'Passing Pct'
+        },
+        saucer_passes: {
+            type: 'integer',
+            title: 'Saucer Passes'
+        },
+        sp_per_gp: {
+            type: 'number',
+            title: 'Sp Per Gp'
+        },
+        hits: {
+            type: 'integer',
+            title: 'Hits'
+        },
+        hits_per_gp: {
+            type: 'number',
+            title: 'Hits Per Gp'
+        },
+        giveaways: {
+            type: 'integer',
+            title: 'Giveaways'
+        },
+        giveaways_per_gp: {
+            type: 'number',
+            title: 'Giveaways Per Gp'
+        },
+        takeaways: {
+            type: 'integer',
+            title: 'Takeaways'
+        },
+        takeaways_per_gp: {
+            type: 'number',
+            title: 'Takeaways Per Gp'
+        },
+        interceptions: {
+            type: 'integer',
+            title: 'Interceptions'
+        },
+        interceptions_per_gp: {
+            type: 'number',
+            title: 'Interceptions Per Gp'
+        },
+        blocked_shots: {
+            type: 'integer',
+            title: 'Blocked Shots'
+        },
+        blocks_per_gp: {
+            type: 'number',
+            title: 'Blocks Per Gp'
+        },
+        penalty_minutes: {
+            type: 'integer',
+            title: 'Penalty Minutes'
+        },
+        penalties_drawn: {
+            type: 'integer',
+            title: 'Penalties Drawn'
+        },
+        penalty_clears: {
+            type: 'integer',
+            title: 'Penalty Clears'
+        },
+        faceoffs_won: {
+            type: 'integer',
+            title: 'Faceoffs Won'
+        },
+        faceoffs_lost: {
+            type: 'integer',
+            title: 'Faceoffs Lost'
+        },
+        faceoff_win_pct: {
+            type: 'number',
+            title: 'Faceoff Win Pct'
+        }
+    },
+    type: 'object',
+    required: ['player_name', 'position', 'record', 'games_played', 'goals', 'goals_per_gp', 'game_winning_goals', 'assists', 'assists_per_gp', 'points', 'points_per_gp', 'possession_min_per_gp', 'plus_minus', 'shots', 'shot_attempts', 'scoring_pct', 'missed_shots', 'shots_on_net_pct', 'deflections', 'passes', 'passes_per_gp', 'pass_attempts', 'pa_per_gp', 'passing_pct', 'saucer_passes', 'sp_per_gp', 'hits', 'hits_per_gp', 'giveaways', 'giveaways_per_gp', 'takeaways', 'takeaways_per_gp', 'interceptions', 'interceptions_per_gp', 'blocked_shots', 'blocks_per_gp', 'penalty_minutes', 'penalties_drawn', 'penalty_clears', 'faceoffs_won', 'faceoffs_lost', 'faceoff_win_pct'],
+    title: 'PlayerDetailedStats'
+} as const;
+
 export const PlayerPublicSchema = {
     properties: {
         ea_id: {
@@ -547,7 +894,7 @@ export const PlayerPublicSchema = {
     title: 'PlayerPublic'
 } as const;
 
-export const PlayerStatsPublicSchema = {
+export const PlayerStatsOverviewSchema = {
     properties: {
         total_matches: {
             type: 'integer',
@@ -563,7 +910,7 @@ export const PlayerStatsPublicSchema = {
     },
     type: 'object',
     required: ['total_matches', 'leagues'],
-    title: 'PlayerStatsPublic'
+    title: 'PlayerStatsOverview'
 } as const;
 
 export const PlayersPublicSchema = {
@@ -797,6 +1144,23 @@ export const SchedulerPublicSchema = {
                 }
             ],
             title: 'Last Run Status'
+        },
+        next_run_at: {
+            anyOf: [
+                {
+                    type: 'string',
+                    format: 'date-time'
+                },
+                {
+                    type: 'null'
+                }
+            ],
+            title: 'Next Run At'
+        },
+        is_running: {
+            type: 'boolean',
+            title: 'Is Running',
+            default: false
         },
         league_name: {
             type: 'string',

@@ -292,6 +292,8 @@ class SchedulerPublic(SchedulerBase):
     id: uuid.UUID
     last_run_at: datetime | None = None
     last_run_status: str | None = None
+    next_run_at: datetime | None = None
+    is_running: bool = False
     league_name: str
     season_name: str
 
