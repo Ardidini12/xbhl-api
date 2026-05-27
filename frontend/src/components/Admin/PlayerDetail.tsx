@@ -179,6 +179,7 @@ const SeasonMatches = ({
       return (
         display.club1.toLowerCase().includes(searchLower) ||
         display.club2.toLowerCase().includes(searchLower) ||
+        display.score.toLowerCase().includes(searchLower) ||
         m.match_id.toLowerCase().includes(searchLower)
       )
     })

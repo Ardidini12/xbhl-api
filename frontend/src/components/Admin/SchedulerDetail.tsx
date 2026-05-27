@@ -136,7 +136,7 @@ const SchedulerDetail = () => {
   const totalUnsaved = unsavedData?.pages[0]?.count ?? 0
 
   useEffect(() => {
-    if (!hasMoreActivities || isFetchingMoreActivities) return
+    if (activeTab !== "activities" || !hasMoreActivities || isFetchingMoreActivities) return
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -152,7 +152,7 @@ const SchedulerDetail = () => {
   }, [hasMoreActivities, isFetchingMoreActivities, fetchNextActivities, activeTab])
 
   useEffect(() => {
-    if (!hasMoreUnsaved || isFetchingMoreUnsaved) return
+    if (activeTab !== "unsaved" || !hasMoreUnsaved || isFetchingMoreUnsaved) return
 
     const observer = new IntersectionObserver(
       (entries) => {
