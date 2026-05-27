@@ -43,7 +43,7 @@ export const CSV_COLUMNS = [
   { label: "SCORING %", key: "scoring_pct" },
   { label: "MISSED SHOTS", key: "missed_shots" },
   { label: "SHOTS ON NET %", key: "shots_on_net_pct" },
-  { label: "DEFELCTIONS", key: "deflections" },
+  { label: "DEFLECTIONS", key: "deflections" },
   { label: "PASSES", key: "passes" },
   { label: "PASSES/GP", key: "passes_per_gp" },
   { label: "PASS ATTEMPTS", key: "pass_attempts" },
