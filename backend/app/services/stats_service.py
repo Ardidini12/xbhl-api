@@ -79,10 +79,24 @@ def process_match_stats(session: Session, match_id: str, action: str = "add"):
         players_data = raw_data.get("players", {})
         clubs_data = raw_data.get("clubs", {})
         
+        # Determine if the match went into overtime (TOI > 60 minutes / 3600 seconds)
+        max_toi = 0
+        for club_players in players_data.values():
+            for p_info in club_players.values():
+                toi = int(p_info.get("toiseconds", 0))
+                if toi > max_toi:
+                    max_toi = toi
+        is_overtime = max_toi > 3600
+
         for club_id, club_players in players_data.items():
-            # Determine Win/Loss for this club
+            # Determine Win/Loss/OTL for this club based on score and overtime status
             club_info = clubs_data.get(club_id, {})
-            is_win = club_info.get("result") == "16385"
+            score = int(club_info.get("score", 0))
+            opp_score = int(club_info.get("opponentScore", 0))
+            
+            is_win = score > opp_score
+            is_otl = not is_win and is_overtime
+            is_loss = not is_win and not is_overtime
             
             for p_ea_id, p_info in club_players.items():
                 if not p_ea_id or not isinstance(p_info, dict):
@@ -94,8 +108,8 @@ def process_match_stats(session: Session, match_id: str, action: str = "add"):
                     player_ea_id=p_ea_id,
                     position=p_info.get("position", "N/A"),
                     win=1 if is_win else 0,
-                    loss=0 if is_win else 1,
-                    otl=0,
+                    loss=1 if is_loss else 0,
+                    otl=1 if is_otl else 0,
                     skgoals=int(p_info.get("skgoals", 0)),
                     skgwg=int(p_info.get("skgwg", 0)),
                     skassists=int(p_info.get("skassists", 0)),
