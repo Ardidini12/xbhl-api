@@ -44,6 +44,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
+import { SchedulerCountdown } from "./SchedulerCountdown"
 
 const route = getRouteApi("/_layout/admin/schedulers/$schedulerId")
 
@@ -61,11 +62,16 @@ const SchedulerDetail = () => {
 
   const activitiesLoadMoreRef = useRef<HTMLDivElement>(null)
   const unsavedLoadMoreRef = useRef<HTMLDivElement>(null)
+  const [activeTab, setActiveTab] = useState("activities")
 
   const { data: scheduler, isLoading: isLoadingScheduler } = useQuery({
     queryKey: ["schedulers", schedulerId],
     queryFn: () => SchedulersService.readScheduler({ id: schedulerId }),
     enabled: !!schedulerId,
+    refetchInterval: (query) => {
+      const data = query.state.data as any
+      return data?.is_running ? 2000 : 10000
+    },
   })
 
   const {
@@ -79,7 +85,7 @@ const SchedulerDetail = () => {
       SchedulersService.readSchedulerActivities({
         id: schedulerId,
         skip: pageParam as number,
-        limit: 20,
+        limit: 50,
       }),
     getNextPageParam: (lastPage, allPages) => {
       const currentCount = allPages.reduce(
@@ -90,6 +96,7 @@ const SchedulerDetail = () => {
     },
     initialPageParam: 0,
     enabled: !!schedulerId,
+    refetchInterval: () => (scheduler?.is_running ? 2000 : false),
   })
 
   const {
@@ -103,7 +110,7 @@ const SchedulerDetail = () => {
       SchedulersService.readUnsavedMatches({
         id: schedulerId,
         skip: pageParam as number,
-        limit: 20,
+        limit: 50,
       }),
     getNextPageParam: (lastPage, allPages) => {
       const currentCount = allPages.reduce(
@@ -114,42 +121,51 @@ const SchedulerDetail = () => {
     },
     initialPageParam: 0,
     enabled: !!schedulerId,
+    refetchInterval: () => (scheduler?.is_running ? 2000 : false),
   })
 
+  const allActivities = useMemo(
+    () => activitiesData?.pages.flatMap((p) => p.data) ?? [],
+    [activitiesData],
+  )
+  const allUnsaved = useMemo(
+    () => unsavedData?.pages.flatMap((p) => p.data) ?? [],
+    [unsavedData],
+  )
+
+  const totalUnsaved = unsavedData?.pages[0]?.count ?? 0
+
   useEffect(() => {
+    if (!hasMoreActivities || isFetchingMoreActivities) return
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          hasMoreActivities &&
-          !isFetchingMoreActivities
-        ) {
+        if (entries[0].isIntersecting) {
           fetchNextActivities()
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1, rootMargin: "200px" },
     )
-    if (activitiesLoadMoreRef.current)
-      observer.observe(activitiesLoadMoreRef.current)
+    const currentRef = activitiesLoadMoreRef.current
+    if (currentRef) observer.observe(currentRef)
     return () => observer.disconnect()
-  }, [hasMoreActivities, isFetchingMoreActivities, fetchNextActivities])
+  }, [hasMoreActivities, isFetchingMoreActivities, fetchNextActivities, activeTab])
 
   useEffect(() => {
+    if (!hasMoreUnsaved || isFetchingMoreUnsaved) return
+
     const observer = new IntersectionObserver(
       (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          hasMoreUnsaved &&
-          !isFetchingMoreUnsaved
-        ) {
+        if (entries[0].isIntersecting) {
           fetchNextUnsaved()
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1, rootMargin: "200px" },
     )
-    if (unsavedLoadMoreRef.current) observer.observe(unsavedLoadMoreRef.current)
+    const currentRef = unsavedLoadMoreRef.current
+    if (currentRef) observer.observe(currentRef)
     return () => observer.disconnect()
-  }, [hasMoreUnsaved, isFetchingMoreUnsaved, fetchNextUnsaved])
+  }, [hasMoreUnsaved, isFetchingMoreUnsaved, fetchNextUnsaved, activeTab])
 
   const promoteMutation = useMutation({
     mutationFn: (matchId: string) =>
@@ -231,17 +247,6 @@ const SchedulerDetail = () => {
     onError: (err: any) => showErrorToast("Error triggering scheduler", err),
   })
 
-  const allActivities = useMemo(
-    () => activitiesData?.pages.flatMap((p) => p.data) ?? [],
-    [activitiesData],
-  )
-  const allUnsaved = useMemo(
-    () => unsavedData?.pages.flatMap((p) => p.data) ?? [],
-    [unsavedData],
-  )
-
-  const totalUnsaved = unsavedData?.pages[0]?.count ?? 0
-
   const toggleSelectMatch = (id: string) => {
     setSelectedMatchIds((prev) =>
       prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
@@ -321,9 +326,15 @@ const SchedulerDetail = () => {
           <ArrowLeft className="size-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight">
-            {scheduler.league_name} / {scheduler.season_name}
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight">
+              {scheduler.league_name} / {scheduler.season_name}
+            </h1>
+            <SchedulerCountdown
+              nextRunAt={scheduler.next_run_at}
+              isRunning={scheduler.is_running}
+            />
+          </div>
           <p className="text-sm text-muted-foreground">
             Detailed activity and pending matches for this scheduler.
           </p>
@@ -342,7 +353,7 @@ const SchedulerDetail = () => {
           <Button
             variant="outline"
             onClick={() => runNowMutation.mutate()}
-            disabled={runNowMutation.isPending}
+            disabled={runNowMutation.isPending || scheduler.is_running}
           >
             <Play className="mr-2 size-4" />
             Run Now
@@ -385,9 +396,16 @@ const SchedulerDetail = () => {
             <CardTitle className="text-sm font-medium">Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <Badge variant={scheduler.is_enabled ? "default" : "destructive"}>
-              {scheduler.is_enabled ? "Enabled" : "Disabled"}
-            </Badge>
+            <div className="flex items-center justify-between">
+              <Badge variant={scheduler.is_enabled ? "default" : "destructive"}>
+                {scheduler.is_enabled ? "Enabled" : "Disabled"}
+              </Badge>
+              {scheduler.is_running && (
+                <Badge variant="secondary" className="animate-pulse">
+                  Processing...
+                </Badge>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground mt-1 truncate italic">
               {scheduler.last_run_status || "Never run"}
             </p>
@@ -395,7 +413,7 @@ const SchedulerDetail = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="activities" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
           <TabsTrigger value="activities">Activity Logs</TabsTrigger>
           <TabsTrigger value="unsaved">
@@ -464,13 +482,15 @@ const SchedulerDetail = () => {
                     ))}
                     <div
                       ref={activitiesLoadMoreRef}
-                      className="p-4 text-center text-sm text-muted-foreground border-t"
+                      className="p-8 text-center text-sm text-muted-foreground border-t min-h-[100px] flex items-center justify-center"
                     >
                       {isFetchingMoreActivities
                         ? "Loading more activities..."
                         : hasMoreActivities
                           ? "Scroll for more"
-                          : `Total runs: ${allActivities.length}`}
+                          : totalUnsaved > 0
+                            ? `Total runs: ${allActivities.length}`
+                            : null}
                     </div>
                   </>
                 )}
@@ -489,7 +509,7 @@ const SchedulerDetail = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="border rounded-md overflow-hidden">
+              <div className="border rounded-md">
                 <div className="border-b px-4 py-3 flex items-center gap-4 bg-muted/50">
                   <Checkbox
                     checked={
@@ -603,13 +623,15 @@ const SchedulerDetail = () => {
                       })}
                       <div
                         ref={unsavedLoadMoreRef}
-                        className="p-4 text-center text-sm text-muted-foreground border-t"
+                        className="p-8 text-center text-sm text-muted-foreground border-t min-h-[100px] flex items-center justify-center"
                       >
                         {isFetchingMoreUnsaved
                           ? "Loading more matches..."
                           : hasMoreUnsaved
                             ? "Scroll for more"
-                            : `Total pending: ${totalUnsaved}`}
+                            : totalUnsaved > 0
+                              ? `Total pending: ${totalUnsaved}`
+                              : null}
                       </div>
                     </>
                   )}

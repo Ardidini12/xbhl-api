@@ -77,6 +77,40 @@ export type MatchesPublic = {
     count: number;
 };
 
+export type MatchPlayerStats = {
+    match_id: string;
+    player_ea_id: string;
+    position: string;
+    win?: number;
+    loss?: number;
+    otl?: number;
+    skgoals?: number;
+    skgwg?: number;
+    skassists?: number;
+    skpossession?: number;
+    skplusmin?: number;
+    skshots?: number;
+    skshotattempts?: number;
+    skshotpct?: number;
+    skshotonnetpct?: number;
+    skdeflections?: number;
+    skpasses?: number;
+    skpassattempts?: number;
+    skpasspct?: number;
+    sksaucerpasses?: number;
+    skhits?: number;
+    skgiveaways?: number;
+    sktakeaways?: number;
+    skinterceptions?: number;
+    skbs?: number;
+    skpim?: number;
+    skpenaltiesdrawn?: number;
+    skpkclearzone?: number;
+    skfow?: number;
+    skfol?: number;
+    skfopct?: number;
+};
+
 export type MatchPublic = {
     match_id: string;
     league_id: string;
@@ -103,6 +137,52 @@ export type NewPassword = {
     new_password: string;
 };
 
+export type PlayerDetailedStats = {
+    player_name: string;
+    team_name?: (string | null);
+    position: string;
+    record: string;
+    games_played: number;
+    goals: number;
+    goals_per_gp: number;
+    game_winning_goals: number;
+    assists: number;
+    assists_per_gp: number;
+    points: number;
+    points_per_gp: number;
+    possession_min_per_gp: number;
+    plus_minus: number;
+    shots: number;
+    shot_attempts: number;
+    scoring_pct: number;
+    missed_shots: number;
+    shots_on_net_pct: number;
+    deflections: number;
+    passes: number;
+    passes_per_gp: number;
+    pass_attempts: number;
+    pa_per_gp: number;
+    passing_pct: number;
+    saucer_passes: number;
+    sp_per_gp: number;
+    hits: number;
+    hits_per_gp: number;
+    giveaways: number;
+    giveaways_per_gp: number;
+    takeaways: number;
+    takeaways_per_gp: number;
+    interceptions: number;
+    interceptions_per_gp: number;
+    blocked_shots: number;
+    blocks_per_gp: number;
+    penalty_minutes: number;
+    penalties_drawn: number;
+    penalty_clears: number;
+    faceoffs_won: number;
+    faceoffs_lost: number;
+    faceoff_win_pct: number;
+};
+
 export type PlayerPublic = {
     ea_id: string;
     gamertag: string;
@@ -115,7 +195,7 @@ export type PlayersPublic = {
     count: number;
 };
 
-export type PlayerStatsPublic = {
+export type PlayerStatsOverview = {
     total_matches: number;
     leagues: Array<LeagueStats>;
 };
@@ -165,6 +245,8 @@ export type SchedulerPublic = {
     id: string;
     last_run_at?: (string | null);
     last_run_status?: (string | null);
+    next_run_at?: (string | null);
+    is_running?: boolean;
     league_name: string;
     season_name: string;
 };
@@ -467,7 +549,25 @@ export type PlayersReadPlayerStatsData = {
     eaId: string;
 };
 
-export type PlayersReadPlayerStatsResponse = (PlayerStatsPublic);
+export type PlayersReadPlayerStatsResponse = (PlayerStatsOverview);
+
+export type PlayersReadPlayerDetailedStatsData = {
+    eaId: string;
+    leagueId?: (string | null);
+    seasonId?: (string | null);
+};
+
+export type PlayersReadPlayerDetailedStatsResponse = (PlayerDetailedStats);
+
+export type PlayersReadPlayerMatchHistoryData = {
+    eaId: string;
+    leagueId?: (string | null);
+    limit?: number;
+    seasonId?: (string | null);
+    skip?: number;
+};
+
+export type PlayersReadPlayerMatchHistoryResponse = (Array<MatchPlayerStats>);
 
 export type PrivateCreateUserData = {
     requestBody: PrivateUserCreate;

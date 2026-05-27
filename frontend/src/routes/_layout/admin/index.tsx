@@ -51,7 +51,7 @@ function UsersTableContent() {
           fetchNextPage()
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0 },
     )
     if (loadMoreRef.current) observer.observe(loadMoreRef.current)
     return () => observer.disconnect()
