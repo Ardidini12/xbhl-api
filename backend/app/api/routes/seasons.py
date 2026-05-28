@@ -211,6 +211,19 @@ def end_season(*, session: SessionDep, id: uuid.UUID) -> Any:
     return season
 
 
+def clean_up_season_jobs(session: SessionDep, season_id: uuid.UUID) -> None:
+    """
+    Clean up background jobs for a specific season.
+    """
+    from app.core.scheduler import remove_scheduler_job
+    from app.models import Scheduler
+
+    scheduler_statement = select(Scheduler).where(Scheduler.season_id == season_id)
+    db_scheduler = session.exec(scheduler_statement).first()
+    if db_scheduler:
+        remove_scheduler_job(db_scheduler.id)
+
+
 @router.delete("/{id}", dependencies=[Depends(get_current_active_superuser)])
 def delete_season(session: SessionDep, id: uuid.UUID) -> Message:
     """
@@ -221,13 +234,7 @@ def delete_season(session: SessionDep, id: uuid.UUID) -> Message:
         raise HTTPException(status_code=404, detail="Season not found")
 
     # Clean up background jobs before deletion
-    from app.core.scheduler import remove_scheduler_job
-    from app.models import Scheduler
-
-    scheduler_statement = select(Scheduler).where(Scheduler.season_id == id)
-    db_scheduler = session.exec(scheduler_statement).first()
-    if db_scheduler:
-        remove_scheduler_job(db_scheduler.id)
+    clean_up_season_jobs(session, id)
 
     session.delete(season)
     session.commit()
@@ -244,6 +251,8 @@ def bulk_delete_seasons(
     for id in ids:
         season = session.get(Season, id)
         if season:
+            # Clean up background jobs before deletion
+            clean_up_season_jobs(session, id)
             session.delete(season)
     session.commit()
     return Message(message="Seasons deleted successfully")

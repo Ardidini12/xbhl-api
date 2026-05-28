@@ -160,7 +160,7 @@ const Schedulers = () => {
           <div className="grid grid-cols-8 gap-4 px-4 py-3 bg-muted/50 text-sm font-medium">
             <div className="col-span-1">League/Season</div>
             <div className="col-span-1">Days</div>
-            <div className="col-span-1">Timeframe (EST)</div>
+            <div className="col-span-1">Timeframe (ET)</div>
             <div className="col-span-1 text-center">Interval</div>
             <div className="col-span-1 text-center">Status</div>
             <div className="col-span-1">Next Run</div>

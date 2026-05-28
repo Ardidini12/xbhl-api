@@ -1,12 +1,19 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+    status,
+)
 from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, func, select
 
-from app.api.deps import get_current_active_superuser, get_db
+from app.api.deps import get_current_active_superuser, get_current_user, get_db
 from app.core.broadcaster import broadcast_manager
 from app.core.scheduler import add_scheduler_job, async_scheduler, remove_scheduler_job
 from app.models import (
@@ -32,7 +39,30 @@ router = APIRouter(prefix="/schedulers", tags=["schedulers"])
 
 
 @router.websocket("/live")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    session: Session = Depends(get_db),
+):
+    # Extract token from Authorization header, cookie, or query parameter
+    token = websocket.headers.get("authorization")
+    if token and token.startswith("Bearer "):
+        token = token[7:]
+    if not token:
+        token = websocket.cookies.get("access_token")
+    if not token:
+        token = websocket.query_params.get("token")
+
+    if not token:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    try:
+        user = get_current_user(session, token)
+        get_current_active_superuser(user)
+    except HTTPException:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
     await broadcast_manager.connect(websocket)
     try:
         while True:

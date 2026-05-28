@@ -51,11 +51,11 @@ async def test_pull_ea_data_simplified(mock_session_local, mock_get, db: Session
     mock_session_local.return_value.__enter__.return_value = db
 
     # Mock EA API Response
-    # Even if it's from another day or opponent not in season, we save it now.
+    # Both clubs must be in the season for the match to be "saved"
     mock_match_1 = {
         "matchId": "any_match_123",
         "timestamp": 1234567890,
-        "clubs": {"101": {}, "999": {}},  # Opponent 999 not in our DB
+        "clubs": {"101": {}, "102": {}},  # Both clubs in our DB/season
     }
 
     mock_response = MagicMock()
@@ -67,7 +67,7 @@ async def test_pull_ea_data_simplified(mock_session_local, mock_get, db: Session
 
     summary = await pull_ea_data(db, scheduler)
 
-    assert "Success: 1 new matches" in summary
+    assert "1 saved" in summary
 
     # Verify match in DB
     saved_match = db.get(Match, "any_match_123")

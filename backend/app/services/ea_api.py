@@ -231,114 +231,128 @@ async def process_club_matches(
                     match_id = str(raw_id)
                     processed_count += 1
 
-                    # 1. Fast Cache Deduplication
+                    # 1. Fast Cache Deduplication (Read-only check outside lock)
                     if match_id in processed_match_ids:
                         continue
 
+                    # 2. Reservation / Deduplication (Narrow critical section)
+                    is_reserved = False
                     async with match_lock:
-                        # 2. Database Deduplication (Safety check after lock)
+                        if match_id in processed_match_ids:
+                            continue
+                        
+                        # Database Deduplication (Safety check after lock)
                         if session.get(Match, match_id) or session.get(UnsavedMatch, match_id):
                             processed_match_ids.add(match_id)
                             continue
 
-                        # 3. Two-Club Verification
-                        clubs_in_match = match_data.get("clubs", {})
-                        match_club_ids = set(clubs_in_match.keys())
-                        
-                        # Intersect match clubs with our season clubs
-                        matching_clubs = match_club_ids.intersection(season_club_ea_ids)
-                        
-                        if len(matching_clubs) >= 1:
-                            # A. Persistent Player Save: Commit players first
-                            await save_players(session, match_data, processed_players, player_lock)
-                            session.commit()
-
-                            # B. Time Window Verification (EST)
-                            eastern_tz = ZoneInfo("America/New_York")
-                            match_ts = match_data.get("timestamp", 0)
-                            match_dt = datetime.fromtimestamp(match_ts, tz=eastern_tz)
-                            match_time = match_dt.time()
-
-                            in_time_window = False
-                            if scheduler.start_time <= scheduler.end_time:
-                                # Normal window (no midnight wrap)
-                                if scheduler.start_time <= match_time <= scheduler.end_time:
-                                    in_time_window = True
-                            else:
-                                # Overnight window (wraps midnight)
-                                if (
-                                    match_time >= scheduler.start_time
-                                    or match_time <= scheduler.end_time
-                                ):
-                                    in_time_window = True
-
-                            # C. Persistent Match Save: Commit match independently
-                            if len(matching_clubs) == len(match_club_ids) and len(matching_clubs) >= 2 and in_time_window:
-                                # Success: Both clubs are in our season AND it's within hours
-                                new_match = Match(
-                                    match_id=match_id,
-                                    league_id=scheduler.league_id,
-                                    season_id=scheduler.season_id,
-                                    raw_data=match_data,
-                                )
-                                session.add(new_match)
-                                
-                                # Create links only for confirmed Match
-                                save_match_links(session, match_data, match_id)
-                                
-                                session.flush()
-                                
-                                # Calculate and save real-time stats
-                                from app.services.stats_service import process_match_stats
-                                process_match_stats(session, match_id, action="add")
-                                session.commit()
-                                
-                                new_count += 1
-                                details.append({"match_id": match_id, "status": "saved"})
-
-                                # Real-time Broadcast: New match saved
-                                await broadcast_manager.broadcast({
-                                    "type": "match_saved",
-                                    "scheduler_id": str(scheduler.id),
-                                    "match_id": match_id,
-                                    "summary": f"New match saved: {match_id}"
-                                })
-                            else:
-                                # Determine reason for UnsavedMatch
-                                reasons = []
-                                if not in_time_window:
-                                    reasons.append(f"Outside scheduled hours: {match_time.strftime('%H:%M')} EST")
-                                if len(matching_clubs) < 2:
-                                    reasons.append(f"Incomplete clubs match (only {len(matching_clubs)} found)")
-                                
-                                reason_str = " & ".join(reasons)
-
-                                unsaved_match = UnsavedMatch(
-                                    match_id=match_id,
-                                    league_id=scheduler.league_id,
-                                    season_id=scheduler.season_id,
-                                    scheduler_id=scheduler.id,
-                                    raw_data=match_data,
-                                    reason=reason_str,
-                                )
-                                session.add(unsaved_match)
-                                session.commit()
-                                unsaved_count += 1
-                                details.append({"match_id": match_id, "status": "unsaved", "reason": reason_str})
-
-                                # Real-time Broadcast: Match unsaved
-                                await broadcast_manager.broadcast({
-                                    "type": "match_unsaved",
-                                    "scheduler_id": str(scheduler.id),
-                                    "match_id": match_id,
-                                    "reason": reason_str
-                                })
-                        else:
-                            # None: Should rarely happen as we fetch by clubId
-                            details.append({"match_id": match_id, "status": "ignored", "reason": "no_clubs_match"})
-
-                        # 4. Mark as processed in cache
+                        # Reserve it
                         processed_match_ids.add(match_id)
+                        is_reserved = True
+                    
+                    if not is_reserved:
+                        continue
+
+                    # 3. Heavy Work (Outside Lock)
+                    # Two-Club Verification
+                    clubs_in_match = match_data.get("clubs", {})
+                    match_club_ids = set(clubs_in_match.keys())
+                    
+                    # Intersect match clubs with our season clubs
+                    matching_clubs = match_club_ids.intersection(season_club_ea_ids)
+                    
+                    if len(matching_clubs) >= 1:
+                        # A. Persistent Player Save: Commit players first
+                        await save_players(session, match_data, processed_players, player_lock)
+                        session.commit()
+
+                        # B. Time Window Verification (EST)
+                        eastern_tz = ZoneInfo("America/New_York")
+                        match_ts = match_data.get("timestamp", 0)
+                        match_dt = datetime.fromtimestamp(match_ts, tz=eastern_tz)
+                        match_time = match_dt.time()
+
+                        in_time_window = False
+                        if scheduler.start_time <= scheduler.end_time:
+                            # Normal window (no midnight wrap)
+                            if scheduler.start_time <= match_time <= scheduler.end_time:
+                                in_time_window = True
+                        else:
+                            # Overnight window (wraps midnight)
+                            if (
+                                match_time >= scheduler.start_time
+                                or match_time <= scheduler.end_time
+                            ):
+                                in_time_window = True
+
+                        # C. Final safety check before creating/saving (Avoid duplicates from concurrent runs)
+                        if session.get(Match, match_id) or session.get(UnsavedMatch, match_id):
+                            continue
+
+                        # D. Persistent Match Save: Commit match independently
+                        if len(matching_clubs) == len(match_club_ids) and len(matching_clubs) >= 2 and in_time_window:
+                            # Success: Both clubs are in our season AND it's within hours
+                            new_match = Match(
+                                match_id=match_id,
+                                league_id=scheduler.league_id,
+                                season_id=scheduler.season_id,
+                                raw_data=match_data,
+                            )
+                            session.add(new_match)
+                            
+                            # Create links only for confirmed Match
+                            save_match_links(session, match_data, match_id)
+                            
+                            session.flush()
+                            
+                            # Calculate and save real-time stats
+                            from app.services.stats_service import process_match_stats
+                            process_match_stats(session, match_id, action="add")
+                            session.commit()
+                            
+                            new_count += 1
+                            details.append({"match_id": match_id, "status": "saved"})
+
+                            # Real-time Broadcast: New match saved
+                            await broadcast_manager.broadcast({
+                                "type": "match_saved",
+                                "scheduler_id": str(scheduler.id),
+                                "match_id": match_id,
+                                "summary": f"New match saved: {match_id}"
+                            })
+                        else:
+                            # Determine reason for UnsavedMatch
+                            reasons = []
+                            if not in_time_window:
+                                reasons.append(f"Outside scheduled hours: {match_time.strftime('%H:%M')} EST")
+                            if len(matching_clubs) < 2:
+                                reasons.append(f"Incomplete clubs match (only {len(matching_clubs)} found)")
+                            
+                            reason_str = " & ".join(reasons)
+
+                            unsaved_match = UnsavedMatch(
+                                match_id=match_id,
+                                league_id=scheduler.league_id,
+                                season_id=scheduler.season_id,
+                                scheduler_id=scheduler.id,
+                                raw_data=match_data,
+                                reason=reason_str,
+                            )
+                            session.add(unsaved_match)
+                            session.commit()
+                            unsaved_count += 1
+                            details.append({"match_id": match_id, "status": "unsaved", "reason": reason_str})
+
+                            # Real-time Broadcast: Match unsaved
+                            await broadcast_manager.broadcast({
+                                "type": "match_unsaved",
+                                "scheduler_id": str(scheduler.id),
+                                "match_id": match_id,
+                                "reason": reason_str
+                            })
+                    else:
+                        # None: Should rarely happen as we fetch by clubId
+                        details.append({"match_id": match_id, "status": "ignored", "reason": "no_clubs_match"})
 
                 except Exception as e:
                     session.rollback()
