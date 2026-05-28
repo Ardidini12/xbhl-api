@@ -26,11 +26,11 @@ const route = getRouteApi("/_layout/admin/clubs/$clubId")
 
 const formatEST = (timestamp: number) => {
   const date = new Date(timestamp * 1000)
-  return date.toLocaleString("en-US", {
+  return `${date.toLocaleString("en-US", {
     timeZone: "America/New_York",
     dateStyle: "medium",
     timeStyle: "short",
-  })
+  })} ET`
 }
 
 interface ClubDetails {

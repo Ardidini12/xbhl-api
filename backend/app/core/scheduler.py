@@ -1,6 +1,6 @@
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -27,9 +27,17 @@ async def scheduler_job(scheduler_id: uuid.UUID):
         now = datetime.now(eastern_tz)
 
         current_day = now.strftime("%A")
+        previous_day = (now - timedelta(days=1)).strftime("%A")
         current_time = now.time()
 
-        is_correct_day = current_day in db_scheduler.days
+        is_correct_day = (
+            current_day in db_scheduler.days
+            or (
+                db_scheduler.start_time > db_scheduler.end_time
+                and current_time <= db_scheduler.end_time
+                and previous_day in db_scheduler.days
+            )
+        )
         in_time_window = False
 
         if db_scheduler.start_time <= db_scheduler.end_time:
@@ -80,10 +88,20 @@ def add_scheduler_job(db_scheduler: Scheduler):
         eastern_tz = ZoneInfo("America/New_York")
         now = datetime.now(eastern_tz)
         current_day = now.strftime("%A")
+        previous_day = (now - timedelta(days=1)).strftime("%A")
         current_time = now.time()
 
+        is_correct_day = (
+            current_day in db_scheduler.days
+            or (
+                db_scheduler.start_time > db_scheduler.end_time
+                and current_time <= db_scheduler.end_time
+                and previous_day in db_scheduler.days
+            )
+        )
+
         in_window = False
-        if current_day in db_scheduler.days:
+        if is_correct_day:
             if db_scheduler.start_time <= db_scheduler.end_time:
                 if db_scheduler.start_time <= current_time <= db_scheduler.end_time:
                     in_window = True

@@ -24,7 +24,7 @@ export const ESTClock = () => {
   return (
     <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full text-xs font-mono font-medium text-primary border border-primary/20">
       <Clock className="size-3 animate-pulse" />
-      <span>NY Time: {time || "--:--:--"} EST</span>
+      <span>NY Time: {time || "--:--:--"} ET</span>
     </div>
   )
 }

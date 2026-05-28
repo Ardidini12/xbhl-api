@@ -22,12 +22,11 @@ class ConnectionManager:
         """
         Push a message to all connected clients.
         """
-        for connection in self.active_connections:
+        for connection in list(self.active_connections):
             try:
                 await connection.send_json(message)
             except Exception:
-                # This usually means the connection is dead, we'll clean up later 
-                # or let the next disconnect handle it
-                pass
+                self.disconnect(connection)
+                logger.debug("Pruned dead websocket connection during broadcast")
 
 broadcast_manager = ConnectionManager()
