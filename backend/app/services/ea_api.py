@@ -2,10 +2,12 @@ import asyncio
 import logging
 import random
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 import httpx
 from sqlmodel import Session, select
 
+from app.core.broadcaster import broadcast_manager
 from app.core.config import settings
 from app.core.db import SessionLocal, engine
 from app.models import (
@@ -175,8 +177,10 @@ async def process_club_matches(
     scheduler: Scheduler,
     season_club_ea_ids: set[str],
     semaphore: asyncio.Semaphore,
-    processed_players: set[str],  # Shared cache for this run
+    processed_players: set[str],  # Shared cache for players
     player_lock: asyncio.Lock,
+    processed_match_ids: set[str],  # Shared cache for matches
+    match_lock: asyncio.Lock,
 ) -> dict:
     # Jitter to avoid bot detection (500ms - 1500ms) - outside semaphore to avoid throttling
     await asyncio.sleep(random.uniform(0.5, 1.5))
@@ -227,62 +231,114 @@ async def process_club_matches(
                     match_id = str(raw_id)
                     processed_count += 1
 
-                    # 1. Global Deduplication: Check Match AND UnsavedMatch
-                    if session.get(Match, match_id) or session.get(UnsavedMatch, match_id):
+                    # 1. Fast Cache Deduplication
+                    if match_id in processed_match_ids:
                         continue
 
-                    # 2. Two-Club Verification
-                    clubs_in_match = match_data.get("clubs", {})
-                    match_club_ids = set(clubs_in_match.keys())
-                    
-                    # Intersect match clubs with our season clubs
-                    matching_clubs = match_club_ids.intersection(season_club_ea_ids)
-                    
-                    if len(matching_clubs) >= 1:
-                        # A. Persistent Player Save: Commit players first
-                        await save_players(session, match_data, processed_players, player_lock)
-                        session.commit()
+                    async with match_lock:
+                        # 2. Database Deduplication (Safety check after lock)
+                        if session.get(Match, match_id) or session.get(UnsavedMatch, match_id):
+                            processed_match_ids.add(match_id)
+                            continue
 
-                        # B. Persistent Match Save: Commit match independently
-                        if len(matching_clubs) == len(match_club_ids) and len(matching_clubs) >= 2:
-                            # Success: Both clubs are in our season
-                            new_match = Match(
-                                match_id=match_id,
-                                league_id=scheduler.league_id,
-                                season_id=scheduler.season_id,
-                                raw_data=match_data,
-                            )
-                            session.add(new_match)
-                            
-                            # Create links only for confirmed Match
-                            save_match_links(session, match_data, match_id)
-                            
-                            session.flush()
-                            
-                            # Calculate and save real-time stats
-                            from app.services.stats_service import process_match_stats
-                            process_match_stats(session, match_id, action="add")
+                        # 3. Two-Club Verification
+                        clubs_in_match = match_data.get("clubs", {})
+                        match_club_ids = set(clubs_in_match.keys())
+                        
+                        # Intersect match clubs with our season clubs
+                        matching_clubs = match_club_ids.intersection(season_club_ea_ids)
+                        
+                        if len(matching_clubs) >= 1:
+                            # A. Persistent Player Save: Commit players first
+                            await save_players(session, match_data, processed_players, player_lock)
                             session.commit()
-                            
-                            new_count += 1
-                            details.append({"match_id": match_id, "status": "saved"})
-                        elif len(matching_clubs) == 1:
-                            # Partial: Only one club matches
-                            unsaved_match = UnsavedMatch(
-                                match_id=match_id,
-                                league_id=scheduler.league_id,
-                                season_id=scheduler.season_id,
-                                scheduler_id=scheduler.id,
-                                raw_data=match_data,
-                                reason=f"Only one club in season: {list(matching_clubs)[0]}",
-                            )
-                            session.add(unsaved_match)
-                            session.commit()
-                            unsaved_count += 1
-                            details.append({"match_id": match_id, "status": "unsaved", "reason": "single_club"})
-                    else:
-                        # None: Should rarely happen as we fetch by clubId, but for safety
-                        details.append({"match_id": match_id, "status": "ignored", "reason": "no_clubs_match"})
+
+                            # B. Time Window Verification (EST)
+                            eastern_tz = ZoneInfo("America/New_York")
+                            match_ts = match_data.get("timestamp", 0)
+                            match_dt = datetime.fromtimestamp(match_ts, tz=eastern_tz)
+                            match_time = match_dt.time()
+
+                            in_time_window = False
+                            if scheduler.start_time <= scheduler.end_time:
+                                # Normal window (no midnight wrap)
+                                if scheduler.start_time <= match_time <= scheduler.end_time:
+                                    in_time_window = True
+                            else:
+                                # Overnight window (wraps midnight)
+                                if (
+                                    match_time >= scheduler.start_time
+                                    or match_time <= scheduler.end_time
+                                ):
+                                    in_time_window = True
+
+                            # C. Persistent Match Save: Commit match independently
+                            if len(matching_clubs) == len(match_club_ids) and len(matching_clubs) >= 2 and in_time_window:
+                                # Success: Both clubs are in our season AND it's within hours
+                                new_match = Match(
+                                    match_id=match_id,
+                                    league_id=scheduler.league_id,
+                                    season_id=scheduler.season_id,
+                                    raw_data=match_data,
+                                )
+                                session.add(new_match)
+                                
+                                # Create links only for confirmed Match
+                                save_match_links(session, match_data, match_id)
+                                
+                                session.flush()
+                                
+                                # Calculate and save real-time stats
+                                from app.services.stats_service import process_match_stats
+                                process_match_stats(session, match_id, action="add")
+                                session.commit()
+                                
+                                new_count += 1
+                                details.append({"match_id": match_id, "status": "saved"})
+
+                                # Real-time Broadcast: New match saved
+                                await broadcast_manager.broadcast({
+                                    "type": "match_saved",
+                                    "scheduler_id": str(scheduler.id),
+                                    "match_id": match_id,
+                                    "summary": f"New match saved: {match_id}"
+                                })
+                            else:
+                                # Determine reason for UnsavedMatch
+                                reasons = []
+                                if not in_time_window:
+                                    reasons.append(f"Outside scheduled hours: {match_time.strftime('%H:%M')} EST")
+                                if len(matching_clubs) < 2:
+                                    reasons.append(f"Incomplete clubs match (only {len(matching_clubs)} found)")
+                                
+                                reason_str = " & ".join(reasons)
+
+                                unsaved_match = UnsavedMatch(
+                                    match_id=match_id,
+                                    league_id=scheduler.league_id,
+                                    season_id=scheduler.season_id,
+                                    scheduler_id=scheduler.id,
+                                    raw_data=match_data,
+                                    reason=reason_str,
+                                )
+                                session.add(unsaved_match)
+                                session.commit()
+                                unsaved_count += 1
+                                details.append({"match_id": match_id, "status": "unsaved", "reason": reason_str})
+
+                                # Real-time Broadcast: Match unsaved
+                                await broadcast_manager.broadcast({
+                                    "type": "match_unsaved",
+                                    "scheduler_id": str(scheduler.id),
+                                    "match_id": match_id,
+                                    "reason": reason_str
+                                })
+                        else:
+                            # None: Should rarely happen as we fetch by clubId
+                            details.append({"match_id": match_id, "status": "ignored", "reason": "no_clubs_match"})
+
+                        # 4. Mark as processed in cache
+                        processed_match_ids.add(match_id)
 
                 except Exception as e:
                     session.rollback()
@@ -308,6 +364,14 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> str:
     session.commit()
     session.refresh(activity)
 
+    # Real-time Broadcast: Start
+    await broadcast_manager.broadcast({
+        "type": "status_update",
+        "scheduler_id": str(scheduler.id),
+        "status": "running",
+        "summary": "Fetching EA Pro Clubs data..."
+    })
+
     try:
         season = session.get(Season, scheduler.season_id)
         if not season:
@@ -317,6 +381,14 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> str:
             activity.finished_at = datetime.now(timezone.utc)
             session.add(activity)
             session.commit()
+
+            # Real-time Broadcast: Error
+            await broadcast_manager.broadcast({
+                "type": "status_update",
+                "scheduler_id": str(scheduler.id),
+                "status": "error",
+                "summary": summary
+            })
             return summary
 
         clubs = season.clubs
@@ -332,6 +404,14 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> str:
             session.add(scheduler)
             session.add(activity)
             session.commit()
+
+            # Real-time Broadcast: Success
+            await broadcast_manager.broadcast({
+                "type": "status_update",
+                "scheduler_id": str(scheduler.id),
+                "status": "success",
+                "summary": summary
+            })
             return summary
 
         total_new = 0
@@ -340,9 +420,11 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> str:
         all_errors = []
         all_details = {}
 
-        # Shared player cache for this run
+        # Shared caches and locks for this run
         processed_players = set()
         player_lock = asyncio.Lock()
+        processed_match_ids = set()
+        match_lock = asyncio.Lock()
 
         # Parallel workers with configurable concurrency limit
         semaphore = asyncio.Semaphore(settings.EA_API_CONCURRENCY_LIMIT)
@@ -357,6 +439,8 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> str:
                     semaphore,
                     processed_players,
                     player_lock,
+                    processed_match_ids,
+                    match_lock,
                 )
                 for ea_id in season_club_ea_ids
             ]
@@ -392,6 +476,14 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> str:
         session.add(scheduler)
         session.add(activity)
         session.commit()
+
+        # Real-time Broadcast: Success
+        await broadcast_manager.broadcast({
+            "type": "status_update",
+            "scheduler_id": str(scheduler.id),
+            "status": "success",
+            "summary": summary
+        })
         return summary
 
     except Exception as e:
@@ -402,4 +494,12 @@ async def pull_ea_data(session: Session, scheduler: Scheduler) -> str:
         activity.finished_at = datetime.now(timezone.utc)
         session.add(activity)
         session.commit()
+
+        # Real-time Broadcast: Error
+        await broadcast_manager.broadcast({
+            "type": "status_update",
+            "scheduler_id": str(scheduler.id),
+            "status": "error",
+            "summary": summary
+        })
         return summary

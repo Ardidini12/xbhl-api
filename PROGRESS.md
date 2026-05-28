@@ -294,22 +294,70 @@ Implementation Summary
        * GET /players/{ea_id}/match-history: Returns the list of match history entries for a player, allowing the frontend to show the "Match History" view you requested.
 
   How Statistics are Calculated
-   * Records: Wins and Losses are extracted from the match result (16385 for Win). OTL defaults to 0 as requested.
+   * Records: Wins and Losses are extracted from the match result. OTL are calculated based on the matches that are longer than 60 minutes and the team that lost in that game.
    * Averages: Derived on-the-fly from total sums (e.g., Total Goals / Games Played).
    * Percentages: Calculated as the average of the percentages reported by the API per match (e.g., Sum of skpasspct / Games Played).
    * Transparency: Every stat is linked to a match_id. If a match is changed or removed, the stats update instantly.
 
 
-   @to do 
-   Verify each finding against current code. Fix only still-valid issues, skip the
-rest with a brief reason, keep changes minimal, and validate.
+28 May: 
+I have updated the plan to address the Timezone Gap (EST vs. Albania) and the Auto-Start requirement. The goal is to make the system "set and forget"—once an admin
+  configures it, it handles the rest based on New York time, regardless of where you or the server are.
 
-In `@backend/app/services/stats_service.py`:
-- Around line 95-98: The otl field is never set and all non-wins are treated as
-losses; update the record creation in stats_service.py where position, win,
-loss, otl are assigned so otl reflects overtime/shootout losses (e.g., use an
-is_otl or similar flag derived from the game result) and set loss to 1 only for
-regulation losses (loss = 1 if not is_win and not is_otl; otl = 1 if is_otl).
-Locate the block that builds the per-player dict (references: p_info, is_win,
-win, loss, otl) and adjust the conditional logic to use the overtime-loss
-indicator when incrementing loss vs otl.
+  The "Universal EST" Strategy
+  We will lock the entire scheduler and match-processing logic to the US/Eastern timezone. 
+   * The Problem: Your local time or server time might differ. 
+   * The Solution: Every time the system asks "What time is it?", it will explicitly ask for "What time is it in New York?". This ensures that if a scheduler is set for
+     9:00 PM, it starts when it is 9:00 PM in New York, even if it's 3:00 AM in Albania.
+
+  ---
+
+  Final Comprehensive Plan
+
+  Phase 1: The "Always-On" Backend Logic
+   1. [DONE] Global Timezone Lock: 
+       * Modified backend/app/core/scheduler.py to use pytz or zoneinfo to force all comparisons to US/Eastern.
+       * Initialized AsyncIOScheduler with America/New_York timezone.
+   2. [DONE] The "Active Window" Checker:
+       * Instead of a manual "Start" button to begin the interval, the "Start" button will now simply mean "Enable Scheduler".
+       * Once enabled, an APScheduler job will run every [Interval] minutes.
+       * Logic inside the job:
+           * Get now_est.
+           * Is now_est within the start_hour, end_hour, and days?
+           * If Yes: Run the match fetcher.
+           * If No: Log a "Standby" message: "Standby: Outside scheduled window (HH:MM-HH:MM EST on Days)".
+   3. [DONE] Real-Time Setting Updates:
+       * When an admin saves new settings (Hour, Days, Interval), the backend will immediately "Reschedule" the job. If the new settings mean the scheduler should be
+         running right now in EST, it will trigger its first run instantly.
+
+  Phase 2: Robust Match Filtering
+   1. [DONE] Timestamp Validation: 
+       * Added logic in backend/app/services/ea_api.py to filter matches based on their internal timestamp converted to EST.
+       * Matches outside the time window are now saved to UnsavedMatch with a clear reason.
+   2. [DONE] Duplicate Protection:
+       * Implemented an asyncio.Lock and a shared processed_match_ids set in backend/app/services/ea_api.py to prevent concurrent double-saving of matches.
+
+  Phase 3: Enhanced UI (The "Control Center")
+   1. [DONE] EST Sync Indicator:
+       * Added a small clock to the Scheduler UI showing "Current Time in New York (EST)". This helps you (in Albania) see exactly what the scheduler is seeing.
+   2. [DONE] Live Status Feed:
+       * Implemented a **WebSocket-driven architecture**.
+       * Backend: Created `broadcaster.py` and a `/live` WebSocket endpoint.
+       * Logic: The `ea_api` service now pushes instant status updates and match events to all connected clients.
+       * Frontend: Added a `useLiveScheduler` hook and integrated a professional indeterminate progress bar for active runs.
+   3. [DONE] Clearer Logs:
+       * Logs will now show: "Success: Saved 2 matches" or "Standby: Waiting for 9:00 PM EST".
+
+  Phase 4: Automated Lifecycle
+   1. [DONE] Season-End Linkage:
+       * Linked the "End Season" action to the scheduler. Ending a season now automatically disables and stops its associated scheduler.
+       * Linked the "Delete Season" action to clean up background jobs immediately, preventing "ghost" tasks.
+
+  ---
+
+  How this solves your issues:
+   * Timezone: It doesn't matter if you are in Albania or the client is in NY; the "New York Clock" in the code is the only one that matters.
+   * Auto-Start: You don't have to be awake at 3:00 AM (Albania time) to press start. Once the scheduler is "Enabled," it will wake up automatically when NY hits 9:00 PM.
+   * Flexibility: If you change the interval from 5 mins to 1 min while it's fetching, the very next run will respect the 1-minute rule immediately.
+   * Robustness: Only games played in that specific NY time window get saved, keeping your "League Games" data clean.
+

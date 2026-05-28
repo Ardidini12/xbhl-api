@@ -1,6 +1,6 @@
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -8,12 +8,12 @@ from apscheduler.triggers.interval import IntervalTrigger
 from sqlmodel import Session, select
 
 from app.core.db import engine
-from app.models import Scheduler
+from app.models import Scheduler, SchedulerActivity
 from app.services.ea_api import pull_ea_data
 
 logger = logging.getLogger(__name__)
 
-async_scheduler = AsyncIOScheduler()
+async_scheduler = AsyncIOScheduler(timezone=ZoneInfo("America/New_York"))
 
 
 async def scheduler_job(scheduler_id: uuid.UUID):
@@ -29,28 +29,37 @@ async def scheduler_job(scheduler_id: uuid.UUID):
         current_day = now.strftime("%A")
         current_time = now.time()
 
-        if current_day not in db_scheduler.days:
-            logger.debug(f"Scheduler {scheduler_id} skipped: wrong day {current_day}")
-            return
+        is_correct_day = current_day in db_scheduler.days
+        in_time_window = False
 
-        # Handle time window, including overnight windows (e.g., 21:00 -> 02:00)
         if db_scheduler.start_time <= db_scheduler.end_time:
             # Normal window (no midnight wrap)
-            if not (db_scheduler.start_time <= current_time <= db_scheduler.end_time):
-                logger.debug(
-                    f"Scheduler {scheduler_id} skipped: outside time window {db_scheduler.start_time}-{db_scheduler.end_time}"
-                )
-                return
+            if db_scheduler.start_time <= current_time <= db_scheduler.end_time:
+                in_time_window = True
         else:
             # Overnight window (wraps midnight)
-            if not (
+            if (
                 current_time >= db_scheduler.start_time
                 or current_time <= db_scheduler.end_time
             ):
-                logger.debug(
-                    f"Scheduler {scheduler_id} skipped: outside time window {db_scheduler.start_time}-{db_scheduler.end_time}"
-                )
-                return
+                in_time_window = True
+
+        if not is_correct_day or not in_time_window:
+            # Standby Logic: Create a log so the user knows the trigger fired but was ignored
+            days_str = ", ".join(db_scheduler.days)
+            reason = f"Standby: Outside scheduled window ({db_scheduler.start_time.strftime('%H:%M')}-{db_scheduler.end_time.strftime('%H:%M')} EST on {days_str})"
+            
+            activity = SchedulerActivity(
+                scheduler_id=db_scheduler.id,
+                started_at=datetime.now(timezone.utc),
+                finished_at=datetime.now(timezone.utc),
+                status="standby",
+                summary=reason,
+            )
+            session.add(activity)
+            session.commit()
+            logger.debug(f"Scheduler {scheduler_id} skipped: {reason}")
+            return
 
         logger.info(f"Running EA pull for scheduler {scheduler_id}")
         await pull_ea_data(session, db_scheduler)

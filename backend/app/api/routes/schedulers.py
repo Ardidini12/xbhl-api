@@ -1,12 +1,13 @@
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, func, select
 
 from app.api.deps import get_current_active_superuser, get_db
+from app.core.broadcaster import broadcast_manager
 from app.core.scheduler import add_scheduler_job, async_scheduler, remove_scheduler_job
 from app.models import (
     League,
@@ -28,6 +29,19 @@ from app.models import (
 )
 
 router = APIRouter(prefix="/schedulers", tags=["schedulers"])
+
+
+@router.websocket("/live")
+async def websocket_endpoint(websocket: WebSocket):
+    await broadcast_manager.connect(websocket)
+    try:
+        while True:
+            # Keep the connection alive
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        broadcast_manager.disconnect(websocket)
+    except Exception:
+        broadcast_manager.disconnect(websocket)
 
 
 def _to_public(session: Session, db_scheduler: Scheduler) -> SchedulerPublic:
