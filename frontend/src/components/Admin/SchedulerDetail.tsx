@@ -43,7 +43,9 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import useCustomToast from "@/hooks/useCustomToast"
+import { useLiveScheduler } from "@/hooks/useLiveScheduler"
 import { handleError } from "@/utils"
+import { ESTClock } from "./ESTClock"
 import { SchedulerCountdown } from "./SchedulerCountdown"
 
 const route = getRouteApi("/_layout/admin/schedulers/$schedulerId")
@@ -64,14 +66,14 @@ const SchedulerDetail = () => {
   const unsavedLoadMoreRef = useRef<HTMLDivElement>(null)
   const [activeTab, setActiveTab] = useState("activities")
 
+  // Listen for real-time WebSocket updates for this specific scheduler
+  useLiveScheduler(schedulerId)
+
   const { data: scheduler, isLoading: isLoadingScheduler } = useQuery({
     queryKey: ["schedulers", schedulerId],
     queryFn: () => SchedulersService.readScheduler({ id: schedulerId }),
     enabled: !!schedulerId,
-    refetchInterval: (query) => {
-      const data = query.state.data as any
-      return data?.is_running ? 2000 : 10000
-    },
+    refetchInterval: 5000,
   })
 
   const {
@@ -316,7 +318,12 @@ const SchedulerDetail = () => {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 relative">
+      {scheduler?.is_running && (
+        <div className="fixed top-0 left-0 right-0 z-[100] h-1 bg-primary/10 overflow-hidden pointer-events-none">
+          <div className="h-full bg-primary animate-progress-indeterminate w-[40%] rounded-full shadow-[0_0_8px_oklch(var(--primary))]" />
+        </div>
+      )}
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -330,6 +337,7 @@ const SchedulerDetail = () => {
             <h1 className="text-2xl font-bold tracking-tight">
               {scheduler.league_name} / {scheduler.season_name}
             </h1>
+            <ESTClock />
             <SchedulerCountdown
               nextRunAt={scheduler.next_run_at}
               isRunning={scheduler.is_running}

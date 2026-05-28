@@ -193,6 +193,19 @@ def end_season(*, session: SessionDep, id: uuid.UUID) -> Any:
         return season
     season.end_date = datetime.now(timezone.utc)
     session.add(season)
+
+    # PHASE 4: Linkage - Stop and disable scheduler when season ends
+    from app.core.scheduler import remove_scheduler_job
+    from app.models import Scheduler
+
+    scheduler_statement = select(Scheduler).where(Scheduler.season_id == id)
+    db_scheduler = session.exec(scheduler_statement).first()
+    if db_scheduler and db_scheduler.is_enabled:
+        db_scheduler.is_enabled = False
+        session.add(db_scheduler)
+        # Remove from memory immediately
+        remove_scheduler_job(db_scheduler.id)
+
     session.commit()
     session.refresh(season)
     return season
@@ -206,6 +219,16 @@ def delete_season(session: SessionDep, id: uuid.UUID) -> Message:
     season = session.get(Season, id)
     if not season:
         raise HTTPException(status_code=404, detail="Season not found")
+
+    # Clean up background jobs before deletion
+    from app.core.scheduler import remove_scheduler_job
+    from app.models import Scheduler
+
+    scheduler_statement = select(Scheduler).where(Scheduler.season_id == id)
+    db_scheduler = session.exec(scheduler_statement).first()
+    if db_scheduler:
+        remove_scheduler_job(db_scheduler.id)
+
     session.delete(season)
     session.commit()
     return Message(message="Season deleted successfully")

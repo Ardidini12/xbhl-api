@@ -7,7 +7,9 @@ import { type SchedulerPublic, SchedulersService } from "@/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useLiveScheduler } from "@/hooks/useLiveScheduler"
 import CreateScheduler from "./CreateScheduler"
+import { ESTClock } from "./ESTClock"
 import SchedulerActions from "./SchedulerActions"
 import { SchedulerCountdown } from "./SchedulerCountdown"
 
@@ -16,6 +18,9 @@ const Schedulers = () => {
   const [createOpen, setCreateOpen] = useState(false)
   const [search, setSearch] = useState("")
   const loadMoreRef = useRef<HTMLDivElement>(null)
+
+  // Listen for real-time WebSocket updates
+  useLiveScheduler()
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
     useInfiniteQuery({
@@ -118,7 +123,10 @@ const Schedulers = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Schedulers</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold tracking-tight">Schedulers</h1>
+          <ESTClock />
+        </div>
         <Button onClick={() => setCreateOpen(true)}>
           <Plus className="mr-2 size-4" />
           Create Scheduler
